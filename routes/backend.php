@@ -156,7 +156,7 @@ Route::middleware(['auth:pegawai'])->group(function () {
         Route::get('/dashboard', [AdminFakultasController::class, 'dashboard'])->name('dashboard');
 
         // Daftar Periode Usulan Jabatan
-        Route::get('/usulan-jabatan', [AdminFakultasController::class, 'indexUsulanJabatan'])->name('usulan-jabatan.index');
+        Route::get('/usulan', [AdminFakultasController::class, 'indexUsulanJabatan'])->name('usulan-jabatan.index');
 
         // Daftar Pengusul per Periode
         Route::get('/periode/{periodeUsulan}/pendaftar', [AdminFakultasController::class, 'showPendaftar'])->name('periode.pendaftar');

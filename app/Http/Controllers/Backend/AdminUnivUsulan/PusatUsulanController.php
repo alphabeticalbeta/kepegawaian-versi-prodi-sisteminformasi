@@ -71,6 +71,7 @@ class PusatUsulanController extends Controller
         // Return view dengan data yang diperlukan
         return view('backend.layouts.admin-univ-usulan.pusat-usulan.detail-usulan', [
             'usulan' => $usulan,
+            'canEdit' => $canEdit,
             'validationFields' => $validationFields,
             'existingValidation' => $existingValidation,
             'canEdit' => $canEdit,

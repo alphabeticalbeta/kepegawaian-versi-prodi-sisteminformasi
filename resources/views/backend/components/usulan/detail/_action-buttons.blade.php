@@ -1,5 +1,9 @@
 {{-- Action Buttons Component --}}
 @php
+    $canEdit = $canEdit ?? in_array($usulan->status_usulan, [
+        'Diusulkan ke Universitas',
+        'Sedang Direview Universitas',
+    ]);
     // Baca syarat dari model
     $minSetuju = $usulan->getSenateMinSetuju();
     $isReviewerRecommended = $usulan->isRecommendedByReviewer();

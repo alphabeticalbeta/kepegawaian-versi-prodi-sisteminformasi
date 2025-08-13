@@ -77,7 +77,7 @@ class AdminFakultasController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('backend.layouts.admin-fakultas.usulan-jabatan.index', compact('periodeUsulans', 'unitKerja'));
+        return view('backend.layouts.admin-fakultas.usulan.index', compact('periodeUsulans', 'unitKerja'));
     }
 
     /**
@@ -129,12 +129,21 @@ class AdminFakultasController extends Controller
             $existingValidation = $usulan->getValidasiByRole('admin_fakultas');
 
             // Mengirim data usulan yang sudah lengkap ke view
-            return view('backend.layouts.admin-fakultas.usulan-jabatan.detail-pengusul', [
+            return view('backend.layouts.shared.usulan-detail.usulan-detail', [
                 'usulan' => $usulan,
                 'validationFields' => $validationFields,
-                'existingValidation' => $existingValidation
+                'existingValidation' => $existingValidation,
+                // Multi-role configuration
+                'currentRole' => 'admin_fakultas',
+                'formAction' => route('admin-fakultas.usulan.save-validation', $usulan->id),
+                'backUrl' => route('admin-fakultas.periode.pendaftar', $usulan->periode_usulan_id),
+                'backText' => 'Kembali ke Daftar Pengusul',
+                'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
+                'roleConfig' => [
+                    'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
+                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
+                ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('Gagal menampilkan detail usulan: ' . $e->getMessage(), ['usulan_id' => $usulan->id]);
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memuat data detail usulan. Error: ' . $e->getMessage());
@@ -274,7 +283,7 @@ class AdminFakultasController extends Controller
             ->latest()
             ->paginate(15);
 
-        return view('backend.layouts.admin-fakultas.usulan-jabatan.pengusul', [
+        return view('backend.layouts.admin-fakultas.usulan.pengusul', [
             'periode' => $periodeUsulan,
             'usulans' => $usulans,
         ]);

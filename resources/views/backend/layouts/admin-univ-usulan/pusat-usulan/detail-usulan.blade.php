@@ -34,13 +34,15 @@
                     'category' => $category,
                     'fields'   => $fields,
                     'usulan'   => $usulan,
+                    'canEdit'  => $canEdit ?? false, 
                 ])
             @endforeach
         @endif
 
         {{-- Tombol aksi (gunakan action_type) --}}
         @include('backend.components.usulan.detail._action-buttons', [
-            'usulan' => $usulan
+            'usulan' => $usulan,
+            'canEdit' => $canEdit ?? false
         ])
 
         {{-- Shared: Riwayat Perubahan --}}

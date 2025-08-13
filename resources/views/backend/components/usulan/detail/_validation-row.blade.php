@@ -8,7 +8,7 @@
 @endphp
 
 <tbody class="divide-y divide-gray-200">
-    <tr>
+    <tr class="border border-gray-300">
         {{-- Column 1: Data Field --}}
         <td class="px-4 py-6">
             <div class="flex items-start gap-3">
