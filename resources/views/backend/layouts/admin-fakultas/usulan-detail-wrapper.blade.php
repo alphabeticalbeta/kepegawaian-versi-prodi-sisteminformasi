@@ -45,7 +45,7 @@
         </div>
 
         {{-- Header Info Card - Reuse existing --}}
-        @include('backend.components.usulan.detail._header', [
+        @include('backend.components.usulan._header', [
             'usulan' => $usulan
         ])
 
@@ -71,15 +71,53 @@
             'usulan' => $usulan
         ])
 
+        {{-- ADDED: Form Input Dokumen Fakultas --}}
+        @include('backend.layouts.admin-fakultas.partials._dokumen-fakultas-form', [
+            'usulan' => $usulan
+        ])
+
+        {{-- Return Form (existing) --}}
+        <div id="returnForm" class="hidden mt-6 bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-yellow-600 to-orange-600 px-6 py-4">
+                <h3 class="text-lg font-semibold text-white">Kembalikan Usulan untuk Perbaikan</h3>
+                <p class="text-yellow-100 text-sm mt-1">Berikan catatan yang jelas untuk pegawai</p>
+            </div>
+            <div class="p-6">
+                {{-- Validation Issue Summary --}}
+                <div id="validationIssueSummary" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <h4 class="font-medium text-red-900 mb-2">Item yang tidak sesuai:</h4>
+                    <ul id="issueList" class="text-sm text-red-800 space-y-1"></ul>
+                </div>
+
+                <div class="mb-4">
+                    <label for="catatan_umum_return" class="block text-sm font-medium text-gray-700 mb-2">
+                        Catatan untuk Pegawai <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="catatan_umum_return" name="catatan_umum" rows="4" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                              placeholder="Jelaskan secara detail item mana yang perlu diperbaiki dan bagaimana cara memperbaikinya..."
+                              required></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Minimum 10 karakter</p>
+                </div>
+                
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="hideReturnForm()" 
+                            class="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">
+                        Batal
+                    </button>
+                    <button type="button" onclick="submitReturnForm()" 
+                            class="px-6 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+                        Kembalikan ke Pegawai
+                    </button>
+                </div>
+            </div>
+        </div>
+
         {{-- Riwayat Log - Reuse existing --}}
         @include('backend.components.usulan._riwayat_log', ['usulan' => $usulan])
     </form>
 </div>
 @endsection
 
-{{-- Admin Fakultas Specific Scripts --}}
-@push('scripts')
-    @include('backend.layouts.admin-fakultas.partials._validation-scripts', [
-        'usulan' => $usulan
-    ])
-@endpush
+{{-- FIXED: Include validation scripts dari component yang benar --}}
+@include('backend.components.usulan._validation-scripts')

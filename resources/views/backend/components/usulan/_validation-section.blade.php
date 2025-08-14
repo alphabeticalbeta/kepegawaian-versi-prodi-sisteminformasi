@@ -48,7 +48,8 @@
         </thead>
         <tbody class="divide-y divide-gray-200">
             @foreach($fields as $field)
-                @include('Backend.components.usulan.detail._validation-row', [
+                {{-- FIXED: Case sensitivity - backend huruf kecil --}}
+                @include('backend.components.usulan._validation-row', [
                     'category' => $category,
                     'field' => $field,
                     'usulan' => $usulan,

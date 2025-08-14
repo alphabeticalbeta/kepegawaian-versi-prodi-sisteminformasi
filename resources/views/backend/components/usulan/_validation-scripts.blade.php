@@ -121,37 +121,117 @@
         mainForm.submit();
     };
 
+    // Updated submitForwardForm function di _validation-scripts.blade.php
     window.submitForwardForm = function() {
-        const mainForm = document.getElementById('validationForm');
-
-        // Validate forward form fields
-        const nomorSurat = document.getElementById('nomor_surat_usulan').value;
-        const fileSurat = document.getElementById('file_surat_usulan').files;
-        const nomorBerita = document.getElementById('nomor_berita_senat').value;
-        const fileBerita = document.getElementById('file_berita_senat').files;
-
-        if (!nomorSurat || fileSurat.length === 0 || !nomorBerita || fileBerita.length === 0) {
-            alert('Semua field dokumen fakultas wajib diisi.');
+        // Validate form first
+        if (!validateForwardForm()) {
             return false;
+        }
+
+        // Show confirmation
+        Swal.fire({
+            title: 'Konfirmasi Pengiriman',
+            html: `
+                <div class="text-left">
+                    <p class="mb-3">Apakah Anda yakin ingin <strong>mengirim usulan ini ke universitas</strong>?</p>
+                    <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm">
+                        <strong>⚠️ Perhatian:</strong>
+                        <ul class="mt-2 space-y-1">
+                            <li>• Usulan akan diteruskan ke tingkat universitas</li>
+                            <li>• Dokumen yang sudah dikirim tidak dapat diubah</li>
+                            <li>• Proses ini tidak dapat dibatalkan</li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Kirim ke Universitas',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                processForwardSubmission();
+            }
+        });
+    };
+
+    function processForwardSubmission() {
+        const mainForm = document.getElementById('validationForm');
+        const forwardForm = document.getElementById('forwardUsulanForm');
+        const progressDiv = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('uploadProgressBar');
+
+        // Show progress
+        if (progressDiv) {
+            progressDiv.classList.remove('hidden');
+            animateProgress(progressBar, 0, 30, 500); // 0-30% in 500ms
+        }
+
+        // Validate all required fields
+        const requiredFields = ['nomor_surat_usulan', 'file_surat_usulan', 'nomor_berita_senat', 'file_berita_senat'];
+        let missingFields = [];
+
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (!field) {
+                missingFields.push(fieldName);
+                return;
+            }
+
+            if (field.type === 'file') {
+                if (field.files.length === 0) {
+                    missingFields.push(fieldName);
+                }
+            } else {
+                if (!field.value.trim()) {
+                    missingFields.push(fieldName);
+                }
+            }
+        });
+
+        if (missingFields.length > 0) {
+            hideProgress();
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Tidak Lengkap',
+                text: 'Semua field dokumen fakultas wajib diisi.',
+                confirmButtonText: 'OK'
+            });
+            return false;
+        }
+
+        // Update progress
+        if (progressBar) {
+            animateProgress(progressBar, 30, 60, 500); // 30-60% in 500ms
         }
 
         // Validate file sizes
-        const maxSizeInBytes = {
-            surat: 2 * 1024 * 1024, // 2MB
-            berita: 5 * 1024 * 1024  // 5MB
-        };
+        const fileSurat = document.getElementById('file_surat_usulan');
+        const fileBerita = document.getElementById('file_berita_senat');
+        const maxSizeBytes = 1 * 1024 * 1024; // 1MB
 
-        if (fileSurat[0].size > maxSizeInBytes.surat) {
-            alert('File surat usulan terlalu besar. Maksimal 2MB.');
+        if (fileSurat.files.length > 0 && fileSurat.files[0].size > maxSizeBytes) {
+            hideProgress();
+            Swal.fire({
+                icon: 'error',
+                title: 'File Terlalu Besar',
+                text: 'File surat usulan terlalu besar. Maksimal 1MB.',
+                confirmButtonText: 'OK'
+            });
             return false;
         }
 
-        if (fileBerita[0].size > maxSizeInBytes.berita) {
-            alert('File berita acara terlalu besar. Maksimal 5MB.');
-            return false;
-        }
-
-        if (!confirm('Apakah Anda yakin ingin mengirim usulan ini ke universitas?')) {
+        if (fileBerita.files.length > 0 && fileBerita.files[0].size > maxSizeBytes) {
+            hideProgress();
+            Swal.fire({
+                icon: 'error',
+                title: 'File Terlalu Besar',
+                text: 'File berita senat terlalu besar. Maksimal 1MB.',
+                confirmButtonText: 'OK'
+            });
             return false;
         }
 
@@ -168,17 +248,65 @@
         actionInput.value = 'forward_to_university';
         mainForm.appendChild(actionInput);
 
+        // Update progress
+        if (progressBar) {
+            animateProgress(progressBar, 60, 85, 500); // 60-85% in 500ms
+        }
+
         // Clone forward form inputs to main form
-        const forwardInputs = document.getElementById('forwardUsulanForm').querySelectorAll('input, textarea, select');
+        const forwardInputs = forwardForm.querySelectorAll('input, textarea, select');
         forwardInputs.forEach(input => {
-            const clonedInput = input.cloneNode(true);
-            clonedInput.style.display = 'none';
-            mainForm.appendChild(clonedInput);
+            if (input.name) { // Only clone inputs with names
+                const clonedInput = input.cloneNode(true);
+                clonedInput.style.display = 'none';
+                mainForm.appendChild(clonedInput);
+            }
         });
 
-        showLoadingState();
-        mainForm.submit();
-    };
+        // Complete progress and submit
+        if (progressBar) {
+            animateProgress(progressBar, 85, 100, 300); // 85-100% in 300ms
+            setTimeout(() => {
+                showLoadingState();
+                mainForm.submit();
+            }, 300);
+        } else {
+            showLoadingState();
+            mainForm.submit();
+        }
+    }
+
+    function animateProgress(progressBar, startPercent, endPercent, duration) {
+        if (!progressBar) return;
+        
+        const startTime = performance.now();
+        const percentDiff = endPercent - startPercent;
+
+        function updateProgress(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const currentPercent = startPercent + (percentDiff * progress);
+            
+            progressBar.style.width = currentPercent + '%';
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateProgress);
+            }
+        }
+        
+        requestAnimationFrame(updateProgress);
+    }
+
+    function hideProgress() {
+        const progressDiv = document.getElementById('uploadProgress');
+        if (progressDiv) {
+            progressDiv.classList.add('hidden');
+        }
+        const progressBar = document.getElementById('uploadProgressBar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
+        }
+    }
 
     // Helper function to update validation issue summary
     function updateValidationIssueSummary() {
@@ -309,6 +437,7 @@
 </script>
 
 <script>
+    // COMPREHENSIVE AUTOSAVE FIX - Prevent Data Loss
     (function () {
         'use strict';
 
@@ -332,88 +461,277 @@
 
         let saveTimer = null;
         let busy = false;
+        let retryCount = 0;
+        const MAX_RETRIES = 2;
+        const SAVE_TIMEOUT = 15000;
+
+        // CRITICAL: Track all form data to prevent partial saves
+        let lastFormSnapshot = {};
 
         function showSaving() {
             saver.textContent = 'Menyimpan…';
-            saver.classList.remove('opacity-0');
+            saver.className = 'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow bg-blue-600 text-white text-sm opacity-100 transition-opacity';
         }
+        
         function showSaved() {
-            saver.textContent = 'Tersimpan';
-            setTimeout(() => saver.classList.add('opacity-0'), 800);
+            saver.textContent = 'Tersimpan ✓';
+            saver.className = 'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow bg-green-600 text-white text-sm opacity-100 transition-opacity';
+            setTimeout(() => {
+                saver.classList.add('opacity-0');
+            }, 2000);
         }
-        function showError() {
-            saver.textContent = 'Gagal menyimpan';
-            saver.classList.remove('opacity-0');
-            setTimeout(() => saver.classList.add('opacity-0'), 1200);
+        
+        function showError(message = 'Gagal menyimpan') {
+            saver.textContent = message;
+            saver.className = 'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow bg-red-600 text-white text-sm opacity-100 transition-opacity';
+            setTimeout(() => {
+                saver.classList.add('opacity-0');
+            }, 4000);
         }
 
         function ensureActionType() {
             let input = form.querySelector('input[name="action_type"]');
             if (!input) {
-            input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'action_type';
-            form.appendChild(input);
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'action_type';
+                form.appendChild(input);
             }
             input.value = 'save_only';
         }
 
+        // CRITICAL: Comprehensive form data collection
+        function getAllFormData() {
+            const formData = {};
+            
+            // Get all validation selects
+            const selects = form.querySelectorAll('select[name^="validation["]');
+            selects.forEach(select => {
+                if (select.name && select.value) {
+                    formData[select.name] = select.value;
+                }
+            });
+
+            // Get all validation textareas
+            const textareas = form.querySelectorAll('textarea[name^="validation["]');
+            textareas.forEach(textarea => {
+                if (textarea.name) {
+                    formData[textarea.name] = textarea.value || '';
+                }
+            });
+
+            // Get all validation inputs
+            const inputs = form.querySelectorAll('input[name^="validation["]');
+            inputs.forEach(input => {
+                if (input.name && input.type !== 'file') {
+                    formData[input.name] = input.value || '';
+                }
+            });
+
+            return formData;
+        }
+
+        // Check if form data has meaningful changes
+        function hasSignificantChanges(newData, oldData) {
+            const newKeys = Object.keys(newData);
+            const oldKeys = Object.keys(oldData);
+            
+            // If different number of fields, definitely changed
+            if (newKeys.length !== oldKeys.length) {
+                return true;
+            }
+
+            // Check each field for changes
+            for (const key of newKeys) {
+                if (newData[key] !== oldData[key]) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         async function autoSave() {
-            if (busy) return;
+            if (busy) {
+                console.log('Autosave: Already busy, skipping');
+                return;
+            }
+
+            // Collect ALL current form data
+            const currentFormData = getAllFormData();
+            
+            // Skip if no significant changes
+            if (!hasSignificantChanges(currentFormData, lastFormSnapshot)) {
+                console.log('Autosave: No changes detected, skipping');
+                return;
+            }
+            
             busy = true;
             showSaving();
             ensureActionType();
 
+            // Create abort controller for timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), SAVE_TIMEOUT);
+
             try {
-            const fd = new FormData(form);
-            const resp = await fetch(form.action, {
-                method: 'POST',
-                body: fd,
-                headers: { 
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': window.Laravel ? window.Laravel.csrfToken : ''
-                },
-                credentials: 'same-origin'
-            });
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
-            showSaved();
+                // CRITICAL: Use comprehensive FormData, not just changed fields
+                const fd = new FormData(form);
+                
+                // Ensure all validation data is included
+                Object.keys(currentFormData).forEach(key => {
+                    if (!fd.has(key)) {
+                        fd.append(key, currentFormData[key]);
+                    }
+                });
+                
+                console.log('Autosave: Starting request with', Object.keys(currentFormData).length, 'validation fields');
+                
+                const resp = await fetch(form.action, {
+                    method: 'POST',
+                    body: fd,
+                    signal: controller.signal,
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': window.Laravel ? window.Laravel.csrfToken : ''
+                    },
+                    credentials: 'same-origin'
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!resp.ok) {
+                    if (resp.status === 504) {
+                        throw new Error('Timeout - Server terlalu lama merespons');
+                    } else if (resp.status === 500) {
+                        throw new Error('Server Error - Silakan coba lagi');
+                    } else {
+                        throw new Error(`HTTP ${resp.status}`);
+                    }
+                }
+
+                // Success: Update snapshot
+                lastFormSnapshot = { ...currentFormData };
+                console.log('Autosave: Success, saved', Object.keys(currentFormData).length, 'fields');
+                showSaved();
+                retryCount = 0;
+
             } catch (e) {
-            console.error('Autosave error', e);
-            showError();
+                clearTimeout(timeoutId);
+                console.error('Autosave error', e);
+                
+                if (e.name === 'AbortError') {
+                    showError('Timeout - Koneksi lambat');
+                } else if (retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    showError(`Gagal (${retryCount}/${MAX_RETRIES})`);
+                    // Retry dengan delay
+                    setTimeout(() => {
+                        busy = false;
+                        autoSave();
+                    }, 2000 * retryCount);
+                    return;
+                } else {
+                    showError('Gagal menyimpan - Refresh halaman');
+                    retryCount = 0;
+                }
             } finally {
-            busy = false;
+                busy = false;
             }
         }
 
         function debounceSave() {
             clearTimeout(saveTimer);
-            saveTimer = setTimeout(autoSave, 600);
+            // Shorter debounce for better UX but prevent too frequent calls
+            saveTimer = setTimeout(autoSave, 800);
         }
 
-        // Bind: select status & textarea keterangan
-        const statusSelects = form.querySelectorAll('select[name^="validation["][name$="[status]"]');
-        const ketTextareas = form.querySelectorAll('textarea[name^="validation["][name$="[keterangan]"]');
+        // Initialize form snapshot
+        function initializeSnapshot() {
+            lastFormSnapshot = getAllFormData();
+            console.log('Form snapshot initialized with', Object.keys(lastFormSnapshot).length, 'fields');
+        }
 
-        statusSelects.forEach(sel => {
-            sel.addEventListener('change', () => {
-            const fieldId = sel.getAttribute('data-field-id');
-            if (typeof window.toggleKeterangan === 'function') {
-                window.toggleKeterangan(fieldId, sel.value);
-            }
-            autoSave();
+        // Event binding with comprehensive coverage
+        function bindEvents() {
+            // Status selects - immediate save
+            const statusSelects = form.querySelectorAll('select[name^="validation["][name$="[status]"]');
+            statusSelects.forEach(sel => {
+                sel.addEventListener('change', (e) => {
+                    const fieldId = sel.getAttribute('data-field-id');
+                    if (typeof window.toggleKeterangan === 'function') {
+                        window.toggleKeterangan(fieldId, sel.value);
+                    }
+                    // Wait a bit for toggleKeterangan to complete
+                    setTimeout(autoSave, 100);
+                });
             });
-        });
 
-        ketTextareas.forEach(ta => {
-            ta.addEventListener('input', debounceSave);
-            ta.addEventListener('change', autoSave);
-        });
+            // Keterangan textareas - debounced save
+            const ketTextareas = form.querySelectorAll('textarea[name^="validation["][name$="[keterangan]"]');
+            ketTextareas.forEach(ta => {
+                ta.addEventListener('input', debounceSave);
+                ta.addEventListener('blur', () => {
+                    // Immediate save on blur to ensure data isn't lost
+                    clearTimeout(saveTimer);
+                    setTimeout(autoSave, 100);
+                });
+            });
 
-        // Tetap sediakan trigger manual jika dibutuhkan
+            // Any other validation inputs
+            const otherInputs = form.querySelectorAll('input[name^="validation["], select[name^="validation["]');
+            otherInputs.forEach(input => {
+                if (!input.name.endsWith('[status]')) { // Skip status selects (already handled)
+                    input.addEventListener('change', debounceSave);
+                    if (input.type === 'text' || input.tagName === 'TEXTAREA') {
+                        input.addEventListener('input', debounceSave);
+                    }
+                }
+            });
+        }
+
+        // Manual trigger with force save
         window.submitValidation = function (e) {
             if (e && e.preventDefault) e.preventDefault();
+            clearTimeout(saveTimer);
             autoSave();
         };
+
+        // Force save when user is about to leave
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && !busy) {
+                clearTimeout(saveTimer);
+                autoSave();
+            }
+        });
+
+        // Before unload protection
+        window.addEventListener('beforeunload', function(e) {
+            const currentData = getAllFormData();
+            if (hasSignificantChanges(currentData, lastFormSnapshot)) {
+                e.preventDefault();
+                e.returnValue = 'Ada perubahan yang belum tersimpan. Yakin ingin meninggalkan halaman?';
+                return e.returnValue;
+            }
+        });
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSnapshot();
+            bindEvents();
+            console.log('Enhanced autosave initialized');
+        });
+
+        // If DOM already loaded
+        if (document.readyState === 'loading') {
+            // Do nothing, DOMContentLoaded will fire
+        } else {
+            // DOM already loaded
+            initializeSnapshot();
+            bindEvents();
+            console.log('Enhanced autosave initialized (DOM ready)');
+        }
+
     })();
 </script>
 @endpush

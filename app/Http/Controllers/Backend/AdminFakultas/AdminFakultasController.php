@@ -202,11 +202,11 @@ class AdminFakultasController extends Controller
                 case 'forward_to_university':
                     // Validasi khusus untuk aksi 'teruskan ke universitas'
                     $validatedData = $request->validate([
-                        'validation' => 'required|array', // Pastikan data validasi utama juga dikirim
+                        'validation' => 'required|array',
                         'nomor_surat_usulan' => 'required|string|max:255',
-                        'file_surat_usulan' => 'required|file|mimes:pdf|max:2048',
+                        'file_surat_usulan' => 'required|file|mimes:pdf|max:1024', // 1MB = 1024KB
                         'nomor_berita_senat' => 'required|string|max:255',
-                        'file_berita_senat' => 'required|file|mimes:pdf|max:5120',
+                        'file_berita_senat' => 'required|file|mimes:pdf|max:1024', // 1MB = 1024KB,
                     ]);
 
                     $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
@@ -528,6 +528,111 @@ class AdminFakultasController extends Controller
                     'class' => 'bg-gray-100 text-gray-800',
                     'text' => $status
                 ];
+        }
+    }
+
+    /**
+ * FIXED: Enhanced autosave method yang memastikan semua data tersimpan
+ * Tambahkan method ini ke AdminFakultasController
+ */
+    public function autosaveValidation(Request $request, Usulan $usulan)
+    {
+        try {
+            \Log::info('Autosave request received', [
+                'usulan_id' => $usulan->id,
+                'request_data_keys' => array_keys($request->all()),
+                'validation_keys' => array_keys($request->input('validation', []))
+            ]);
+
+            // Enhanced validation
+            $validatedData = $request->validate([
+                'validation' => 'required|array',
+                'validation.*' => 'array',
+                'validation.*.*' => 'array',
+                'validation.*.*.status' => 'required|in:sesuai,tidak_sesuai',
+                'validation.*.*.keterangan' => 'nullable|string',
+                'action_type' => 'required|in:save_only'
+            ]);
+
+            // Quick authorization check
+            $admin = Auth::user();
+            if ($admin->unit_kerja_id !== $usulan->pegawai?->unitKerja?->subUnitKerja?->unit_kerja_id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // CRITICAL: Preserve existing validation data dan merge dengan data baru
+            $existingValidation = $usulan->validasi_data ?? [];
+            $adminFakultasValidation = $existingValidation['admin_fakultas'] ?? [];
+            
+            // Get current validation data (preserve non-validation fields)
+            $currentValidationData = $adminFakultasValidation['validation'] ?? [];
+            
+            // Merge dengan data baru - PENTING: jangan replace, tapi merge
+            $newValidationData = $validatedData['validation'];
+            
+            // Deep merge: preserve existing categories dan fields
+            foreach ($newValidationData as $category => $fields) {
+                if (!isset($currentValidationData[$category])) {
+                    $currentValidationData[$category] = [];
+                }
+                
+                foreach ($fields as $field => $fieldData) {
+                    $currentValidationData[$category][$field] = $fieldData;
+                }
+            }
+
+            // Update the complete validation structure
+            $adminFakultasValidation['validation'] = $currentValidationData;
+            $adminFakultasValidation['validated_by'] = $admin->id;
+            $adminFakultasValidation['validated_at'] = now();
+            
+            // Preserve other admin_fakultas data (like dokumen_pendukung)
+            $existingValidation['admin_fakultas'] = $adminFakultasValidation;
+            
+            // Save dengan complete data structure
+            $usulan->validasi_data = $existingValidation;
+            
+            // Update status jika diperlukan (only on first save)
+            if ($usulan->status_usulan === 'Diajukan') {
+                $usulan->status_usulan = 'Sedang Direview';
+            }
+            
+            $usulan->save();
+
+            // Log success dengan detail
+            \Log::info('Autosave successful', [
+                'usulan_id' => $usulan->id,
+                'saved_categories' => array_keys($currentValidationData),
+                'total_fields_saved' => array_sum(array_map('count', $currentValidationData)),
+                'status' => $usulan->status_usulan
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil disimpan',
+                'saved_fields' => array_sum(array_map('count', $currentValidationData)),
+                'categories' => array_keys($currentValidationData)
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('Autosave validation failed', [
+                'usulan_id' => $usulan->id,
+                'errors' => $e->errors(),
+                'input' => $request->input('validation', [])
+            ]);
+            
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors()
+            ], 422);
+            
+        } catch (\Exception $e) {
+            \Log::error('Autosave error: ' . $e->getMessage(), [
+                'usulan_id' => $usulan->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json(['error' => 'Save failed'], 500);
         }
     }
 

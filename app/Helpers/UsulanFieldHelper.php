@@ -250,7 +250,26 @@ class UsulanFieldHelper
 
         // Field nomor → tampilkan teks
         if (in_array($field, ['nomor_surat_usulan', 'nomor_berita_senat'], true)) {
-            $val = trim((string)($data[$field] ?? ''));
+            $rawValue = $data[$field] ?? '';
+            
+            // FIXED: Handle array values gracefully
+            if (is_array($rawValue)) {
+                // If it's an array, try to get meaningful value
+                $val = $rawValue['value'] ?? $rawValue['nomor'] ?? $rawValue[0] ?? '';
+                if (is_array($val)) {
+                    // If still array, convert to JSON for debugging
+                    \Log::warning('Unexpected array in dokumen_pendukung field', [
+                        'field' => $field,
+                        'usulan_id' => $this->usulan->id,
+                        'raw_value' => $rawValue
+                    ]);
+                    return '<span class="text-yellow-600">⚠ Data format error</span>';
+                }
+            } else {
+                $val = $rawValue;
+            }
+            
+            $val = trim((string)$val);
             return $val !== '' ? e($val) : '-';
         }
 
@@ -259,6 +278,19 @@ class UsulanFieldHelper
             // Nama key path di data: file_*_path (lihat controller AdminFakultas)
             $pathKey = $field . '_path';
             $path = $data[$pathKey] ?? $data[$field] ?? null;
+
+            // FIXED: Handle array paths
+            if (is_array($path)) {
+                $path = $path['path'] ?? $path['value'] ?? $path[0] ?? null;
+                if (is_array($path)) {
+                    \Log::warning('Unexpected array in dokumen_pendukung file path', [
+                        'field' => $field,
+                        'usulan_id' => $this->usulan->id,
+                        'raw_path' => $data[$pathKey] ?? $data[$field]
+                    ]);
+                    return '<span class="text-yellow-600">⚠ Path format error</span>';
+                }
+            }
 
             if (!$path) {
                 return '<span class="text-red-600">✗ Belum diunggah</span>';
@@ -275,6 +307,5 @@ class UsulanFieldHelper
         // Default
         return '-';
     }
-
 
 }

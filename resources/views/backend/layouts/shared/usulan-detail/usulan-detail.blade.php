@@ -17,7 +17,7 @@
     ])
 @else
     {{-- Default: Reuse existing admin universitas template --}}
-    @include('backend.admin-univ-usulan.pusat-usulan.usulan-detail', [
+    @include('backend.layouts.admin-univ-usulan.pusat-usulan.detail-usulan', [
         'usulan' => $usulan
     ])
 @endif

@@ -177,7 +177,11 @@ Route::middleware(['auth:pegawai'])->group(function () {
         Route::prefix('usulan')->name('usulan.')->group(function () {
             Route::get('/jabatan', [AdminFakultasController::class, 'usulanJabatan'])->name('jabatan');
             Route::get('/pangkat', [AdminFakultasController::class, 'usulanPangkat'])->name('pangkat');
+
+            Route::post('/{usulan}/autosave', [AdminFakultasController::class, 'autosaveValidation'])
+                ->name('autosave');
         });
+        
     });
 
     // ------ RUTE HALAMAN BACKEND PENILAI UNIVERSITAS ------//
