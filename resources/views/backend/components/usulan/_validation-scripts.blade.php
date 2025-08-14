@@ -1,4 +1,5 @@
 {{-- Validation Scripts - Separated JavaScript for validation functionality --}}
+@push('scripts')
 <script>
 (function() {
     'use strict';
@@ -242,6 +243,12 @@
         });
     }
 
+    // Setup CSRF token for AJAX requests
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (csrfToken) {
+        window.Laravel = { csrfToken: csrfToken.getAttribute('content') };
+    }
+
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         // Set initial state for all fields based on existing data
@@ -362,8 +369,11 @@
             const resp = await fetch(form.action, {
                 method: 'POST',
                 body: fd,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin' // ⬅️ tambahkan ini
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': window.Laravel ? window.Laravel.csrfToken : ''
+                },
+                credentials: 'same-origin'
             });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             showSaved();
@@ -406,4 +416,5 @@
         };
     })();
 </script>
+@endpush
 

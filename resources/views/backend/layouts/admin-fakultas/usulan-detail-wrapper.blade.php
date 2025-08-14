@@ -56,7 +56,7 @@
 
         @if(isset($validationFields) && count($validationFields) > 0)
             @foreach($validationFields as $category => $fields)
-                @include('backend.components.usulan.detail._validation-section', [
+                @include('backend.components.usulan._validation-section', [
                     'category' => $category,
                     'fields'   => $fields,
                     'usulan'   => $usulan,
@@ -72,7 +72,7 @@
         ])
 
         {{-- Riwayat Log - Reuse existing --}}
-        @include('backend.components.usulan.detail._riwayat_log', ['usulan' => $usulan])
+        @include('backend.components.usulan._riwayat_log', ['usulan' => $usulan])
     </form>
 </div>
 @endsection

@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Dashboard Pegawai') - Kepegawaian UNMUL</title>
 
-    {{-- Memuat CSS dari Vite --}}
+    {{-- Memuat CSS dan JS dari Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    {{-- CSRF Token untuk AJAX requests --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- External Libraries --}}
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -82,6 +85,9 @@
             }
         });
     </script>
+
+    {{-- Additional scripts from child templates --}}
+    @stack('scripts')
 
 </body>
 </html>

@@ -55,7 +55,7 @@ class AdminFakultasController extends Controller
         $unitKerja = $admin->unitKerjaPengelola;
 
         if (!$unitKerja) {
-            return view('backend.layouts.admin-fakultas.usulan-jabatan.index', [
+            return view('backend.layouts.admin-fakultas.usulan.index', [
                 'periodeUsulans' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
                 'unitKerja' => null
             ]);
