@@ -287,4 +287,4 @@ Route::bind('usulan', function ($value) {
 //             ]);
 //         })->name('user');
 //     });
-}
+
