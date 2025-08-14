@@ -19,14 +19,6 @@
             </p>
         </div>
 
-        {{-- Global Alert Messages (menggantikan semua alert manual) --}}
-        @include('backend.components.usulan._alert-messages', [
-            'unitKerja' => $unitKerja ?? null,
-            'showDebug' => true,
-            'totalPeriode' => $periodeUsulans->total() ?? 0,
-            'totalPengusul' => $periodeUsulans->sum('jumlah_pengusul') ?? 0
-        ])
-
         {{-- Alert Panel untuk Unit Kerja --}}
         @if(!isset($unitKerja) || !$unitKerja)
             <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6" role="alert">

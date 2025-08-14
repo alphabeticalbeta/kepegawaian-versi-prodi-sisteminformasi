@@ -1,9 +1,13 @@
 {{-- Unit Kerja Resolver - Handle hierarki unit kerja yang benar --}}
 @php
-    // Cek apakah $unitKerja sudah ada dari controller
-    if (!isset($unitKerja) || !$unitKerja) {
-        $currentAdmin = Auth::user();
+    // PERBAIKAN: Pastikan $unitKerja selalu terdefinisi
+    if (!isset($unitKerja)) {
         $unitKerja = null;
+    }
+
+    // Cek apakah $unitKerja sudah ada dari controller
+    if (!$unitKerja) {
+        $currentAdmin = Auth::user();
         $debugInfo = [];
 
         if ($currentAdmin) {
@@ -20,7 +24,7 @@
                     }
                 }
 
-                // METHOD 2: Pegawai Biasa - Hierarki melalui unit_kerja_terakhir_id
+                // METHOD 2: Pegawai Biasa - Hierarki melalui unit_kerja_terakhir_id (HANYA jika method 1 gagal)
                 if (!$unitKerja && $currentAdmin->unit_kerja_terakhir_id) {
                     $debugInfo['method_2'] = 'Testing Pegawai Hierarki (unit_kerja_terakhir_id)';
 
@@ -38,36 +42,7 @@
                     }
                 }
 
-                // METHOD 3: Raw query jika semua gagal
-                if (!$unitKerja) {
-                    $debugInfo['method_3'] = 'Testing Raw Query Fallback';
-
-                    if ($currentAdmin->unit_kerja_id) {
-                        $rawResult = \DB::table('unit_kerjas')
-                            ->where('id', $currentAdmin->unit_kerja_id)
-                            ->first();
-                    } elseif ($currentAdmin->unit_kerja_terakhir_id) {
-                        // Raw query untuk hierarki
-                        $rawResult = \DB::table('sub_sub_unit_kerjas as ssuk')
-                            ->join('sub_unit_kerjas as suk', 'ssuk.sub_unit_kerja_id', '=', 'suk.id')
-                            ->join('unit_kerjas as uk', 'suk.unit_kerja_id', '=', 'uk.id')
-                            ->where('ssuk.id', $currentAdmin->unit_kerja_terakhir_id)
-                            ->select('uk.id', 'uk.nama')
-                            ->first();
-                    }
-
-                    if (isset($rawResult) && $rawResult) {
-                        $unitKerja = new \App\Models\BackendUnivUsulan\UnitKerja();
-                        $unitKerja->id = $rawResult->id;
-                        $unitKerja->nama = $rawResult->nama;
-                        $unitKerja->exists = true;
-                        $debugInfo['method_3_result'] = 'SUCCESS: ' . $unitKerja->nama . ' (raw query)';
-                    } else {
-                        $debugInfo['method_3_result'] = 'FAILED: Raw query tidak ada hasil';
-                    }
-                }
-
-                // Log debugging info
+                // PERBAIKAN: Log debugging info
                 if (config('app.debug')) {
                     \Log::debug('Unit Kerja Resolver (Hierarki)', array_merge([
                         'admin_id' => $currentAdmin->id,
@@ -87,8 +62,13 @@
             }
         }
 
-        // Store debug info untuk ditampilkan di debug panel
-        $unitKerjaResolverDebug = $debugInfo;
+        // PERBAIKAN: Store debug info untuk ditampilkan di debug panel
+        $unitKerjaResolverDebug = $debugInfo ?? [];
+    }
+
+    // FINAL CHECK: Pastikan $unitKerja tidak null atau buat object kosong
+    if (!$unitKerja) {
+        $unitKerja = (object) ['nama' => null, 'id' => null];
     }
 @endphp
 

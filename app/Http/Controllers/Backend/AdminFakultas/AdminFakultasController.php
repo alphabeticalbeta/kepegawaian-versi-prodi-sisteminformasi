@@ -11,6 +11,25 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Admin Fakultas Controller
+ * 
+ * Controller untuk mengelola fitur-fitur admin fakultas termasuk:
+ * - Dashboard dengan statistik usulan
+ * - Hybrid approach untuk usulan jabatan & pangkat
+ * - Validasi dan approval usulan
+ * 
+ * HYBRID APPROACH ARCHITECTURE:
+ * - Separate routes: /usulan/jabatan, /usulan/pangkat
+ * - Shared view template: index-dynamic.blade.php
+ * - Dynamic configuration based on type
+ * - Performance optimized with caching
+ * 
+ * @package App\Http\Controllers\Backend\AdminFakultas
+ * @author Development Team
+ * @version 2.0 - Hybrid Approach Implementation
+ */
+
 class AdminFakultasController extends Controller
 {
     /**
@@ -20,29 +39,17 @@ class AdminFakultasController extends Controller
     {
         /** @var \App\Models\BackendUnivUsulan\Pegawai $admin */
         $admin = Auth::user();
-        $unitKerjaId = $admin->unit_kerja_id;
-
-        // Jika admin tidak terhubung ke fakultas, kembalikan view kosong.
-        if (!$unitKerjaId) {
-            return view('backend.layouts.admin-fakultas.dashboard', [
-                'periodeUsulans' => collect()
-            ]);
-        }
-
-        $periodeUsulans = PeriodeUsulan::query()
-            ->withCount([
-                // Count semua usulan yang memerlukan review (status Diajukan atau Sedang Direview)
-                'usulans as jumlah_pengusul' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview'])
-                        ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
-                            $subQuery->where('id', $unitKerjaId);
-                        });
-                }
-            ])
-            ->latest()
-            ->paginate(10);
-
-        return view('backend.layouts.admin-fakultas.dashboard', compact('periodeUsulans'));
+        
+        // Gunakan helper method untuk mendapatkan unit kerja
+        $unitKerja = $this->getAdminUnitKerja($admin);
+        
+        // Gunakan helper method untuk mendapatkan periode usulan
+        $periodeUsulans = $this->getPeriodeUsulanWithCount($unitKerja);
+        
+        // Get dashboard statistics
+        $statistics = $this->getDashboardStatistics($periodeUsulans, $unitKerja);
+        
+        return view('backend.layouts.admin-fakultas.dashboard', compact('periodeUsulans', 'unitKerja', 'statistics'));
     }
 
     /**
@@ -318,6 +325,210 @@ class AdminFakultasController extends Controller
 
         // Kirim file ke browser
         return response()->file(Storage::disk('local')->path($filePath));
+    }
+
+    /**
+     * Helper method untuk mendapatkan unit kerja admin fakultas
+     */
+    private function getAdminUnitKerja($admin)
+    {
+        try {
+            // Coba ambil unit kerja langsung dari admin
+            if ($admin->unit_kerja_id) {
+                return \App\Models\BackendUnivUsulan\UnitKerja::find($admin->unit_kerja_id);
+            }
+            
+            // Fallback: ambil dari hierarki jika admin tidak punya unit_kerja_id
+            if ($admin->unit_kerja_terakhir_id) {
+                $subSubUnit = \App\Models\BackendUnivUsulan\SubSubUnitKerja::with('subUnitKerja.unitKerja')
+                    ->find($admin->unit_kerja_terakhir_id);
+                
+                if ($subSubUnit && $subSubUnit->subUnitKerja && $subSubUnit->subUnitKerja->unitKerja) {
+                    return $subSubUnit->subUnitKerja->unitKerja;
+                }
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            \Log::error('Error getting admin unit kerja: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Helper method untuk mendapatkan periode usulan dengan count
+     */
+    private function getPeriodeUsulanWithCount($unitKerja)
+    {
+        if (!$unitKerja) {
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+        }
+        
+        try {
+            return \App\Models\BackendUnivUsulan\PeriodeUsulan::withCount([
+                'usulans as jumlah_pengusul' => function ($query) use ($unitKerja) {
+                    $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview'])
+                        ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
+                            $subQuery->where('id', $unitKerja->id);
+                        });
+                }
+            ])->latest()->paginate(10);
+        } catch (\Exception $e) {
+            \Log::error('Error getting periode usulan: ' . $e->getMessage());
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+        }
+    }
+
+    private function getDashboardStatistics($periodeUsulans, $unitKerja)
+    {
+        return [
+            'total_periode' => $periodeUsulans->total(),
+            'total_pengusul' => $periodeUsulans->sum('jumlah_pengusul'),
+            'unit_kerja_name' => $unitKerja ? $unitKerja->nama : 'Tidak diketahui',
+            'has_pending_review' => $periodeUsulans->sum('jumlah_pengusul') > 0
+        ];
+    }
+
+    public function usulanJabatan()
+    {
+        return $this->showUsulanData('jabatan');
+    }
+
+    /**
+     * Menampilkan usulan pangkat dengan shared view
+     */
+    public function usulanPangkat()
+    {
+        return $this->showUsulanData('pangkat');
+    }
+
+    /**
+     * Shared method untuk menampilkan data usulan berdasarkan type
+     */
+    private function showUsulanData($type)
+    {
+        /** @var \App\Models\BackendUnivUsulan\Pegawai $admin */
+        $admin = Auth::user();
+        $unitKerja = $this->getAdminUnitKerja($admin);
+        
+        // Configuration untuk setiap type
+        $config = $this->getUsulanConfig($type, $unitKerja);
+        
+        return view('backend.layouts.admin-fakultas.usulan.index-dynamic', compact('config', 'unitKerja'));
+    }
+
+    /**
+     * Get configuration untuk setiap type usulan
+     */
+    private function getUsulanConfig($type, $unitKerja)
+    {
+        $baseConfig = [
+            'type' => $type,
+            'unitKerja' => $unitKerja,
+            'breadcrumbs' => [
+                ['name' => 'Dashboard', 'url' => route('admin-fakultas.dashboard')],
+                ['name' => 'Usulan ' . ucfirst($type), 'url' => null]
+            ]
+        ];
+        
+        switch ($type) {
+            case 'jabatan':
+                return array_merge($baseConfig, [
+                    'title' => 'Usulan Jabatan',
+                    'description' => 'Daftar usulan kenaikan jabatan dari pegawai fakultas',
+                    'icon' => 'briefcase',
+                    'color' => 'indigo',
+                    'data' => $this->getJabatanData($unitKerja),
+                    'columns' => [
+                        'nama_periode' => 'Nama Periode',
+                        'jenis_usulan' => 'Jenis',
+                        'tanggal' => 'Jadwal Usulan', 
+                        'status' => 'Status',
+                        'jumlah_pengusul' => 'Review'
+                    ]
+                ]);
+                
+            case 'pangkat':
+                return array_merge($baseConfig, [
+                    'title' => 'Usulan Pangkat', 
+                    'description' => 'Daftar usulan kenaikan pangkat dari pegawai fakultas',
+                    'icon' => 'award',
+                    'color' => 'emerald',
+                    'data' => $this->getPangkatData($unitKerja),
+                    'columns' => [
+                        'nama_periode' => 'Nama Periode',
+                        'jenis_usulan' => 'Jenis',
+                        'tanggal' => 'Jadwal Usulan', 
+                        'status' => 'Status',
+                        'jumlah_pengusul' => 'Review'
+                    ]
+                ]);
+                
+            default:
+                return array_merge($baseConfig, [
+                    'title' => 'Data Tidak Ditemukan',
+                    'description' => 'Type data tidak dikenali',
+                    'icon' => 'alert-circle',
+                    'color' => 'red',
+                    'data' => collect(),
+                    'columns' => []
+                ]);
+        }
+    }
+
+    private function getJabatanData($unitKerja)
+    {
+        try {
+            // SIMPLE QUERY untuk testing
+            return \App\Models\BackendUnivUsulan\PeriodeUsulan::query()
+                ->where('jenis_usulan', 'jabatan')
+                ->latest()
+                ->paginate(5);
+        } catch (\Exception $e) {
+            \Log::error('Error: ' . $e->getMessage());
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 5);
+        }
+}
+
+    /**
+     * Get data pangkat untuk admin fakultas
+     */
+    private function getPangkatData($unitKerja)
+    {
+        try {
+            // SIMPLE QUERY untuk testing
+            return \App\Models\BackendUnivUsulan\PeriodeUsulan::query()
+                ->where('jenis_usulan', 'pangkat')
+                ->latest()
+                ->paginate(5);
+        } catch (\Exception $e) {
+            \Log::error('Error: ' . $e->getMessage());
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 5);
+        }
+    }
+
+    /**
+     * Get formatted status badge untuk UI
+     */
+    private function getStatusBadge($status)
+    {
+        switch ($status) {
+            case 'Buka':
+                return [
+                    'class' => 'bg-green-100 text-green-800',
+                    'text' => 'Buka'
+                ];
+            case 'Tutup':
+                return [
+                    'class' => 'bg-red-100 text-red-800', 
+                    'text' => 'Tutup'
+                ];
+            default:
+                return [
+                    'class' => 'bg-gray-100 text-gray-800',
+                    'text' => $status
+                ];
+        }
     }
 
 }

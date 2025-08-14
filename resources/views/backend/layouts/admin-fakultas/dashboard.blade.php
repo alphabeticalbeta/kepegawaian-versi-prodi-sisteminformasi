@@ -3,36 +3,27 @@
 @section('title', 'Dashboard Admin Fakultas')
 
 @section('content')
-    {{-- Auto-resolve unit kerja jika tidak ada dari controller --}}
-    @include('backend.components.usulan._unit-kerja-resolver')
-
-    {{-- Auto-resolve periode jika tidak ada dari controller --}}
-    @include('backend.components.usulan._periode-resolver')
-
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header Halaman -->
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-gray-800">Pusat Usulan Fakultas</h1>
             <p class="mt-1 text-sm text-gray-600">
-                Selamat datang, <span class="font-medium">{{ Auth::user()->nama_lengkap }}</span>.
-                @if(isset($unitKerja) && $subSubUnitKerja && $subSubUnitKerja->subUnitKerja && $subSubUnitKerja->subUnitKerja->unitKerja)
+                Selamat datang, <span class="font-medium">{{ Auth::user()->nama_lengkap ?? 'Admin' }}</span>.
+                @if($unitKerja)
                     Anda mengelola usulan untuk <span class="font-semibold text-indigo-600">{{ $unitKerja->nama }}</span>.
                 @else
-                    <span class="text-red-600 font-medium">⚠️ Unit kerja tidak ditemukan.</span>
+                    <span class="text-red-600 font-medium flex items-center">
+                        <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        Unit kerja tidak ditemukan.
+                    </span>
                 @endif
             </p>
         </div>
 
-        {{-- Global Alert Messages (menggantikan semua alert manual) --}}
-        @include('backend.components.usulan._alert-messages', [
-            'unitKerja' => $unitKerja ?? null,
-            'showDebug' => true,
-            'totalPeriode' => $periodeUsulans->total() ?? 0,
-            'totalPengusul' => $periodeUsulans->sum('jumlah_pengusul') ?? 0
-        ])
-
         <!-- Alert & Info Panel -->
-        @if(!isset($unitKerja) || !$unitKerja)
+        @if(!$unitKerja)
             <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -64,7 +55,7 @@
                     <div class="ml-3">
                         <p class="text-sm text-blue-700">
                             <strong>{{ $unitKerja->nama }}</strong> |
-                            Total periode: {{ $periodeUsulans->total() ?? 0 }} |
+                            Total periode: {{ $periodeUsulans->total() }} |
                             Total usulan menunggu review: {{ $periodeUsulans->sum('jumlah_pengusul') }}
                         </p>
                     </div>
@@ -169,14 +160,14 @@
                                             <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2z" />
                                         </svg>
                                         <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak Ada Periode Usulan</h3>
-                                        @if(!isset($unitKerja) || !$unitKerja)
+                                        @if(!$unitKerja)
                                             <p class="mt-1 text-sm text-red-600">Unit kerja tidak ditemukan. Periksa pengaturan akun Anda.</p>
                                         @else
                                             <p class="mt-1 text-sm text-gray-500">
                                                 Saat ini tidak ada periode usulan untuk fakultas <strong>{{ $unitKerja->nama }}</strong>.
                                             </p>
                                             <p class="mt-1 text-xs text-gray-400">
-                                                Total periode ditemukan: {{ $periodeUsulans->total() ?? 0 }}
+                                                Total periode ditemukan: {{ $periodeUsulans->total() }}
                                             </p>
                                         @endif
                                     </div>
@@ -188,7 +179,7 @@
             </div>
 
             <!-- Pagination -->
-            @if (method_exists($periodeUsulans, 'hasPages') && $periodeUsulans->hasPages())
+            @if ($periodeUsulans->hasPages())
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     {{ $periodeUsulans->links() }}
                 </div>

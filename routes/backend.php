@@ -170,6 +170,14 @@ Route::middleware(['auth:pegawai'])->group(function () {
         // ===================================================================
         Route::get('/usulan/{usulan}/dokumen/{field}', [AdminFakultasController::class, 'showUsulanDocument'])
             ->name('usulan.show-document');
+
+        // ===================================================================
+        // USULAN ROUTES - Hybrid Approach (Clean URLs + Shared Logic)
+        // ===================================================================
+        Route::prefix('usulan')->name('usulan.')->group(function () {
+            Route::get('/jabatan', [AdminFakultasController::class, 'usulanJabatan'])->name('jabatan');
+            Route::get('/pangkat', [AdminFakultasController::class, 'usulanPangkat'])->name('pangkat');
+        });
     });
 
     // ------ RUTE HALAMAN BACKEND PENILAI UNIVERSITAS ------//
