@@ -283,4 +283,96 @@ class PusatUsulanController extends Controller
         }
     }
 
+    /**
+     * DEBUG METHOD - Analisis struktur data usulan dan link dokumen
+     * Hapus setelah debugging selesai
+     */
+    public function debugDataUsulan($usulanId)
+    {
+        // Hanya untuk environment local/development
+        if (!app()->environment(['local', 'development'])) {
+            abort(404);
+        }
+
+        $usulan = \App\Models\BackendUnivUsulan\Usulan::findOrFail($usulanId);
+        
+        // Test helper untuk semua kategori dokumen
+        $helper = new \App\Helpers\UsulanFieldHelper($usulan);
+        
+        $debugData = [
+            'basic_info' => [
+                'usulan_id' => $usulan->id,
+                'pegawai_name' => $usulan->pegawai->nama_lengkap ?? 'N/A',
+                'jenis_usulan' => $usulan->jenis_usulan,
+                'status_usulan' => $usulan->status_usulan,
+                'created_at' => $usulan->created_at->format('Y-m-d H:i:s'),
+            ],
+            
+            'data_usulan_analysis' => [
+                'has_data_usulan' => !empty($usulan->data_usulan),
+                'main_keys' => array_keys($usulan->data_usulan ?? []),
+                'dokumen_usulan_exists' => isset($usulan->data_usulan['dokumen_usulan']),
+                'dokumen_usulan_keys' => array_keys($usulan->data_usulan['dokumen_usulan'] ?? []),
+            ],
+            
+            'document_path_tests' => [
+                'pakta_integritas' => $usulan->getDocumentPath('pakta_integritas'),
+                'bukti_korespondensi' => $usulan->getDocumentPath('bukti_korespondensi'),
+                'turnitin' => $usulan->getDocumentPath('turnitin'),
+                'upload_artikel' => $usulan->getDocumentPath('upload_artikel'),
+                'bkd_semester_1' => $usulan->getDocumentPath('bkd_semester_1'),
+                'bkd_ganjil_2024_2025' => $usulan->getDocumentPath('bkd_ganjil_2024_2025'),
+            ],
+            
+            'helper_field_tests' => [],
+            'helper_errors' => [],
+            
+            'bkd_label_tests' => [],
+            
+            'route_tests' => []
+        ];
+        
+        // Test UsulanFieldHelper untuk kategori dokumen_usulan
+        $dokumenUsulanFields = ['pakta_integritas', 'bukti_korespondensi', 'turnitin', 'upload_artikel'];
+        foreach ($dokumenUsulanFields as $field) {
+            try {
+                $debugData['helper_field_tests']['dokumen_usulan'][$field] = $helper->getFieldValue('dokumen_usulan', $field);
+            } catch (\Exception $e) {
+                $debugData['helper_errors']['dokumen_usulan'][$field] = $e->getMessage();
+            }
+        }
+        
+        // Test UsulanFieldHelper untuk kategori dokumen_bkd
+        $bkdFields = ['bkd_semester_1', 'bkd_semester_2', 'bkd_semester_3', 'bkd_semester_4'];
+        foreach ($bkdFields as $field) {
+            try {
+                $debugData['helper_field_tests']['dokumen_bkd'][$field] = $helper->getFieldValue('dokumen_bkd', $field);
+            } catch (\Exception $e) {
+                $debugData['helper_errors']['dokumen_bkd'][$field] = $e->getMessage();
+            }
+        }
+        
+        // Test BKD Labels dari model
+        try {
+            $debugData['bkd_label_tests'] = $usulan->getBkdDisplayLabels();
+        } catch (\Exception $e) {
+            $debugData['helper_errors']['bkd_labels'] = $e->getMessage();
+        }
+        
+        // Test route generation
+        try {
+            $debugData['route_tests'] = [
+                'pakta_integritas' => route('backend.admin-univ-usulan.pusat-usulan.show-document', [$usulan->id, 'pakta_integritas']),
+                'bukti_korespondensi' => route('backend.admin-univ-usulan.pusat-usulan.show-document', [$usulan->id, 'bukti_korespondensi']),
+            ];
+        } catch (\Exception $e) {
+            $debugData['helper_errors']['routes'] = $e->getMessage();
+        }
+        
+        // Detail struktur data_usulan (full dump untuk analisis)
+        $debugData['full_data_usulan'] = $usulan->data_usulan;
+        
+        return response()->json($debugData, 200, [], JSON_PRETTY_PRINT);
+}
+
 }

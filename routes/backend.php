@@ -150,7 +150,7 @@ Route::middleware(['auth:pegawai'])->group(function () {
         });
     });
 
-    // ------ RUTE HALAMAN BACKEND ADMIN FAKULTAS ------//
+// ------ RUTE HALAMAN BACKEND ADMIN FAKULTAS ------//
     Route::prefix('admin-fakultas')->middleware(['auth', 'role:Admin Fakultas'])->name('admin-fakultas.')->group(function () {
         // Dashboard Utama
         Route::get('/dashboard', [AdminFakultasController::class, 'dashboard'])->name('dashboard');
@@ -161,15 +161,27 @@ Route::middleware(['auth:pegawai'])->group(function () {
         // Daftar Pengusul per Periode
         Route::get('/periode/{periodeUsulan}/pendaftar', [AdminFakultasController::class, 'showPendaftar'])->name('periode.pendaftar');
 
-        // Detail Usulan untuk Validasi - FIXED: Use adminUsulan parameter
+        // Detail Usulan untuk Validasi
         Route::get('/usulan/{adminUsulan}', [AdminFakultasController::class, 'show'])->name('usulan.show');
 
         // Simpan hasil validasi (mendukung semua aksi)
         Route::post('/usulan/{adminUsulan}/validasi', [AdminFakultasController::class, 'saveValidation'])->name('usulan.save-validation');
 
         // ===================================================================
+        // DOCUMENT VIEWING ROUTES - NEW: Untuk semua jenis dokumen
+        // ===================================================================
+        
+        // Dokumen usulan (pakta, turnitin, artikel, dll)
         Route::get('/usulan/{usulan}/dokumen/{field}', [AdminFakultasController::class, 'showUsulanDocument'])
             ->name('usulan.show-document');
+            
+        // NEW: Dokumen profil pegawai (ijazah, SK, dll)
+        Route::get('/usulan/{usulan}/profil-dokumen/{field}', [AdminFakultasController::class, 'showPegawaiDocument'])
+            ->name('usulan.show-pegawai-document');
+            
+        // NEW: Dokumen pendukung fakultas (surat usulan, berita senat)
+        Route::get('/usulan/{usulan}/pendukung-dokumen/{field}', [AdminFakultasController::class, 'showDokumenPendukung'])
+            ->name('usulan.show-dokumen-pendukung');
 
         // ===================================================================
         // USULAN ROUTES - Hybrid Approach (Clean URLs + Shared Logic)
@@ -249,30 +261,30 @@ Route::bind('usulan', function ($value) {
     return $usulan;
 });
 
-// =====================================================
-// ADDITIONAL DEBUGGING ROUTES (Development Only)
-// =====================================================
-if (app()->environment('local')) {
-    Route::prefix('debug')->middleware(['auth:pegawai'])->name('debug.')->group(function () {
-        Route::get('/routes', function () {
-            $routes = collect(\Illuminate\Support\Facades\Route::getRoutes())->map(function ($route) {
-                return [
-                    'method' => implode('|', $route->methods()),
-                    'uri' => $route->uri(),
-                    'name' => $route->getName(),
-                    'action' => $route->getActionName(),
-                ];
-            });
+// // =====================================================
+// // ADDITIONAL DEBUGGING ROUTES (Development Only)
+// // =====================================================
+// if (app()->environment('local')) {
+//     Route::prefix('debug')->middleware(['auth:pegawai'])->name('debug.')->group(function () {
+//         Route::get('/routes', function () {
+//             $routes = collect(\Illuminate\Support\Facades\Route::getRoutes())->map(function ($route) {
+//                 return [
+//                     'method' => implode('|', $route->methods()),
+//                     'uri' => $route->uri(),
+//                     'name' => $route->getName(),
+//                     'action' => $route->getActionName(),
+//                 ];
+//             });
 
-            return response()->json($routes->toArray());
-        })->name('routes');
+//             return response()->json($routes->toArray());
+//         })->name('routes');
 
-        Route::get('/user', function () {
-            return response()->json([
-                'user' => Auth::user(),
-                'permissions' => Auth::user()->getAllPermissions()->pluck('name'),
-                'roles' => Auth::user()->getRoleNames(),
-            ]);
-        })->name('user');
-    });
+//         Route::get('/user', function () {
+//             return response()->json([
+//                 'user' => Auth::user(),
+//                 'permissions' => Auth::user()->getAllPermissions()->pluck('name'),
+//                 'roles' => Auth::user()->getRoleNames(),
+//             ]);
+//         })->name('user');
+//     });
 }
