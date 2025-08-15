@@ -151,7 +151,7 @@ class Usulan extends Model
      */
     public function penilais(): BelongsToMany
     {
-        return $this->belongsToMany(Pegawai::class, 'usulan_penilai_jabatan', 'usulan_id', 'penilai_id')
+        return $this->belongsToMany(Pegawai::class, 'usulan_penilai', 'usulan_id', 'penilai_id')
                     ->withPivot('status_penilaian', 'catatan_penilaian')
                     ->withTimestamps();
     }
@@ -251,13 +251,67 @@ class Usulan extends Model
     }
 
     /**
-     * Get document path (supports both old and new structure)
+     * Get document path for a given document name
+     * ENHANCED: Better handling for BKD documents and legacy mapping
      */
     public function getDocumentPath(string $documentName): ?string
     {
         // Check new structure first
         if (!empty($this->data_usulan['dokumen_usulan'][$documentName]['path'])) {
             return $this->data_usulan['dokumen_usulan'][$documentName]['path'];
+        }
+
+        // Check if it's a BKD semester field and try legacy mapping
+        if (str_starts_with($documentName, 'bkd_semester_') && $this->periodeUsulan) {
+            $num = (int) str_replace('bkd_semester_', '', $documentName);
+            if ($num >= 1 && $num <= 4) {
+                // Get BKD labels to find the corresponding legacy key
+                $labels = $this->getBkdDisplayLabels();
+                if (isset($labels[$documentName])) {
+                    $label = $labels[$documentName];
+                    // Parse label to get semester and year
+                    if (preg_match('/BKD\s+Semester\s+(Ganjil|Genap)\s+(\d{4})\/(\d{4})/i', $label, $m)) {
+                        $sem = strtolower($m[1]); // ganjil|genap
+                        $y1 = $m[2];
+                        $y2 = $m[3];
+                        
+                        // Try legacy key format
+                        $legacyKey = 'bkd_' . $sem . '_' . $y1 . '_' . $y2;
+                        
+                        // Check new structure with legacy key
+                        if (!empty($this->data_usulan['dokumen_usulan'][$legacyKey]['path'])) {
+                            return $this->data_usulan['dokumen_usulan'][$legacyKey]['path'];
+                        }
+                        
+                        // Check old structure with legacy key
+                        if (!empty($this->data_usulan[$legacyKey])) {
+                            return $this->data_usulan[$legacyKey];
+                        }
+                        
+                        // Scan all BKD keys in dokumen_usulan
+                        if (!empty($this->data_usulan['dokumen_usulan'])) {
+                            foreach ($this->data_usulan['dokumen_usulan'] as $k => $info) {
+                                if (preg_match('/^bkd_(ganjil|genap)_(\d{4})_(\d{4})$/i', (string) $k, $mm)) {
+                                    if (strtolower($mm[1]) === $sem && $mm[2] === $y1 && $mm[3] === $y2) {
+                                        return is_array($info) ? ($info['path'] ?? null) : $info;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Scan all BKD keys in flat structure
+                        if (!empty($this->data_usulan)) {
+                            foreach ($this->data_usulan as $k => $info) {
+                                if (preg_match('/^bkd_(ganjil|genap)_(\d{4})_(\d{4})$/i', (string) $k, $mm)) {
+                                    if (strtolower($mm[1]) === $sem && $mm[2] === $y1 && $mm[3] === $y2) {
+                                        return is_array($info) ? ($info['path'] ?? null) : $info;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Fallback to old structure
@@ -699,94 +753,101 @@ class Usulan extends Model
                 'bkd_semester_1',
                 'bkd_semester_2',
                 'bkd_semester_3',
-                'bkd_semester_4',
+                'bkd_semester_4'
             ],
             'dokumen_pendukung' => [
-                'nomor_surat_usulan',
-                'file_surat_usulan',
-                'nomor_berita_senat',
-                'file_berita_senat',
-            ],
+                'nomor_surat_usulan', 'file_surat_usulan', 'nomor_berita_senat', 'file_berita_senat'
+            ]
         ];
     }
 
     /**
      * Get validation fields with dynamic BKD
-     * NEW METHOD: Untuk mendapatkan validation fields dengan BKD dinamis
+     * FIXED: Dokumen pendukung hanya untuk admin_universitas, penilai, dan senat
      */
-    public static function getValidationFieldsWithDynamicBkd($usulan = null): array
+    public static function getValidationFieldsWithDynamicBkd($usulan = null, $userRole = null): array
     {
         // Get base fields
         $fields = self::getValidationFields();
 
-        // // If usulan provided, check for additional BKD fields in data_usulan
-        // if ($usulan && isset($usulan->data_usulan['dokumen_usulan'])) {
-        //     $additionalBkdFields = [];
+        // If usulan provided, check for additional BKD fields in data_usulan
+        if ($usulan && $usulan->periodeUsulan) {
+            // Generate BKD fields based on periode
+            $bkdFields = $usulan->generateBkdFieldNames();
+            
+            // Update dokumen_bkd with dynamic fields
+            $fields['dokumen_bkd'] = $bkdFields;
+        }
 
-        //     foreach ($usulan->data_usulan['dokumen_usulan'] as $key => $value) {
-        //         // Check if it's a BKD field and not already in default list
-        //         if (str_starts_with($key, 'bkd_') && !in_array($key, $fields['dokumen_bkd'])) {
-        //             $additionalBkdFields[] = $key;
-        //         }
-        //     }
-
-        //     // Merge additional BKD fields if found
-        //     if (!empty($additionalBkdFields)) {
-        //         $fields['dokumen_bkd'] = array_merge($fields['dokumen_bkd'], $additionalBkdFields);
-        //     }
-        // }
+        // FIXED: Dokumen pendukung hanya untuk role tertentu
+        if (in_array($userRole, ['admin_universitas', 'penilai', 'senat'])) {
+            // Keep dokumen_pendukung for admin universitas, penilai, dan senat
+            // It's already included in getValidationFields()
+        } else {
+            // Remove dokumen_pendukung for admin fakultas and other roles
+            unset($fields['dokumen_pendukung']);
+        }
 
         return $fields;
     }
 
     /**
      * Generate BKD field names based on periode
-     * NEW METHOD: Generate nama field BKD berdasarkan periode usulan
+     * FIXED: Use same logic as controller to ensure consistency
      */
     public function generateBkdFieldNames(): array
     {
         if (!$this->periodeUsulan) {
-            // Return default if no periode
-            return [
-                'bkd_semester_1',
-                'bkd_semester_2',
-                'bkd_semester_3',
-                'bkd_semester_4',
-            ];
+            return ['bkd_semester_1', 'bkd_semester_2', 'bkd_semester_3', 'bkd_semester_4'];
         }
 
         $startDate = \Carbon\Carbon::parse($this->periodeUsulan->tanggal_mulai);
         $month = $startDate->month;
         $year = $startDate->year;
 
-        // Determine current semester
+        // Determine current semester based on month
+        $currentSemester = '';
+        $currentYear = 0;
+
         if ($month >= 1 && $month <= 6) {
-            $currentSemester = 'genap';
-            $currentYear = $year - 1;
-        } else {
-            $currentSemester = 'ganjil';
+            // Januari - Juni: Semester Genap sedang berjalan
+            $currentSemester = 'Genap';
+            $currentYear = $year - 1; // Tahun akademik dimulai tahun sebelumnya
+        } elseif ($month >= 7 && $month <= 12) {
+            // Juli - Desember: Semester Ganjil sedang berjalan
+            $currentSemester = 'Ganjil';
             $currentYear = $year;
         }
 
-        $fields = [];
-        $tempSemester = $currentSemester;
-        $tempYear = $currentYear;
+        // NEW LOGIC: Mundur 2 semester dari periode saat ini untuk titik awal BKD
+        $bkdStartSemester = $currentSemester;
+        $bkdStartYear = $currentYear;
 
-        // Generate 4 semester fields
-        for ($i = 1; $i <= 4; $i++) {
-            // Move to previous semester
-            if ($tempSemester === 'ganjil') {
-                $tempSemester = 'genap';
-                $tempYear--;
+        // Mundur 2 semester
+        for ($i = 0; $i < 2; $i++) {
+            if ($bkdStartSemester === 'Ganjil') {
+                $bkdStartSemester = 'Genap';
+                $bkdStartYear--;
             } else {
-                $tempSemester = 'ganjil';
+                $bkdStartSemester = 'Ganjil';
             }
+        }
 
-            // Option 1: Simple numbered format
+        // Generate 4 semester BKD mulai dari titik awal (mundur)
+        $fields = [];
+        $tempSemester = $bkdStartSemester;
+        $tempYear = $bkdStartYear;
+
+        for ($i = 1; $i <= 4; $i++) {
             $fields[] = 'bkd_semester_' . $i;
 
-            // Option 2: Detailed format (uncomment if preferred)
-            // $fields[] = 'bkd_' . $tempSemester . '_' . $tempYear . '_' . ($tempYear + 1);
+            // Move to previous semester (mundur)
+            if ($tempSemester === 'Ganjil') {
+                $tempSemester = 'Genap';
+                $tempYear--;
+            } else {
+                $tempSemester = 'Ganjil';
+            }
         }
 
         return $fields;
@@ -794,7 +855,7 @@ class Usulan extends Model
 
     /**
      * Get BKD display labels based on periode
-     * NEW METHOD: Generate label display untuk BKD
+     * FIXED: Use same logic as controller to ensure consistency
      */
     public function getBkdDisplayLabels(): array
     {
@@ -811,30 +872,50 @@ class Usulan extends Model
         $month = $startDate->month;
         $year = $startDate->year;
 
-        // Determine current semester
+        // Determine current semester based on month
+        $currentSemester = '';
+        $currentYear = 0;
+
         if ($month >= 1 && $month <= 6) {
+            // Januari - Juni: Semester Genap sedang berjalan
             $currentSemester = 'Genap';
-            $currentYear = $year - 1;
-        } else {
+            $currentYear = $year - 1; // Tahun akademik dimulai tahun sebelumnya
+        } elseif ($month >= 7 && $month <= 12) {
+            // Juli - Desember: Semester Ganjil sedang berjalan
             $currentSemester = 'Ganjil';
             $currentYear = $year;
         }
 
+        // NEW LOGIC: Mundur 2 semester dari periode saat ini untuk titik awal BKD
+        $bkdStartSemester = $currentSemester;
+        $bkdStartYear = $currentYear;
+
+        // Mundur 2 semester
+        for ($i = 0; $i < 2; $i++) {
+            if ($bkdStartSemester === 'Ganjil') {
+                $bkdStartSemester = 'Genap';
+                $bkdStartYear--;
+            } else {
+                $bkdStartSemester = 'Ganjil';
+            }
+        }
+
+        // Generate 4 semester BKD mulai dari titik awal (mundur)
         $labels = [];
-        $tempSemester = $currentSemester;
-        $tempYear = $currentYear;
+        $tempSemester = $bkdStartSemester;
+        $tempYear = $bkdStartYear;
 
         for ($i = 1; $i <= 4; $i++) {
-            // Move to previous semester
+            $academicYear = $tempYear . '/' . ($tempYear + 1);
+            $labels['bkd_semester_' . $i] = "BKD Semester {$tempSemester} {$academicYear}";
+
+            // Move to previous semester (mundur)
             if ($tempSemester === 'Ganjil') {
                 $tempSemester = 'Genap';
                 $tempYear--;
             } else {
                 $tempSemester = 'Ganjil';
             }
-
-            $academicYear = $tempYear . '/' . ($tempYear + 1);
-            $labels['bkd_semester_' . $i] = "BKD Semester {$tempSemester} {$academicYear}";
         }
 
         return $labels;
@@ -879,29 +960,110 @@ public function getSenateDecisionCounts(): array
     /** Sudah direkomendasikan oleh tim penilai? (cek di tabel usulan_penilai) */
     public function isRecommendedByReviewer(): bool
     {
-        // Ambil total penilai yang ditugaskan
-        $total = \DB::table('usulan_penilai')
-            ->where('usulan_id', $this->id)
-            ->count();
-
-        // Ambil jumlah penilai yang memberi rekomendasi (status_penilaian = 'Sesuai')
-        $setuju = \DB::table('usulan_penilai')
-            ->where('usulan_id', $this->id)
-            ->where('status_penilaian', 'Sesuai')
-            ->count();
-
-        // Jika tidak ada penilai sama sekali, otomatis tidak direkomendasikan
+        // OPTIMASI: Gunakan Eloquent relationship instead of raw DB query
+        $total = $this->penilais()->count();
+        
         if ($total === 0) {
             return false;
         }
 
-        // Hitung ambang minimal:
-        // 1 penilai -> min 1 setuju
-        // 2 penilai -> min 2 setuju
-        // 3 penilai -> min 2 setuju
+        $setuju = $this->penilais()
+            ->where('status_penilaian', 'Sesuai')
+            ->count();
+
+        // Hitung ambang minimal: 1 penilai -> min 1 setuju, 2 penilai -> min 2 setuju, 3 penilai -> min 2 setuju
         $threshold = (int) ceil(($total + 1) / 2);
 
         return $setuju >= $threshold;
+    }
+
+    // =====================================
+    // QUERY SCOPES OPTIMIZATION
+    // =====================================
+
+    /**
+     * Scope untuk usulan yang ditugaskan ke penilai tertentu
+     */
+    public function scopeAssignedToReviewer($query, int $reviewerId)
+    {
+        return $query->whereHas('penilais', function ($q) use ($reviewerId) {
+            $q->where('penilai_id', $reviewerId);
+        });
+    }
+
+    /**
+     * Scope untuk usulan berdasarkan fakultas
+     */
+    public function scopeByFakultas($query, int $fakultasId)
+    {
+        return $query->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($q) use ($fakultasId) {
+            $q->where('id', $fakultasId);
+        });
+    }
+
+    /**
+     * Scope untuk usulan dengan eager loading yang optimal
+     */
+    public function scopeWithOptimalRelations($query)
+    {
+        return $query->with([
+            'pegawai:id,nama_lengkap,email,pangkat_terakhir_id,jabatan_terakhir_id,unit_kerja_terakhir_id',
+            'pegawai.pangkat:id,pangkat',
+            'pegawai.jabatan:id,jabatan',
+            'pegawai.unitKerja:id,nama',
+            'jabatanLama:id,jabatan',
+            'jabatanTujuan:id,jabatan',
+            'periodeUsulan:id,nama_periode,tanggal_mulai,tanggal_selesai',
+            'dokumens:id,usulan_id,nama_dokumen,path',
+            'logs:id,usulan_id,status_baru,catatan,created_at,dilakukan_oleh_id',
+            'logs.dilakukanOleh:id,nama_lengkap'
+        ]);
+    }
+
+    /**
+     * Scope untuk usulan yang memerlukan validasi
+     */
+    public function scopeNeedsValidation($query)
+    {
+        return $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview']);
+    }
+
+    /**
+     * Scope untuk usulan berdasarkan periode aktif
+     */
+    public function scopeActivePeriod($query)
+    {
+        return $query->whereHas('periodeUsulan', function ($q) {
+            $q->where('status', 'Buka')
+              ->where('tanggal_mulai', '<=', now())
+              ->where('tanggal_selesai', '>=', now());
+        });
+    }
+
+    // =====================================
+    // CACHE OPTIMIZATION
+    // =====================================
+
+    /**
+     * Cache key untuk usulan
+     */
+    public function getCacheKey(): string
+    {
+        return "usulan_{$this->id}_v" . $this->updated_at->timestamp;
+    }
+
+    /**
+     * Clear cache when usulan is updated
+     */
+    protected static function booted()
+    {
+        static::updated(function ($usulan) {
+            \Cache::forget($usulan->getCacheKey());
+        });
+
+        static::deleted(function ($usulan) {
+            \Cache::forget($usulan->getCacheKey());
+        });
     }
 
 }

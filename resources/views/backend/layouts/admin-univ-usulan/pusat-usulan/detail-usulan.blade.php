@@ -18,7 +18,7 @@
         @csrf
 
         {{-- Header Info Card --}}
-        @include('backend.components.usulan.detail._header', [
+        @include('backend.components.usulan._header', [
             'usulan' => $usulan
         ])
 
@@ -30,23 +30,23 @@
 
         @if(isset($validationFields) && count($validationFields) > 0)
             @foreach($validationFields as $category => $fields)
-                @include('backend.components.usulan.detail._validation-section', [
+                @include('backend.components.usulan._validation-section', [
                     'category' => $category,
                     'fields'   => $fields,
                     'usulan'   => $usulan,
-                    'canEdit'  => $canEdit ?? false, 
+                    'canEdit'  => $canEdit ?? false,
                 ])
             @endforeach
         @endif
 
         {{-- Tombol aksi (gunakan action_type) --}}
-        @include('backend.components.usulan.detail._action-buttons', [
+        @include('backend.components.usulan._action-buttons', [
             'usulan' => $usulan,
             'canEdit' => $canEdit ?? false
         ])
 
         {{-- Shared: Riwayat Perubahan --}}
-        @include('backend.components.usulan.detail._riwayat_log', ['usulan' => $usulan])
+        @include('backend.components.usulan._riwayat_log', ['usulan' => $usulan])
     </form>
 
 </div>
@@ -54,7 +54,7 @@
 
 {{-- Script validasi/submit --}}
 @push('scripts')
-    @include('Backend.components.usulan.detail._validation-scripts', [
+    @include('Backend.components.usulan._validation-scripts', [
         'usulan' => $usulan
     ])
 @endpush

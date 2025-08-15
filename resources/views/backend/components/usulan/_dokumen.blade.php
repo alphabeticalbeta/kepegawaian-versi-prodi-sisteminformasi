@@ -19,14 +19,49 @@
     $bkdLabels = $bkdLabels ?? ($usulan->getBkdDisplayLabels() ?? []);
     // Keys: bkd_semester_1 .. bkd_semester_4
 
-    // Helper untuk ambil path & url lihat dokumen
-    $docRow = function(string $field, string $label) use ($usulan) {
-        $path = $usulan->getDocumentPath($field); // dukung struktur lama/baru (sudah ada di model)
+
+    // Deteksi role user, bisa disesuaikan dengan implementasi Anda
+    $currentRole = $currentRole ?? (auth()->user()->role ?? null);
+
+    // Helper untuk menentukan route dokumen sesuai role
+    $docRow = function(string $field, string $label) use ($usulan, $currentRole) {
+        $path = $usulan->getDocumentPath($field);
         $exists = !empty($path);
 
-        $url = $exists
-            ? route('backend.admin-univ-usulan.pusat-usulan.show-document', ['usulan' => $usulan->id, 'field' => $field])
-            : '#';
+        $profilFields = [
+            'ijazah_terakhir', 'transkrip_nilai_terakhir', 'sk_pangkat_terakhir',
+            'sk_jabatan_terakhir', 'skp_tahun_pertama', 'skp_tahun_kedua',
+            'pak_konversi', 'sk_cpns', 'sk_pns', 'sk_penyetaraan_ijazah',
+            'disertasi_thesis_terakhir'
+        ];
+
+        $fieldParam = strtolower($field); // pastikan field lowercase
+
+        if ($exists) {
+            // Pilih route sesuai role
+            switch ($currentRole) {
+                case 'Admin Fakultas':
+                    if (in_array($field, $profilFields)) {
+                        $url = route('usulan.show-pegawai-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+                    } else {
+                        $url = route('usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+                    }
+                    break;
+                case 'Admin Universitas Usulan':
+                    if (in_array($field, $profilFields)) {
+                        $url = route('backend.admin-univ-usulan.data-pegawai.show-document', ['pegawai' => $usulan->pegawai_id, 'field' => $fieldParam]);
+                    } else {
+                        $url = route('backend.admin-univ-usulan.pusat-usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+                    }
+                    break;
+                // Tambahkan case lain jika ada role lain
+                default:
+                    // Fallback: gunakan route pusat-usulan
+                    $url = route('backend.admin-univ-usulan.pusat-usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+            }
+        } else {
+            $url = '#';
+        }
 
         return [
             'label'  => $label,

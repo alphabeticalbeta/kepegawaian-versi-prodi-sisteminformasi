@@ -136,6 +136,9 @@ class UsulanJabatanController extends BaseUsulanController
 
         $bkdSemesters = $this->generateBkdSemesterLabels($daftarPeriode);
 
+        // Get document fields for the form
+        $documentFields = $this->getDocumentKeys($pegawai->jenis_pegawai);
+
         return view('backend.layouts.pegawai-unmul.usul-jabatan.create-jabatan', [
             'pegawai' => $pegawai,
             'daftarPeriode' => $daftarPeriode,
@@ -145,7 +148,7 @@ class UsulanJabatanController extends BaseUsulanController
             'formConfig' => $formConfig,
             'jenisUsulanPeriode' => $jenisUsulanPeriode,
             'bkdSemesters' => $bkdSemesters,
-            'documentFields' => $documentFields, // ADD THIS
+            'documentFields' => $documentFields,
         ]);
     }
 
@@ -336,6 +339,9 @@ class UsulanJabatanController extends BaseUsulanController
 
         $bkdSemesters = $this->generateBkdSemesterLabels($usulanJabatan->periodeUsulan);
 
+        // Get document fields for the form
+        $documentFields = $this->getDocumentKeys($pegawai->jenis_pegawai);
+
         return view('backend.layouts.pegawai-unmul.usul-jabatan.create-jabatan', [
             'pegawai' => $pegawai,
             'daftarPeriode' => $daftarPeriode,
@@ -346,6 +352,7 @@ class UsulanJabatanController extends BaseUsulanController
             'jenisUsulanPeriode' => $jenisUsulanPeriode,
             'catatanPerbaikan' => $catatanPerbaikan,
             'bkdSemesters' => $bkdSemesters,
+            'documentFields' => $documentFields,
         ]);
     }
 
@@ -391,7 +398,7 @@ class UsulanJabatanController extends BaseUsulanController
             DB::transaction(function () use ($request, $usulanJabatan, $pegawai, $statusUsulan, $validatedData, $oldStatus, &$updatedUsulan) {
 
                 // Get existing data
-                $dataUsulanLama = $usulan->data_usulan ?? [];
+                $dataUsulanLama = $usulanJabatan->data_usulan ?? [];
 
                 // Update karya ilmiah data
                 $karyaIlmiahData = $this->extractKaryaIlmiahData($validatedData);

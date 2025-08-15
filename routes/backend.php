@@ -170,15 +170,26 @@ Route::middleware(['auth:pegawai'])->group(function () {
         // ===================================================================
         // DOCUMENT VIEWING ROUTES - NEW: Untuk semua jenis dokumen
         // ===================================================================
-        
+
         // Dokumen usulan (pakta, turnitin, artikel, dll)
         Route::get('/usulan/{usulan}/dokumen/{field}', [AdminFakultasController::class, 'showUsulanDocument'])
             ->name('usulan.show-document');
-            
+
+        // DEBUG: Test route untuk memastikan routing berfungsi
+        Route::get('/test-dokumen/{usulan}/{field}', function($usulan, $field) {
+            return response()->json([
+                'usulan_id' => $usulan,
+                'field' => $field,
+                'usulan_exists' => \App\Models\BackendUnivUsulan\Usulan::find($usulan) ? true : false,
+                'document_path' => \App\Models\BackendUnivUsulan\Usulan::find($usulan)?->getDocumentPath($field),
+                'file_exists' => \Storage::disk('local')->exists(\App\Models\BackendUnivUsulan\Usulan::find($usulan)?->getDocumentPath($field) ?? '')
+            ]);
+        })->name('test-dokumen');
+
         // NEW: Dokumen profil pegawai (ijazah, SK, dll)
         Route::get('/usulan/{usulan}/profil-dokumen/{field}', [AdminFakultasController::class, 'showPegawaiDocument'])
             ->name('usulan.show-pegawai-document');
-            
+
         // NEW: Dokumen pendukung fakultas (surat usulan, berita senat)
         Route::get('/usulan/{usulan}/pendukung-dokumen/{field}', [AdminFakultasController::class, 'showDokumenPendukung'])
             ->name('usulan.show-dokumen-pendukung');
@@ -193,7 +204,7 @@ Route::middleware(['auth:pegawai'])->group(function () {
             Route::post('/{usulan}/autosave', [AdminFakultasController::class, 'autosaveValidation'])
                 ->name('autosave');
         });
-        
+
     });
 
     // ------ RUTE HALAMAN BACKEND PENILAI UNIVERSITAS ------//

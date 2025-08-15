@@ -7,40 +7,43 @@ function toggleKeterangan(fieldId, status) {
     console.log('Toggle called for:', fieldId, 'with status:', status); // Debug log
     
     const keteranganTextarea = document.getElementById(`keterangan_${fieldId}`);
-    const placeholder = document.getElementById(`placeholder_${fieldId}`);
     
     console.log('Textarea found:', keteranganTextarea); // Debug log
-    console.log('Placeholder found:', placeholder); // Debug log
 
-    if (keteranganTextarea && placeholder) {
+    if (keteranganTextarea) {
         if (status === 'tidak_sesuai') {
-            keteranganTextarea.classList.remove('hidden');
-            placeholder.classList.add('hidden');
+            // Enable textarea for tidak_sesuai
+            keteranganTextarea.disabled = false;
             keteranganTextarea.required = true;
-            console.log('Showing textarea for:', fieldId);
+            keteranganTextarea.placeholder = 'Jelaskan mengapa item ini tidak sesuai...';
+            keteranganTextarea.style.textAlign = 'center';
+            console.log('Enabled textarea for:', fieldId);
         } else {
-            keteranganTextarea.classList.add('hidden');
-            placeholder.classList.remove('hidden');
+            // Disable textarea for sesuai
+            keteranganTextarea.disabled = true;
             keteranganTextarea.required = false;
             keteranganTextarea.value = '';
-            console.log('Hiding textarea for:', fieldId);
+            keteranganTextarea.placeholder = 'Pilih "Tidak Sesuai" untuk mengisi keterangan';
+            keteranganTextarea.style.textAlign = 'center';
+            console.log('Disabled textarea for:', fieldId);
         }
     } else {
-        console.error('Elements not found for field:', fieldId);
+        console.error('Textarea not found for field:', fieldId);
         console.error('Expected textarea ID:', `keterangan_${fieldId}`);
-        console.error('Expected placeholder ID:', `placeholder_${fieldId}`);
         
         // Fallback: try to find by name attribute
         const textareaByName = document.querySelector(`textarea[name*="${fieldId}"][name*="keterangan"]`);
         if (textareaByName) {
             console.log('Found textarea by name:', textareaByName.name);
             if (status === 'tidak_sesuai') {
-                textareaByName.classList.remove('hidden');
+                textareaByName.disabled = false;
                 textareaByName.required = true;
+                textareaByName.placeholder = 'Jelaskan mengapa item ini tidak sesuai...';
             } else {
-                textareaByName.classList.add('hidden');
+                textareaByName.disabled = true;
                 textareaByName.required = false;
                 textareaByName.value = '';
+                textareaByName.placeholder = 'Pilih "Tidak Sesuai" untuk mengisi keterangan';
             }
         }
     }
@@ -106,9 +109,12 @@ function submitReturnForm() {
         return false;
     }
 
-    const catatanUmum = catatanUmumTextarea.value;
-    if (!catatanUmum || catatanUmum.trim().length < 10) {
-        alert('Catatan untuk pegawai wajib diisi minimal 10 karakter.');
+    const catatanUmum = catatanUmumTextarea.value.trim();
+    console.log('Catatan umum length:', catatanUmum.length); // Debug log
+    
+    if (!catatanUmum || catatanUmum.length < 10) {
+        alert('Catatan untuk pegawai wajib diisi minimal 10 karakter. Saat ini: ' + catatanUmum.length + ' karakter.');
+        catatanUmumTextarea.focus();
         return false;
     }
 
@@ -139,9 +145,17 @@ function submitRejectForm() {
     const rejectForm = document.getElementById('rejectUsulanForm');
     const catatanRejectTextarea = rejectForm.querySelector('textarea[name="catatan_reject"]');
 
-    const catatanReject = catatanRejectTextarea.value;
-    if (!catatanReject || catatanReject.trim().length < 10) {
-        alert('Alasan belum direkomendasikan wajib diisi minimal 10 karakter.');
+    if (!catatanRejectTextarea) {
+        alert("Terjadi error: komponen catatan reject tidak ditemukan.");
+        return false;
+    }
+
+    const catatanReject = catatanRejectTextarea.value.trim();
+    console.log('Catatan reject length:', catatanReject.length); // Debug log
+    
+    if (!catatanReject || catatanReject.length < 10) {
+        alert('Alasan belum direkomendasikan wajib diisi minimal 10 karakter. Saat ini: ' + catatanReject.length + ' karakter.');
+        catatanRejectTextarea.focus();
         return false;
     }
 
@@ -256,15 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Found', textareas.length, 'keterangan textareas');
     
     textareas.forEach((textarea, index) => {
-        console.log(`Textarea ${index}:`, textarea.name, 'id:', textarea.id);
-    });
-    
-    // Find all placeholder divs
-    const placeholders = document.querySelectorAll('div[id*="placeholder_"]');
-    console.log('Found', placeholders.length, 'placeholder divs');
-    
-    placeholders.forEach((placeholder, index) => {
-        console.log(`Placeholder ${index}:`, placeholder.id);
+        console.log(`Textarea ${index}:`, textarea.name, 'id:', textarea.id, 'disabled:', textarea.disabled);
     });
     
     console.log('=== END DEBUG INFO ===');
@@ -273,7 +279,9 @@ document.addEventListener('DOMContentLoaded', function() {
     selects.forEach(select => {
         const fieldParts = select.name.match(/validation\[(\w+)\]\[(\w+)\]/);
         if (fieldParts) {
-            toggleKeterangan(fieldParts[1] + '_' + fieldParts[2], select.value);
+            const fieldId = fieldParts[1] + '_' + fieldParts[2];
+            console.log('Setting initial state for:', fieldId, 'value:', select.value);
+            toggleKeterangan(fieldId, select.value);
         }
     });
 });

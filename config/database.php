@@ -57,8 +57,17 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // OPTIMASI: Tambah konfigurasi untuk performa database
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                // OPTIMASI: Enable query cache
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+                // OPTIMASI: Set connection timeout
+                PDO::ATTR_TIMEOUT => 60,
+                // OPTIMASI: Enable prepared statements
+                PDO::ATTR_EMULATE_PREPARES => false,
+                // OPTIMASI: Set fetch mode
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]) : [],
         ],
 

@@ -56,7 +56,8 @@
                         <p class="text-sm text-blue-700">
                             <strong>{{ $unitKerja->nama }}</strong> |
                             Total periode: {{ $periodeUsulans->total() }} |
-                            Total usulan menunggu review: {{ $periodeUsulans->sum('jumlah_pengusul') }}
+                            Total usulan menunggu review: {{ $periodeUsulans->sum('jumlah_pengusul') }} |
+                            Total usulan: {{ $periodeUsulans->sum('total_usulan') }}
                         </p>
                     </div>
                 </div>
@@ -68,7 +69,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-medium leading-6 text-gray-900">Daftar Periode Usulan</h3>
                 <p class="mt-1 text-sm text-gray-500">
-                    Angka pada kolom "Review" menunjukkan jumlah usulan yang menunggu verifikasi Anda.
+                    Angka pada kolom "Review" menunjukkan jumlah usulan yang menunggu verifikasi. Klik tombol aksi untuk melihat semua usulan periode tersebut.
                 </p>
             </div>
 
@@ -133,23 +134,18 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    @if($periode->jumlah_pengusul > 0)
-                                        <a href="{{ route('admin-fakultas.periode.pendaftar', $periode->id) }}"
-                                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
-                                            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                            </svg>
+                                    <a href="{{ route('admin-fakultas.periode.pendaftar', $periode->id) }}"
+                                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                        </svg>
+                                        @if($periode->jumlah_pengusul > 0)
                                             Review ({{ $periode->jumlah_pengusul }})
-                                        </a>
-                                    @else
-                                        <span class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
-                                            <svg class="h-5 w-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-                                            </svg>
-                                            Tidak Ada
-                                        </span>
-                                    @endif
+                                        @else
+                                            Lihat Semua
+                                        @endif
+                                    </a>
                                 </td>
                             </tr>
                         @empty

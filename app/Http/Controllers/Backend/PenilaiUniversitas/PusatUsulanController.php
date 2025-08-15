@@ -12,25 +12,30 @@ class PusatUsulanController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil pegawai_id dari user login (sesuaikan cara ambil pegawai di projectmu)
-        $pegawaiId = optional(Auth::user()->pegawai)->id;
-
-        // Filter usulan yang ditugaskan ke penilai ini dari tabel usulan_penilai
-        $usulanIds = DB::table('usulan_penilai')
-            ->where('penilai_id', $pegawaiId)
-            ->pluck('usulan_id');
+        // OPTIMASI: Gunakan Eloquent relationship instead of raw DB query
+        $pegawaiId = Auth::user()->id;
 
         $query = Usulan::query()
-            ->whereIn('id', $usulanIds)
+            ->whereHas('penilais', function ($q) use ($pegawaiId) {
+                $q->where('penilai_id', $pegawaiId);
+            })
+            ->with([
+                'pegawai:id,nama_lengkap,email',
+                'jabatanLama:id,jabatan',
+                'jabatanTujuan:id,jabatan',
+                'periodeUsulan:id,nama_periode'
+            ])
             ->latest();
 
-        // (opsional) filter status/keyword
-        if ($search = $request->get('q')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('jenis_usulan', 'like', "%{$search}%")
-                  ->orWhereHas('pegawai', fn ($qq) => $qq->where('nama_lengkap', 'like', "%{$search}%"));
+        // OPTIMASI: Gunakan when() untuk conditional filtering
+        $query->when($request->get('q'), function ($q, $search) {
+            return $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('jenis_usulan', 'like', "%{$search}%")
+                  ->orWhereHas('pegawai', function ($pegawaiQuery) use ($search) {
+                      $pegawaiQuery->where('nama_lengkap', 'like', "%{$search}%");
+                  });
             });
-        }
+        });
 
         $usulans = $query->paginate(15);
 
@@ -39,7 +44,7 @@ class PusatUsulanController extends Controller
 
     public function show(Usulan $usulan)
     {
-        // Eager-load data yang dibutuhkan partial shared
+        // OPTIMASI: Eager load semua relasi yang dibutuhkan sekaligus
         $usulan->load([
             'pegawai.pangkat',
             'pegawai.jabatan',
@@ -48,17 +53,32 @@ class PusatUsulanController extends Controller
             'jabatanTujuan',
             'periodeUsulan',
             'dokumens',
-            'logs' => function ($query) {
-                $query->with('dilakukanOleh')->latest();
+            'logs.dilakukanOleh' => function ($query) {
+                $query->latest();
             },
         ]);
 
-        // (opsional) label BKD jika kamu sudah pakai di Admin Univ
-        // $bkdLabels = $usulan->getBkdDisplayLabels();
+        // UPDATED: Pass usulan object and role to get dynamic BKD fields
+        $validationFields = \App\Models\BackendUnivUsulan\Usulan::getValidationFieldsWithDynamicBkd($usulan, 'penilai');
+
+        // ADDED: Get BKD labels for display
+        $bkdLabels = $usulan->getBkdDisplayLabels();
+
+        // Get existing validation data if any
+        $existingValidation = $usulan->getValidasiByRole('penilai');
+
+        // Determine if can edit based on status
+        $canEdit = in_array($usulan->status_usulan, [
+            'Diusulkan ke Universitas',
+            'Sedang Direview Universitas',
+        ]);
 
         return view('backend.layouts.penilai-universitas.pusat-usulan.detail-usulan', [
-            'usulan'    => $usulan,
-            // 'bkdLabels' => $bkdLabels ?? [],
+            'usulan' => $usulan,
+            'validationFields' => $validationFields,
+            'existingValidation' => $existingValidation,
+            'bkdLabels' => $bkdLabels,
+            'canEdit' => $canEdit,
         ]);
     }
 }

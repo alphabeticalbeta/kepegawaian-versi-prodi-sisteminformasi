@@ -57,6 +57,12 @@ class UsulanFieldHelper
                 return $pegawai->jabatan->jabatan ?? '-';
             case 'unit_kerja_saat_usul':
                 return $pegawai->unitKerja->nama ?? '-';
+            case 'url_profil_sinta':
+                $urlValue = $pegawai->{$field} ?? null;
+                if ($urlValue && filter_var($urlValue, FILTER_VALIDATE_URL)) {
+                    return '<a href="' . $urlValue . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">View Link</a>';
+                }
+                return $urlValue ?: '-';
             case 'tanggal_lahir':
             case 'tmt_pangkat':
             case 'tmt_jabatan':
@@ -73,10 +79,15 @@ class UsulanFieldHelper
     {
         $dokumenPath = $this->usulan->pegawai->{$field} ?? null;
         if (!empty($dokumenPath)) {
-            $route = route('backend.admin-univ-usulan.data-pegawai.show-document', [$this->usulan->pegawai_id, $field]);
-            return '<a href="' . $route . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1">✓ Lihat Dokumen</a>';
+            // DETECT ROUTE berdasarkan konteks user
+            if (request()->is('admin-fakultas/*')) {
+                $route = route('admin-fakultas.usulan.show-pegawai-document', [$this->usulan->id, $field]);
+            } else {
+                $route = route('backend.admin-univ-usulan.data-pegawai.show-document', [$this->usulan->pegawai_id, $field]);
+            }
+            return '<a href="' . $route . '" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">✓ Lihat Dokumen</a>';
         }
-        return '<span class="text-red-500">✗ Belum diunggah</span>';
+        return '<span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md">✗ Belum diunggah</span>';
     }
 
     protected function getDokumenUsulanLink(string $field): string
@@ -133,17 +144,20 @@ class UsulanFieldHelper
 
         // 3) Jika ada path → buat link; kalau tidak → info belum diunggah
         if (!empty($docPath)) {
+            // DETECT ROUTE berdasarkan konteks user
             if (request()->is('pegawai-unmul/*')) {
                 $route = route('pegawai-unmul.usulan-jabatan.show-document', [$this->usulan->id, $field]);
+            } elseif (request()->is('admin-fakultas/*')) {
+                $route = route('admin-fakultas.usulan.show-document', [$this->usulan->id, $field]);
             } else {
                 $route = route('backend.admin-univ-usulan.pusat-usulan.show-document', [$this->usulan->id, $field]);
             }
             // Judul baris sudah menampilkan label semesternya, jadi link cukup "Lihat Dokumen"
             $label = '✓ Lihat Dokumen';
-            return '<a href="' . $route . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1">' . $label . '</a>';
+            return '<a href="' . $route . '" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">' . $label . '</a>';
         }
 
-        return '<span class="text-red-600">✗ Belum diunggah</span>';
+        return '<span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md">✗ Belum diunggah</span>';
     }
 
     protected function getKaryaIlmiahData(string $field): string
@@ -155,6 +169,10 @@ class UsulanFieldHelper
             $linkValue = $data['links'][$linkKey] ?? $data[$field] ?? null;
 
             if ($linkValue && filter_var($linkValue, FILTER_VALIDATE_URL)) {
+                // Special handling for Sinta link
+                if ($field === 'link_sinta') {
+                    return '<a href="' . $linkValue . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">View Link</a>';
+                }
                 return '<a href="' . $linkValue . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Lihat Link</a>';
             }
             return $linkValue ?: '-';
@@ -251,7 +269,7 @@ class UsulanFieldHelper
         // Field nomor → tampilkan teks
         if (in_array($field, ['nomor_surat_usulan', 'nomor_berita_senat'], true)) {
             $rawValue = $data[$field] ?? '';
-            
+
             // FIXED: Handle array values gracefully
             if (is_array($rawValue)) {
                 // If it's an array, try to get meaningful value
@@ -268,7 +286,7 @@ class UsulanFieldHelper
             } else {
                 $val = $rawValue;
             }
-            
+
             $val = trim((string)$val);
             return $val !== '' ? e($val) : '-';
         }
@@ -293,19 +311,55 @@ class UsulanFieldHelper
             }
 
             if (!$path) {
-                return '<span class="text-red-600">✗ Belum diunggah</span>';
+                return '<span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md">✗ Belum diunggah</span>';
             }
 
             if (\Storage::disk('public')->exists($path)) {
                 $url = \Storage::disk('public')->url($path);
-                return '<a href="' . $url . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">✓ Lihat Dokumen</a>';
+                return '<a href="' . $url . '" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">✓ Lihat Dokumen</a>';
             }
 
-            return '<span class="text-red-600">✗ File tidak ditemukan</span>';
+            return '<span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md">✗ File tidak ditemukan</span>';
         }
 
         // Default
         return '-';
+    }
+
+    /**
+     * Get validation label for display
+     * ENHANCED: Uppercase field names except for article links and document links
+     */
+    public function getValidationLabel(string $category, string $field, array $bkdLabels = []): string
+    {
+        // Special handling for BKD documents
+        if ($category === 'dokumen_bkd' && \Str::startsWith($field, 'bkd_')) {
+            return strtoupper($bkdLabels[$field] ?? ucwords(str_replace('_', ' ', $field)));
+        } 
+        
+        // Special handling for dokumen pendukung
+        elseif ($category === 'dokumen_pendukung') {
+            $labels = [
+                'nomor_surat_usulan' => 'Nomor Surat Usulan Fakultas',
+                'file_surat_usulan'  => 'Dokumen Surat Usulan Fakultas',
+                'nomor_berita_senat' => 'Nomor Surat Senat',
+                'file_berita_senat'  => 'Dokumen Surat Senat',
+            ];
+            return strtoupper($labels[$field] ?? ucwords(str_replace('_', ' ', $field)));
+        }
+        
+        // Special handling for article links - keep as is
+        elseif ($category === 'karya_ilmiah' && in_array($field, ['link_artikel', 'link_sinta', 'link_scopus', 'link_scimago', 'link_wos'])) {
+            return ucwords(str_replace('_', ' ', $field));
+        }
+        
+        // Special handling for document links - keep as is
+        elseif (in_array($category, ['dokumen_profil', 'dokumen_usulan']) && str_contains($field, 'link_')) {
+            return ucwords(str_replace('_', ' ', $field));
+        }
+        
+        // Default: uppercase for all other fields
+        return strtoupper(ucwords(str_replace('_', ' ', $field)));
     }
 
 }

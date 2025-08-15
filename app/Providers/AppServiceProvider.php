@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-// use Illuminate\Support\Facades\Gate; // <-- Dihapus
-// use App\Models\User; // <-- Dihapus
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,18 +22,43 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Mengatur route model binding secara eksplisit jika diperlukan
-        Route::pattern('id', '[0-9]+');
+        // OPTIMASI: Enable lazy loading prevention in production
+        Model::preventLazyLoading(!app()->isProduction());
 
-        // Mengatur namespace default untuk route
-        Route::middleware('web')
-            ->group(function () {
-                require base_path('routes/frontend.php');
-                require base_path('routes/backend.php');
+        // OPTIMASI: Log slow queries in development
+        if (app()->isLocal()) {
+            DB::listen(function ($query) {
+                if ($query->time > 100) { // Log queries taking more than 100ms
+                    Log::warning('Slow query detected', [
+                        'sql' => $query->sql,
+                        'bindings' => $query->bindings,
+                        'time' => $query->time . 'ms',
+                        'connection' => $query->connection->getName(),
+                    ]);
+                }
             });
+        }
 
-        // BAGIAN DI BAWAH INI TELAH DIHAPUS KARENA SALAH TEMPAT
-        // $this->registerPolicies();
-        // Gate::define('manage-roles', function (User $user) { ... });
+        // OPTIMASI: Set default string length for MySQL
+        \Illuminate\Support\Facades\Schema::defaultStringLength(191);
+
+        // OPTIMASI: Configure cache for better performance
+        $this->configureCache();
+    }
+
+    /**
+     * Configure cache settings for optimization
+     */
+    private function configureCache(): void
+    {
+        // Set cache TTL based on environment
+        $defaultTtl = app()->isProduction() ? 3600 : 300; // 1 hour in prod, 5 min in dev
+        
+        config([
+            'cache.ttl.default' => $defaultTtl,
+            'cache.ttl.short' => 300,
+            'cache.ttl.medium' => 1800,
+            'cache.ttl.long' => 86400,
+        ]);
     }
 }

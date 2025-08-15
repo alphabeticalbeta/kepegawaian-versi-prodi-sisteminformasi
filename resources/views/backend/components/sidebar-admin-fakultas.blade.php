@@ -28,7 +28,7 @@
             </div>
 
             <div class="px-4 relative">
-                <a href="{{ route('admin-fakultas.usulan.jabatan') }}" 
+                <a href="{{ route('admin-fakultas.usulan.jabatan') }}"
                    class="flex items-center px-3 py-2.5 rounded-lg {{ request()->routeIs('admin-fakultas.usulan.jabatan') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-100' }}">
                     <i data-lucide="briefcase" class="w-5 h-5 mr-3 flex-shrink-0"></i>
                     <span class="font-medium sidebar-text">Jabatan</span>
@@ -36,7 +36,7 @@
             </div>
 
             <div class="px-4 relative">
-                <a href="{{ route('admin-fakultas.usulan.pangkat') }}" 
+                <a href="{{ route('admin-fakultas.usulan.pangkat') }}"
                    class="flex items-center px-3 py-2.5 rounded-lg {{ request()->routeIs('admin-fakultas.usulan.pangkat') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-100' }}">
                     <i data-lucide="award" class="w-5 h-5 mr-3 flex-shrink-0"></i>
                     <span class="font-medium sidebar-text">Pangkat</span>

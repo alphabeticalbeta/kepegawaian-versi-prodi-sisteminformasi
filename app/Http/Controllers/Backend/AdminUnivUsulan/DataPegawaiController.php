@@ -25,41 +25,45 @@ class DataPegawaiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) // PERUBAHAN 1: Tambahkan Request $request
+    public function index(Request $request)
     {
-        // PERUBAHAN 2: Ganti logika pengambilan data dengan query builder
-        $query = Pegawai::with(['pangkat', 'jabatan', 'unitKerja'])->latest();
+        // OPTIMASI: Gunakan query builder dengan eager loading yang optimal
+        $query = Pegawai::withOptimalRelations()
+            ->when($request->filter_jenis_pegawai, function ($q, $jenis_pegawai) {
+                return $q->byJenisPegawai($jenis_pegawai);
+            })
+            ->when($request->search, function ($q, $search) {
+                return $q->searchByNameOrNip($search);
+            })
+            ->latest();
 
-        // Terapkan filter berdasarkan jenis pegawai jika ada
-        $query->when($request->filter_jenis_pegawai, function ($q, $jenis_pegawai) {
-            return $q->where('jenis_pegawai', $jenis_pegawai);
-        });
-
-        // Terapkan filter pencarian berdasarkan nama atau NIP jika ada
-        $query->when($request->search, function ($q, $search) {
-            return $q->where(function ($subQuery) use ($search) {
-                $subQuery->where('nama_lengkap', 'like', "%{$search}%")
-                         ->orWhere('nip', 'like', "%{$search}%");
-            });
-        });
-
-        // Ambil data dengan paginasi
         $pegawais = $query->paginate(10)->withQueryString();
 
         return view('backend.layouts.admin-univ-usulan.data-pegawai.master-datapegawai', compact('pegawais'));
     }
-
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        $pangkats = Pangkat::orderBy('pangkat')->get();
-        $jabatans = Jabatan::orderBy('jabatan')->get();
-        $unitKerjas = SubSubUnitKerja::with('subUnitKerja.unitKerja')->orderBy('nama')->get();
+        // OPTIMASI: Cache data yang sering digunakan
+        $pangkats = \Cache::remember('pangkats_all', 3600, function () {
+            return Pangkat::orderBy('pangkat')->get(['id', 'pangkat']);
+        });
+        
+        $jabatans = \Cache::remember('jabatans_all', 3600, function () {
+            return Jabatan::orderBy('jabatan')->get(['id', 'jabatan', 'jenis_pegawai']);
+        });
+        
+        $unitKerjas = \Cache::remember('unit_kerjas_with_relations', 3600, function () {
+            return SubSubUnitKerja::with(['subUnitKerja:id,nama,unit_kerja_id', 'subUnitKerja.unitKerja:id,nama'])
+                ->orderBy('nama')
+                ->get(['id', 'nama', 'sub_unit_kerja_id']);
+        });
 
-        return view('backend.layouts.admin-univ-usulan.data-pegawai.form-datapegawai', compact('pangkats', 'jabatans', 'unitKerjas'));
+        return view('backend.layouts.admin-univ-usulan.data-pegawai.form-datapegawai', 
+            compact('pangkats', 'jabatans', 'unitKerjas'));
     }
 
     /**
@@ -273,66 +277,139 @@ class DataPegawaiController extends Controller
     }
 
     /**
-     * Cek apakah user bisa mengakses dokumen pegawai tertentu
+     * Enhanced access control dengan security terbaik
      */
     private function canAccessDocument($currentUser, $targetPegawai): bool
     {
-        // Admin Univ Usulan - bisa akses semua dokumen
-        if ($currentUser->hasPermissionTo('view_all_pegawai_documents')) {
+        // 1. SUPER ADMIN: Admin Universitas Usulan - full access
+        if ($currentUser->hasRole('Admin Universitas Usulan') ||
+            $currentUser->hasPermissionTo('view_all_pegawai_documents')) {
             return true;
         }
 
-        // Pegawai - hanya bisa akses dokumen sendiri
-        if ($currentUser->hasPermissionTo('view_own_documents')) {
+        // 2. ADMIN FAKULTAS: Hanya bisa akses dokumen pegawai di fakultasnya
+        if ($currentUser->hasRole('Admin Fakultas')) {
+            // Double check: pastikan ada unit_kerja_id
+            if (!$currentUser->unit_kerja_id) {
+                \Log::warning('Admin Fakultas tanpa unit_kerja_id mencoba akses dokumen', [
+                    'admin_id' => $currentUser->id,
+                    'target_pegawai_id' => $targetPegawai->id
+                ]);
+                return false;
+            }
+
+            // Cek apakah pegawai target berada di fakultas yang sama
+            $targetFakultasId = $targetPegawai->unitKerja?->subUnitKerja?->unit_kerja_id;
+
+            if ($currentUser->unit_kerja_id === $targetFakultasId) {
+                \Log::info('Admin Fakultas akses dokumen pegawai di fakultasnya', [
+                    'admin_id' => $currentUser->id,
+                    'admin_fakultas_id' => $currentUser->unit_kerja_id,
+                    'target_pegawai_id' => $targetPegawai->id,
+                    'target_fakultas_id' => $targetFakultasId
+                ]);
+                return true;
+            }
+
+            \Log::warning('Admin Fakultas mencoba akses dokumen pegawai dari fakultas lain', [
+                'admin_id' => $currentUser->id,
+                'admin_fakultas_id' => $currentUser->unit_kerja_id,
+                'target_pegawai_id' => $targetPegawai->id,
+                'target_fakultas_id' => $targetFakultasId
+            ]);
+            return false;
+        }
+
+        // 3. PEGAWAI: Hanya dokumen sendiri
+        if ($currentUser->hasPermissionTo('view_own_documents') ||
+            $currentUser->hasRole('Pegawai')) {
             return $currentUser->id === $targetPegawai->id;
         }
 
-        // Admin Fakultas - bisa akses dokumen pegawai di fakultasnya
-        if ($currentUser->hasPermissionTo('view_fakultas_pegawai_documents')) {
-            return $this->isInSameFakultas($currentUser, $targetPegawai);
-        }
-
-        // Penilai - untuk saat ini return false (akan diimplementasi nanti)
-        if ($currentUser->hasPermissionTo('view_assessment_documents')) {
-            // TODO: Implementasi logic penilai saat modul penilaian sudah ada
+        // 4. PENILAI: Akses terbatas (implementasi future)
+        if ($currentUser->hasRole('Penilai Universitas')) {
+            // TODO: Implementasi logic penilai berdasarkan usulan yang sedang dinilai
             return false;
         }
+
+        // 5. DEFAULT DENY: Tidak ada akses
+        \Log::warning('Unauthorized document access attempt', [
+            'user_id' => $currentUser->id,
+            'user_roles' => $currentUser->getRoleNames()->toArray(),
+            'target_pegawai_id' => $targetPegawai->id,
+            'field' => request()->route('field')
+        ]);
 
         return false;
     }
 
     /**
-     * Cek apakah dua pegawai berada di fakultas yang sama
+     * Enhanced fakultas checking dengan error handling
      */
     private function isInSameFakultas($user1, $user2): bool
     {
-        // Load relasi jika belum ada
-        if (!$user1->relationLoaded('unitKerja')) {
-            $user1->load('unitKerja.subUnitKerja.unitKerja');
-        }
-        if (!$user2->relationLoaded('unitKerja')) {
-            $user2->load('unitKerja.subUnitKerja.unitKerja');
-        }
+        try {
+            // Load relasi dengan error handling
+            if (!$user1->relationLoaded('unitKerja')) {
+                $user1->load('unitKerja.subUnitKerja.unitKerja');
+            }
+            if (!$user2->relationLoaded('unitKerja')) {
+                $user2->load('unitKerja.subUnitKerja.unitKerja');
+            }
 
-        // Ambil fakultas (unit_kerja) dari masing-masing pegawai
-        $fakultas1 = $user1->unitKerja?->subUnitKerja?->unitKerja?->id;
-        $fakultas2 = $user2->unitKerja?->subUnitKerja?->unitKerja?->id;
+            // Method 1: Gunakan unit_kerja_id langsung (lebih efisien)
+            if ($user1->unit_kerja_id && $user2->unitKerja?->subUnitKerja?->unit_kerja_id) {
+                return $user1->unit_kerja_id === $user2->unitKerja->subUnitKerja->unit_kerja_id;
+            }
 
-        return $fakultas1 && $fakultas2 && $fakultas1 === $fakultas2;
+            // Method 2: Fallback dengan relasi lengkap
+            $fakultas1 = $user1->unitKerja?->subUnitKerja?->unitKerja?->id;
+            $fakultas2 = $user2->unitKerja?->subUnitKerja?->unitKerja?->id;
+
+            return $fakultas1 && $fakultas2 && $fakultas1 === $fakultas2;
+
+        } catch (\Exception $e) {
+            \Log::error('Error checking fakultas relationship', [
+                'user1_id' => $user1->id,
+                'user2_id' => $user2->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
-     * Catat akses dokumen ke log
+     * Simplified logging tanpa advanced fields
      */
     private function logDocumentAccess($pegawaiId, $accessorId, $documentField, $request): void
     {
-        DocumentAccessLog::create([
-            'pegawai_id' => $pegawaiId,
-            'accessor_id' => $accessorId,
-            'document_field' => $documentField,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->header('User-Agent', ''),
-            'accessed_at' => now(),
-        ]);
+        try {
+            DocumentAccessLog::create([
+                'pegawai_id' => $pegawaiId,
+                'accessor_id' => $accessorId,
+                'document_field' => $documentField,
+                'ip_address' => $request->ip(),
+                'user_agent' => substr($request->header('User-Agent', ''), 0, 500),
+                'accessed_at' => now(),
+            ]);
+
+            // Log role info separately untuk debugging
+            $accessor = Auth::guard('pegawai')->user();
+            if ($accessor) {
+                \Log::info('Document accessed', [
+                    'pegawai_id' => $pegawaiId,
+                    'accessor_id' => $accessorId,
+                    'document_field' => $documentField,
+                    'accessor_has_roles' => $accessor->roles ? $accessor->roles->count() : 0,
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to log document access', [
+                'pegawai_id' => $pegawaiId,
+                'accessor_id' => $accessorId,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }
