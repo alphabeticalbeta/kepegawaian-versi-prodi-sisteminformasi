@@ -201,12 +201,18 @@ class PusatUsulanController extends Controller
             return redirect()->back()->with('error', 'Aksi tidak dapat dilakukan karena status usulan saat ini adalah: ' . $usulan->status_usulan);
         }
 
-        // 2) Validasi input (tambahkan recommend_proposal)
+        // 2) Validasi input (tambahkan action baru)
         $request->validate([
-            'action_type'  => 'required|in:save_only,return_to_pegawai,reject_proposal,approve_proposal,recommend_proposal',
-            'catatan_umum' => 'required_if:action_type,return_to_pegawai|nullable|string|min:10|max:2000',
+            'action_type'  => 'required|in:save_only,return_to_pegawai,reject_proposal,approve_proposal,recommend_proposal,return_for_revision,not_recommended,send_to_assessor_team,send_to_senate_team',
+            'catatan_umum' => 'required_if:action_type,return_to_pegawai,return_for_revision,not_recommended|nullable|string|min:10|max:2000',
+            'assessor_ids' => 'required_if:action_type,send_to_assessor_team|array|min:1|max:3',
+            'assessor_ids.*' => 'required_if:action_type,send_to_assessor_team|exists:pegawais,id',
         ], [
             'catatan_umum.required_if' => 'Catatan wajib diisi jika Anda mengembalikan usulan ke pegawai.',
+            'assessor_ids.required_if' => 'Pilih minimal 1 dan maksimal 3 penilai.',
+            'assessor_ids.min' => 'Pilih minimal 1 penilai.',
+            'assessor_ids.max' => 'Pilih maksimal 3 penilai.',
+            'assessor_ids.*.exists' => 'Penilai yang dipilih tidak valid.',
         ]);
 
         // 3) Cek prasyarat rekomendasi SENAT & PENILAI lebih dulu (hindari early-return dalam transaksi)
@@ -239,6 +245,51 @@ class PusatUsulanController extends Controller
                     // Pastikan kolom ini ada; jika tidak, pindahkan ke log/validasi
                     $usulan->catatan_verifikator = $request->catatan_umum;
                     $logMessage = 'Usulan dikembalikan ke Pegawai untuk perbaikan oleh Admin Universitas.';
+                    break;
+
+                case 'return_for_revision':
+                    // Langsung ke employee tanpa melalui Faculty Admin
+                    $usulan->status_usulan = 'Perlu Perbaikan';
+                    $usulan->catatan_verifikator = $request->catatan_umum;
+                    $logMessage = 'Usulan dikembalikan langsung ke Pegawai untuk perbaikan oleh Admin Universitas.';
+                    break;
+
+                case 'not_recommended':
+                    // Return ke employee dan tidak bisa submit lagi di periode tersebut
+                    $usulan->status_usulan = 'Tidak Direkomendasikan';
+                    $usulan->catatan_verifikator = $request->catatan_umum;
+                    $logMessage = 'Usulan tidak direkomendasikan oleh Admin Universitas. Pegawai tidak dapat submit lagi di periode ini.';
+                    break;
+
+                case 'send_to_assessor_team':
+                    // Kirim ke tim penilai
+                    $usulan->status_usulan = 'Sedang Dinilai';
+                    
+                    // Hapus penilai lama jika ada
+                    $usulan->penilais()->detach();
+                    
+                    // Tambah penilai baru
+                    $assessorIds = $request->assessor_ids;
+                    $assessorData = [];
+                    foreach ($assessorIds as $assessorId) {
+                        $assessorData[$assessorId] = [
+                            'status_penilaian' => 'Belum Dinilai',
+                            'catatan_penilaian' => null,
+                        ];
+                    }
+                    $usulan->penilais()->attach($assessorData);
+                    
+                    $logMessage = 'Usulan dikirim ke Tim Penilai (' . count($assessorIds) . ' penilai).';
+                    break;
+
+                case 'send_to_senate_team':
+                    // Kirim ke tim senat (hanya jika penilai sudah memberikan rekomendasi)
+                    if (!$usulan->isRecommendedByReviewer()) {
+                        return back()->with('error', 'Belum dapat dikirim ke Tim Senat: menunggu rekomendasi dari Tim Penilai.');
+                    }
+                    
+                    $usulan->status_usulan = 'Sedang Direview Senat';
+                    $logMessage = 'Usulan dikirim ke Tim Senat untuk review.';
                     break;
 
                 case 'reject_proposal':

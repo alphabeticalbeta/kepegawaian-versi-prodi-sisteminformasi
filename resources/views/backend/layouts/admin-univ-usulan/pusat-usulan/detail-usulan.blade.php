@@ -23,11 +23,6 @@
         ])
 
         {{-- Validation Sections (field dinamis per kategori) --}}
-        @php
-            // Ambil field validasi dinamis
-            $validationFields = \App\Models\BackendUnivUsulan\Usulan::getValidationFieldsWithDynamicBkd($usulan);
-        @endphp
-
         @if(isset($validationFields) && count($validationFields) > 0)
             @foreach($validationFields as $category => $fields)
                 @include('backend.components.usulan._validation-section', [
@@ -45,6 +40,12 @@
             'canEdit' => $canEdit ?? false
         ])
 
+        {{-- Hidden Forms untuk modal --}}
+        @include('backend.components.usulan._hidden-forms', [
+            'usulan' => $usulan,
+            'formAction' => route('backend.admin-univ-usulan.pusat-usulan.process', $usulan->id)
+        ])
+
         {{-- Shared: Riwayat Perubahan --}}
         @include('backend.components.usulan._riwayat_log', ['usulan' => $usulan])
     </form>
@@ -54,7 +55,304 @@
 
 {{-- Script validasi/submit --}}
 @push('scripts')
-    @include('Backend.components.usulan._validation-scripts', [
-        'usulan' => $usulan
-    ])
+<script>
+// =====================================
+// FORM DISPLAY/HIDE FUNCTIONS
+// =====================================
+
+// Return Form Functions
+function showReturnForm() {
+    const form = document.getElementById('returnForm');
+    const textarea = document.getElementById('catatan_umum_return');
+    
+    if (!form) {
+        console.error('Return form not found');
+        return;
+    }
+    
+    form.classList.remove('hidden');
+    if (textarea) {
+        textarea.focus();
+    }
+}
+
+function hideReturnForm() {
+    const form = document.getElementById('returnForm');
+    const textarea = document.getElementById('catatan_umum_return');
+    const charCount = document.getElementById('charCount_return');
+    
+    if (!form) {
+        console.error('Return form not found');
+        return;
+    }
+    
+    form.classList.add('hidden');
+    if (textarea) {
+        textarea.value = '';
+    }
+    if (charCount) {
+        charCount.textContent = '0';
+    }
+}
+
+// Not Recommended Form Functions
+function showNotRecommendedForm() {
+    const form = document.getElementById('notRecommendedForm');
+    const textarea = document.getElementById('catatan_umum_not_recommended');
+    
+    if (!form) {
+        console.error('Not recommended form not found');
+        return;
+    }
+    
+    form.classList.remove('hidden');
+    if (textarea) {
+        textarea.focus();
+    }
+}
+
+function hideNotRecommendedForm() {
+    const form = document.getElementById('notRecommendedForm');
+    const textarea = document.getElementById('catatan_umum_not_recommended');
+    const charCount = document.getElementById('charCount_not_recommended');
+    
+    if (!form) {
+        console.error('Not recommended form not found');
+        return;
+    }
+    
+    form.classList.add('hidden');
+    if (textarea) {
+        textarea.value = '';
+    }
+    if (charCount) {
+        charCount.textContent = '0';
+    }
+}
+
+// Send to Assessor Team Form Functions
+function showSendToAssessorForm() {
+    const form = document.getElementById('sendToAssessorForm');
+    
+    if (!form) {
+        console.error('Send to assessor form not found');
+        return;
+    }
+    
+    form.classList.remove('hidden');
+}
+
+function hideSendToAssessorForm() {
+    const form = document.getElementById('sendToAssessorForm');
+    
+    if (!form) {
+        console.error('Send to assessor form not found');
+        return;
+    }
+    
+    form.classList.add('hidden');
+    
+    // Reset checkboxes
+    const checkboxes = document.querySelectorAll('input[name="assessor_ids[]"]');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    validateAssessorSelection();
+}
+
+// Send to Senate Team Form Functions
+function showSendToSenateForm() {
+    const form = document.getElementById('sendToSenateForm');
+    
+    if (!form) {
+        console.error('Send to senate form not found');
+        return;
+    }
+    
+    form.classList.remove('hidden');
+}
+
+function hideSendToSenateForm() {
+    const form = document.getElementById('sendToSenateForm');
+    
+    if (!form) {
+        console.error('Send to senate form not found');
+        return;
+    }
+    
+    form.classList.add('hidden');
+}
+
+// =====================================
+// VALIDATION FUNCTIONS
+// =====================================
+
+function validateAssessorSelection() {
+    const checkboxes = document.querySelectorAll('input[name="assessor_ids[]"]:checked');
+    const count = checkboxes.length;
+    const submitBtn = document.getElementById('submitAssessorBtn');
+    const countDisplay = document.getElementById('assessorCount');
+    
+    if (countDisplay) {
+        countDisplay.textContent = count;
+    }
+    
+    if (submitBtn) {
+        if (count >= 1 && count <= 3) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
+            submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
+            submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+        }
+    }
+}
+
+// =====================================
+// FORM SUBMISSION HANDLERS
+// =====================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing form handlers...');
+    
+    // Return Form Submission
+    const returnForm = document.getElementById('returnFormSubmit');
+    if (returnForm) {
+        returnForm.addEventListener('submit', function(e) {
+            const textarea = document.getElementById('catatan_umum_return');
+            if (!textarea) {
+                console.error('Return form textarea not found');
+                return;
+            }
+            
+            const value = textarea.value.trim();
+            
+            if (value.length < 10) {
+                e.preventDefault();
+                alert('Catatan perbaikan harus minimal 10 karakter.');
+                textarea.focus();
+                return false;
+            }
+            
+            if (value.length > 2000) {
+                e.preventDefault();
+                alert('Catatan perbaikan maksimal 2000 karakter.');
+                textarea.focus();
+                return false;
+            }
+            
+            return confirm('Apakah Anda yakin ingin mengembalikan usulan ini ke pegawai untuk perbaikan?');
+        });
+    } else {
+        console.warn('Return form submit handler not found');
+    }
+    
+    // Not Recommended Form Submission
+    const notRecommendedForm = document.getElementById('notRecommendedFormSubmit');
+    if (notRecommendedForm) {
+        notRecommendedForm.addEventListener('submit', function(e) {
+            const textarea = document.getElementById('catatan_umum_not_recommended');
+            if (!textarea) {
+                console.error('Not recommended form textarea not found');
+                return;
+            }
+            
+            const value = textarea.value.trim();
+            
+            if (value.length < 10) {
+                e.preventDefault();
+                alert('Alasan tidak direkomendasikan harus minimal 10 karakter.');
+                textarea.focus();
+                return false;
+            }
+            
+            if (value.length > 2000) {
+                e.preventDefault();
+                alert('Alasan tidak direkomendasikan maksimal 2000 karakter.');
+                textarea.focus();
+                return false;
+            }
+            
+            return confirm('Apakah Anda yakin ingin menandai usulan ini sebagai tidak direkomendasikan? Pegawai tidak dapat submit lagi di periode ini.');
+        });
+    } else {
+        console.warn('Not recommended form submit handler not found');
+    }
+    
+    // Send to Assessor Team Form Submission
+    const sendToAssessorForm = document.getElementById('sendToAssessorFormSubmit');
+    if (sendToAssessorForm) {
+        sendToAssessorForm.addEventListener('submit', function(e) {
+            const checkboxes = document.querySelectorAll('input[name="assessor_ids[]"]:checked');
+            
+            if (checkboxes.length < 1) {
+                e.preventDefault();
+                alert('Pilih minimal 1 penilai.');
+                return false;
+            }
+            
+            if (checkboxes.length > 3) {
+                e.preventDefault();
+                alert('Pilih maksimal 3 penilai.');
+                return false;
+            }
+            
+            const assessorNames = Array.from(checkboxes).map(cb => {
+                return cb.nextElementSibling ? cb.nextElementSibling.textContent : 'Unknown';
+            }).join(', ');
+            
+            return confirm(`Apakah Anda yakin ingin mengirim usulan ini ke Tim Penilai?\n\nPenilai yang dipilih:\n${assessorNames}`);
+        });
+    } else {
+        console.warn('Send to assessor form submit handler not found');
+    }
+    
+    // Send to Senate Team Form Submission
+    const sendToSenateForm = document.getElementById('sendToSenateFormSubmit');
+    if (sendToSenateForm) {
+        sendToSenateForm.addEventListener('submit', function(e) {
+            return confirm('Apakah Anda yakin ingin mengirim usulan ini ke Tim Senat untuk review final?');
+        });
+    } else {
+        console.warn('Send to senate form submit handler not found');
+    }
+    
+    // =====================================
+    // CHARACTER COUNT HANDLERS
+    // =====================================
+    
+    // Character count for Return Form
+    const returnTextarea = document.getElementById('catatan_umum_return');
+    if (returnTextarea) {
+        returnTextarea.addEventListener('input', function() {
+            const count = this.value.length;
+            const charCount = document.getElementById('charCount_return');
+            if (charCount) {
+                charCount.textContent = count;
+            }
+        });
+    } else {
+        console.warn('Return form textarea not found for character count');
+    }
+    
+    // Character count for Not Recommended
+    const notRecommendedTextarea = document.getElementById('catatan_umum_not_recommended');
+    if (notRecommendedTextarea) {
+        notRecommendedTextarea.addEventListener('input', function() {
+            const count = this.value.length;
+            const charCount = document.getElementById('charCount_not_recommended');
+            if (charCount) {
+                charCount.textContent = count;
+            }
+        });
+    } else {
+        console.warn('Not recommended form textarea not found for character count');
+    }
+    
+    // Initialize assessor selection validation
+    validateAssessorSelection();
+    
+    console.log('Form handlers initialized successfully');
+});
+</script>
 @endpush

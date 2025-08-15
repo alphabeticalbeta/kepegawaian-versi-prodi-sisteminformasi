@@ -51,40 +51,41 @@
                     Kembalikan untuk Revisi
                 </button>
 
-                <button type="submit" name="action_type" value="reject_proposal"
-                        onclick="return confirm('Apakah Anda yakin ingin MENOLAK usulan ini? Aksi ini tidak dapat dibatalkan.')"
+                <button type="button"
+                        onclick="showNotRecommendedForm()"
                         class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Belum Direkomendasikan
                 </button>
 
-                <button type="submit"
-                        name="action_type"
-                        value="recommend_proposal"
-                        class="px-6 py-2 rounded-md text-white transition-colors
-                            {{ $canEdit && $canRecommend ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-300 cursor-not-allowed' }}"
-                        {{ $canEdit && $canRecommend ? '' : 'disabled' }}
-                        title="{{ $canRecommend ? '' : 'Menunggu rekomendasi penilai & keputusan Senat memenuhi ambang' }}">
-                    Direkomendasikan
-                </button>
-
                 <button type="button"
-                        onclick="showForwardForm()"
-                        class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700
-                               flex items-center gap-2 transition-colors">
+                        onclick="showSendToAssessorForm()"
+                        class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8">
                         </path>
                     </svg>
-                    Kirim Usulan Ke Tim Penilai
+                    Kirim Usulan ke Tim Penilai
                 </button>
 
-                @if(!$canRecommend)
+                <button type="button"
+                        onclick="showSendToSenateForm()"
+                        class="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2 transition-colors
+                               {{ $usulan->isRecommendedByReviewer() ? '' : 'opacity-50 cursor-not-allowed' }}"
+                        {{ $usulan->isRecommendedByReviewer() ? '' : 'disabled' }}
+                        title="{{ $usulan->isRecommendedByReviewer() ? 'Kirim ke Tim Senat' : 'Menunggu rekomendasi dari Tim Penilai' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                    Kirim Usulan ke Tim Senat
+                </button>
+
+                @if(!$usulan->isRecommendedByReviewer())
                     <p class="text-xs text-gray-500 mt-2">
-                        Syarat belum terpenuhi:
-                        Penilai direkomendasikan: <b>{{ $isReviewerRecommended ? 'Ya' : 'Tidak' }}</b>,
-                        Senat setuju: <b>{{ $usulan->getSenateDecisionCounts()['setuju'] }}</b> / minimal <b>{{ $minSetuju }}</b>.
+                        Syarat untuk Kirim ke Tim Senat: Tim Penilai belum memberikan rekomendasi.
                     </p>
                 @endif
 

@@ -169,11 +169,18 @@ class Usulan extends Model
             'Draft' => 'bg-gray-100 text-gray-800',
             'Diajukan' => 'bg-blue-100 text-blue-800',
             'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
+            'Sedang Direview Universitas' => 'bg-yellow-100 text-yellow-800',
             'Perlu Perbaikan' => 'bg-orange-100 text-orange-800',
             'Dikembalikan' => 'bg-red-100 text-red-800',
+            'Dikembalikan ke Pegawai' => 'bg-red-100 text-red-800',
             'Disetujui' => 'bg-green-100 text-green-800',
             'Direkomendasikan' => 'bg-purple-100 text-purple-800',
+            'Tidak Direkomendasikan' => 'bg-red-100 text-red-800',
+            'Sedang Dinilai' => 'bg-indigo-100 text-indigo-800',
+            'Sedang Direview Senat' => 'bg-purple-100 text-purple-800',
+            'Diusulkan ke Universitas' => 'bg-blue-100 text-blue-800',
             'Ditolak' => 'bg-red-100 text-red-800',
+            'Ditolak Universitas' => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800'
         };
     }
