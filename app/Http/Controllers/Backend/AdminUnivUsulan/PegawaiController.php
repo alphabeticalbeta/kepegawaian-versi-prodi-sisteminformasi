@@ -7,11 +7,19 @@ use App\Models\BackendUnivUsulan\Pegawai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use App\Services\FileStorageService;
+use App\Services\ValidationService;
 
 class PegawaiController extends Controller
 {
-    public function __construct()
+    private $fileStorage;
+    private $validationService;
+
+    public function __construct(FileStorageService $fileStorage, ValidationService $validationService)
     {
+        $this->fileStorage = $fileStorage;
+        $this->validationService = $validationService;
+        
         // Terapkan Gate: hanya yang lolos 'manage-pegawai' bisa akses
         $this->middleware('can:manage-pegawai');
     }
@@ -22,7 +30,7 @@ class PegawaiController extends Controller
     public function index()
     {
         $pegawais = Pegawai::orderBy('nama_lengkap')->paginate(15);
-        return view('backend.layouts.admin-univ-usulan.pegawai.index', compact('pegawais'));
+        return view('backend.layouts.views.admin-univ-usulan.pegawai.index', compact('pegawais'));
     }
 
     /**
@@ -30,7 +38,7 @@ class PegawaiController extends Controller
      */
     public function edit(Pegawai $pegawai)
     {
-        return view('backend.layouts.admin-univ-usulan.pegawai.edit', compact('pegawai'));
+        return view('backend.layouts.views.admin-univ-usulan.pegawai.edit', compact('pegawai'));
     }
 
     /**

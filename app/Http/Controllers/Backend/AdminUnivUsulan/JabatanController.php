@@ -5,9 +5,20 @@ namespace App\Http\Controllers\Backend\AdminUnivUsulan;
 use App\Http\Controllers\Controller;
 use App\Models\BackendUnivUsulan\Jabatan;
 use Illuminate\Http\Request;
+use App\Services\FileStorageService;
+use App\Services\ValidationService;
 
 class JabatanController extends Controller
 {
+    private $fileStorage;
+    private $validationService;
+
+    public function __construct(FileStorageService $fileStorage, ValidationService $validationService)
+    {
+        $this->fileStorage = $fileStorage;
+        $this->validationService = $validationService;
+    }
+
     /**
      * Display a listing of the resource with filters.
      */
@@ -71,7 +82,7 @@ class JabatanController extends Controller
             'dapat_usulan' => Jabatan::where('jenis_jabatan', '!=', 'Tenaga Kependidikan Struktural')->count(),
         ];
 
-        return view('backend.layouts.admin-univ-usulan.jabatan.master-data-jabatan', compact('jabatans', 'filterData', 'stats'));
+        return view('backend.layouts.views.admin-univ-usulan.jabatan.master-data-jabatan', compact('jabatans', 'filterData', 'stats'));
     }
 
     /**
@@ -79,7 +90,7 @@ class JabatanController extends Controller
      */
     public function create()
     {
-        return view('backend.layouts.admin-univ-usulan.jabatan.form-jabatan');
+        return view('backend.layouts.views.admin-univ-usulan.jabatan.form-jabatan');
     }
 
     /**
@@ -93,20 +104,45 @@ class JabatanController extends Controller
             'jabatan' => 'required|string|max:255|unique:jabatans,jabatan',
             'hierarchy_level' => 'nullable|integer|min:1|max:100',
         ], [
+            'jenis_pegawai.required' => 'Jenis pegawai wajib dipilih.',
+            'jenis_pegawai.in' => 'Jenis pegawai harus Dosen atau Tenaga Kependidikan.',
+            'jenis_jabatan.required' => 'Jenis jabatan wajib diisi.',
+            'jabatan.required' => 'Nama jabatan wajib diisi.',
+            'jabatan.unique' => 'Nama jabatan ini sudah ada.',
             'hierarchy_level.integer' => 'Level hirarki harus berupa angka.',
             'hierarchy_level.min' => 'Level hirarki minimal 1.',
             'hierarchy_level.max' => 'Level hirarki maksimal 100.',
         ]);
 
-        Jabatan::create([
-            'jenis_pegawai' => $request->jenis_pegawai,
-            'jenis_jabatan' => $request->jenis_jabatan,
-            'jabatan' => $request->jabatan,
-            'hierarchy_level' => $request->hierarchy_level,
-        ]);
+        try {
+            Jabatan::create([
+                'jenis_pegawai' => $request->jenis_pegawai,
+                'jenis_jabatan' => $request->jenis_jabatan,
+                'jabatan' => $request->jabatan,
+                'hierarchy_level' => $request->hierarchy_level,
+            ]);
 
-        return redirect()->route('backend.admin-univ-usulan.jabatan.index')
-                        ->with('success', 'Data jabatan berhasil ditambahkan.');
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data jabatan berhasil ditambahkan.'
+                ]);
+            }
+
+            return redirect()->route('backend.admin-univ-usulan.jabatan.index')
+                            ->with('success', 'Data jabatan berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -114,7 +150,7 @@ class JabatanController extends Controller
      */
     public function show(Jabatan $jabatan)
     {
-        return view('backend.layouts.admin-univ-usulan.jabatan.show', compact('jabatan'));
+        return view('backend.layouts.views.admin-univ-usulan.jabatan.show', compact('jabatan'));
     }
 
     /**
@@ -122,7 +158,7 @@ class JabatanController extends Controller
      */
     public function edit(Jabatan $jabatan)
     {
-        return view('backend.layouts.admin-univ-usulan.jabatan.form-jabatan', compact('jabatan'));
+        return view('backend.layouts.views.admin-univ-usulan.jabatan.form-jabatan', compact('jabatan'));
     }
 
     /**
@@ -136,20 +172,45 @@ class JabatanController extends Controller
             'jabatan' => 'required|string|max:255|unique:jabatans,jabatan,' . $jabatan->id,
             'hierarchy_level' => 'nullable|integer|min:1|max:100',
         ], [
+            'jenis_pegawai.required' => 'Jenis pegawai wajib dipilih.',
+            'jenis_pegawai.in' => 'Jenis pegawai harus Dosen atau Tenaga Kependidikan.',
+            'jenis_jabatan.required' => 'Jenis jabatan wajib diisi.',
+            'jabatan.required' => 'Nama jabatan wajib diisi.',
+            'jabatan.unique' => 'Nama jabatan ini sudah ada.',
             'hierarchy_level.integer' => 'Level hirarki harus berupa angka.',
             'hierarchy_level.min' => 'Level hirarki minimal 1.',
             'hierarchy_level.max' => 'Level hirarki maksimal 100.',
         ]);
 
-        $jabatan->update([
-            'jenis_pegawai' => $request->jenis_pegawai,
-            'jenis_jabatan' => $request->jenis_jabatan,
-            'jabatan' => $request->jabatan,
-            'hierarchy_level' => $request->hierarchy_level,
-        ]);
+        try {
+            $jabatan->update([
+                'jenis_pegawai' => $request->jenis_pegawai,
+                'jenis_jabatan' => $request->jenis_jabatan,
+                'jabatan' => $request->jabatan,
+                'hierarchy_level' => $request->hierarchy_level,
+            ]);
 
-        return redirect()->route('backend.admin-univ-usulan.jabatan.index')
-                        ->with('success', 'Data jabatan berhasil diperbarui.');
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data jabatan berhasil diperbarui.'
+                ]);
+            }
+
+            return redirect()->route('backend.admin-univ-usulan.jabatan.index')
+                            ->with('success', 'Data jabatan berhasil diperbarui.');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -157,19 +218,45 @@ class JabatanController extends Controller
      */
     public function destroy(Jabatan $jabatan)
     {
-        // Check if jabatan is being used
-        $usedInUsulan = $jabatan->usulanJabatanLama()->exists() || $jabatan->usulanJabatanTujuan()->exists();
-        $usedByPegawai = $jabatan->pegawais()->exists();
+        try {
+            // Check if jabatan is being used
+            $usedInUsulan = $jabatan->usulanJabatanLama()->exists() || $jabatan->usulanJabatanTujuan()->exists();
+            $usedByPegawai = $jabatan->pegawais()->exists();
 
-        if ($usedInUsulan || $usedByPegawai) {
+            if ($usedInUsulan || $usedByPegawai) {
+                if (request()->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Jabatan tidak dapat dihapus karena sedang digunakan oleh pegawai atau usulan.'
+                    ], 400);
+                }
+
+                return redirect()->route('backend.admin-univ-usulan.jabatan.index')
+                                ->with('error', 'Jabatan tidak dapat dihapus karena sedang digunakan oleh pegawai atau usulan.');
+            }
+
+            $jabatan->delete();
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data jabatan berhasil dihapus.'
+                ]);
+            }
+
             return redirect()->route('backend.admin-univ-usulan.jabatan.index')
-                            ->with('error', 'Jabatan tidak dapat dihapus karena sedang digunakan oleh pegawai atau usulan.');
+                            ->with('success', 'Data jabatan berhasil dihapus.');
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('backend.admin-univ-usulan.jabatan.index')
+                            ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
         }
-
-        $jabatan->delete();
-
-        return redirect()->route('backend.admin-univ-usulan.jabatan.index')
-                        ->with('success', 'Data jabatan berhasil dihapus.');
     }
 
     /**

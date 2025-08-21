@@ -29,6 +29,17 @@ class SubSubUnitKerja extends Model
      */
     public function unitKerja()
     {
-        return $this->hasOneThrough(UnitKerja::class, SubUnitKerja::class, 'id', 'id', 'sub_unit_kerja_id', 'unit_kerja_id');
+        return $this->belongsTo(UnitKerja::class, 'unit_kerja_id', 'id');
+    }
+
+    /**
+     * Get the unit kerja through sub unit kerja using accessor.
+     */
+    public function getUnitKerjaAttribute()
+    {
+        if ($this->subUnitKerja && $this->subUnitKerja->unitKerja) {
+            return $this->subUnitKerja->unitKerja;
+        }
+        return null;
     }
 }

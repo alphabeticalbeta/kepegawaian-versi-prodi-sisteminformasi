@@ -39,6 +39,9 @@ class UsulanFieldHelper
             case 'dokumen_pendukung':
                 return $this->getDokumenPendukungValue($field);
 
+            case 'dokumen_admin_fakultas':
+                return $this->getDokumenAdminFakultasValue($field);
+
             default:
                 return '-';
         }
@@ -315,8 +318,84 @@ class UsulanFieldHelper
             }
 
             if (\Storage::disk('public')->exists($path)) {
-                $url = \Storage::disk('public')->url($path);
-                return '<a href="' . $url . '" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">✓ Lihat Dokumen</a>';
+                // Use proper route for Tim Penilai
+                if (request()->is('penilai-universitas/*')) {
+                    $route = route('penilai-universitas.pusat-usulan.show-admin-fakultas-document', [$this->usulan->id, $field]);
+                } else {
+                    $url = \Storage::disk('public')->url($path);
+                }
+                return '<a href="' . ($route ?? $url) . '" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">✓ Lihat Dokumen</a>';
+            }
+
+            return '<span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md">✗ File tidak ditemukan</span>';
+        }
+
+        // Default
+        return '-';
+    }
+
+    /**
+     * Get dokumen admin fakultas value for display
+     */
+    private function getDokumenAdminFakultasValue(string $field): string
+    {
+        // Data disimpan oleh Admin Fakultas ketika "forward_to_university"
+        $data = $this->usulan->validasi_data['admin_fakultas']['dokumen_pendukung'] ?? [];
+
+        // Field nomor → tampilkan teks
+        if (in_array($field, ['nomor_surat_usulan', 'nomor_berita_senat'], true)) {
+            $rawValue = $data[$field] ?? '';
+
+            // Handle array values gracefully
+            if (is_array($rawValue)) {
+                $val = $rawValue['value'] ?? $rawValue['nomor'] ?? $rawValue[0] ?? '';
+                if (is_array($val)) {
+                    \Log::warning('Unexpected array in dokumen_admin_fakultas field', [
+                        'field' => $field,
+                        'usulan_id' => $this->usulan->id,
+                        'raw_value' => $rawValue
+                    ]);
+                    return '<span class="text-yellow-600">⚠ Data format error</span>';
+                }
+            } else {
+                $val = $rawValue;
+            }
+
+            $val = trim((string)$val);
+            return $val !== '' ? e($val) : '-';
+        }
+
+        // Field file → baca path lalu buat link (disk: public)
+        if ($field === 'file_surat_usulan' || $field === 'file_berita_senat') {
+            // Nama key path di data: file_*_path
+            $pathKey = $field . '_path';
+            $path = $data[$pathKey] ?? $data[$field] ?? null;
+
+            // Handle array paths
+            if (is_array($path)) {
+                $path = $path['path'] ?? $path['value'] ?? $path[0] ?? null;
+                if (is_array($path)) {
+                    \Log::warning('Unexpected array in dokumen_admin_fakultas file path', [
+                        'field' => $field,
+                        'usulan_id' => $this->usulan->id,
+                        'raw_path' => $data[$pathKey] ?? $data[$field]
+                    ]);
+                    return '<span class="text-yellow-600">⚠ Path format error</span>';
+                }
+            }
+
+            if (!$path) {
+                return '<span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md">✗ Belum diunggah</span>';
+            }
+
+            if (\Storage::disk('public')->exists($path)) {
+                // Use proper route for Tim Penilai
+                if (request()->is('penilai-universitas/*')) {
+                    $route = route('penilai-universitas.pusat-usulan.show-admin-fakultas-document', [$this->usulan->id, $field]);
+                } else {
+                    $url = \Storage::disk('public')->url($path);
+                }
+                return '<a href="' . ($route ?? $url) . '" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">✓ Lihat Dokumen</a>';
             }
 
             return '<span class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md">✗ File tidak ditemukan</span>';
@@ -335,8 +414,8 @@ class UsulanFieldHelper
         // Special handling for BKD documents
         if ($category === 'dokumen_bkd' && \Str::startsWith($field, 'bkd_')) {
             return strtoupper($bkdLabels[$field] ?? ucwords(str_replace('_', ' ', $field)));
-        } 
-        
+        }
+
         // Special handling for dokumen pendukung
         elseif ($category === 'dokumen_pendukung') {
             $labels = [
@@ -347,17 +426,28 @@ class UsulanFieldHelper
             ];
             return strtoupper($labels[$field] ?? ucwords(str_replace('_', ' ', $field)));
         }
-        
+
+        // Special handling for dokumen admin fakultas
+        elseif ($category === 'dokumen_admin_fakultas') {
+            $labels = [
+                'nomor_surat_usulan' => 'Nomor Surat Usulan Fakultas',
+                'file_surat_usulan'  => 'Dokumen Surat Usulan Fakultas',
+                'nomor_berita_senat' => 'Nomor Berita Senat',
+                'file_berita_senat'  => 'Dokumen Berita Senat',
+            ];
+            return strtoupper($labels[$field] ?? ucwords(str_replace('_', ' ', $field)));
+        }
+
         // Special handling for article links - keep as is
         elseif ($category === 'karya_ilmiah' && in_array($field, ['link_artikel', 'link_sinta', 'link_scopus', 'link_scimago', 'link_wos'])) {
             return ucwords(str_replace('_', ' ', $field));
         }
-        
+
         // Special handling for document links - keep as is
         elseif (in_array($category, ['dokumen_profil', 'dokumen_usulan']) && str_contains($field, 'link_')) {
             return ucwords(str_replace('_', ' ', $field));
         }
-        
+
         // Default: uppercase for all other fields
         return strtoupper(ucwords(str_replace('_', ' ', $field)));
     }

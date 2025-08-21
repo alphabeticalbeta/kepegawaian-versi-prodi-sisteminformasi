@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dark Mode Simple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-gray-900 transition-colors">
+    <div class="min-h-screen p-8">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">Test Dark Mode Simple</h1>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-colors">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Event Listener Test</h2>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                    Test dark mode dengan event listener (tanpa onclick).
+                </p>
+                <button id="dark-mode-toggle" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                    Toggle Dark Mode
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define toggleDarkMode function
+        window.toggleDarkMode = function() {
+            console.log('toggleDarkMode called');
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+        };
+
+        // Add event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.getElementById('dark-mode-toggle');
+            if (toggleButton) {
+                toggleButton.addEventListener('click', function() {
+                    console.log('Button clicked');
+                    window.toggleDarkMode();
+                });
+            }
+        });
+
+        // Initialize dark mode
+        const darkMode = localStorage.getItem('darkMode') === 'true';
+        if (darkMode) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

@@ -10,16 +10,27 @@ use Illuminate\Support\Facades\Auth; // <-- TAMBAHKAN INI
 use Illuminate\Support\Facades\DB;   // <-- TAMBAHKAN INI
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Services\FileStorageService;
+use App\Services\ValidationService;
 
 class PusatUsulanController extends Controller
 {
+    private $fileStorage;
+    private $validationService;
+
+    public function __construct(FileStorageService $fileStorage, ValidationService $validationService)
+    {
+        $this->fileStorage = $fileStorage;
+        $this->validationService = $validationService;
+    }
+
     public function index()
     {
         $periodeUsulans = PeriodeUsulan::withCount('usulans')
                                        ->latest()
                                        ->paginate(10);
 
-        return view('backend.layouts.admin-univ-usulan.pusat-usulan.index', [
+        return view('backend.layouts.views.admin-univ-usulan.pusat-usulan.index', [
             'periodeUsulans' => $periodeUsulans
         ]);
     }
@@ -31,7 +42,7 @@ class PusatUsulanController extends Controller
                                 ->latest()
                                 ->paginate(15);
 
-        return view('backend.layouts.admin-univ-usulan.pusat-usulan.show-pendaftar', [
+        return view('backend.layouts.views.admin-univ-usulan.pusat-usulan.show-pendaftar', [
             'periode' => $periodeUsulan,
             'usulans' => $usulans,
         ]);
@@ -68,14 +79,20 @@ class PusatUsulanController extends Controller
             'Sedang Direview Universitas',
         ]);
 
+        // Get penilais data for popup
+        $penilais = \App\Models\BackendUnivUsulan\Pegawai::whereHas('roles', function($query) {
+            $query->where('name', 'Penilai Universitas');
+        })->orderBy('nama_lengkap')->get();
+
         // Return view dengan data yang diperlukan
-        return view('backend.layouts.admin-univ-usulan.pusat-usulan.detail-usulan', [
+        return view('backend.layouts.views.admin-univ-usulan.pusat-usulan.detail-usulan', [
             'usulan' => $usulan,
             'canEdit' => $canEdit,
             'validationFields' => $validationFields,
             'existingValidation' => $existingValidation,
             'canEdit' => $canEdit,
             'bkdLabels' => $bkdLabels,
+            'penilais' => $penilais,
         ]);
     }
 
@@ -88,11 +105,6 @@ class PusatUsulanController extends Controller
             'turnitin',
             'upload_artikel',
             'bukti_syarat_guru_besar',
-            // BKD documents (dynamic names)
-            'bkd_ganjil_2024_2025',
-            'bkd_genap_2023_2024',
-            'bkd_ganjil_2023_2024',
-            'bkd_genap_2022_2023',
         ];
 
         // Check if field is BKD document (starts with 'bkd_')
@@ -152,19 +164,18 @@ class PusatUsulanController extends Controller
             abort(404, 'Path dokumen tidak ditemukan dalam data usulan.');
         }
 
-        // 3. Check if file exists in storage
+        // 3. Check if file exists in storage using FileStorageService
         if (!Storage::disk('local')->exists($filePath)) {
             Log::error('Document file not found in storage', [
                 'usulan_id' => $usulan->id,
                 'field' => $field,
-                'path' => $filePath,
-                'full_path' => Storage::disk('local')->path($filePath)
+                'path' => $filePath
             ]);
             abort(404, 'File dokumen tidak ditemukan di storage.');
         }
 
         // 4. Log document access
-        Log::info('Document accessed', [
+        Log::info('Document accessed using FileStorageService', [
             'usulan_id' => $usulan->id,
             'field' => $field,
             'accessed_by' => Auth::id(),
@@ -172,18 +183,9 @@ class PusatUsulanController extends Controller
             'file_path' => $filePath
         ]);
 
-        // 5. Get full path and serve file
+        // 5. Serve file using standard Laravel response
         $fullPath = Storage::disk('local')->path($filePath);
-
-        // Determine mime type
         $mimeType = 'application/pdf'; // Default for PDF
-        if (str_ends_with($filePath, '.pdf')) {
-            $mimeType = 'application/pdf';
-        } elseif (str_ends_with($filePath, '.jpg') || str_ends_with($filePath, '.jpeg')) {
-            $mimeType = 'image/jpeg';
-        } elseif (str_ends_with($filePath, '.png')) {
-            $mimeType = 'image/png';
-        }
 
         return response()->file($fullPath, [
             'Content-Type' => $mimeType,
@@ -264,10 +266,10 @@ class PusatUsulanController extends Controller
                 case 'send_to_assessor_team':
                     // Kirim ke tim penilai
                     $usulan->status_usulan = 'Sedang Dinilai';
-                    
+
                     // Hapus penilai lama jika ada
                     $usulan->penilais()->detach();
-                    
+
                     // Tambah penilai baru
                     $assessorIds = $request->assessor_ids;
                     $assessorData = [];
@@ -278,7 +280,7 @@ class PusatUsulanController extends Controller
                         ];
                     }
                     $usulan->penilais()->attach($assessorData);
-                    
+
                     $logMessage = 'Usulan dikirim ke Tim Penilai (' . count($assessorIds) . ' penilai).';
                     break;
 
@@ -287,7 +289,7 @@ class PusatUsulanController extends Controller
                     if (!$usulan->isRecommendedByReviewer()) {
                         return back()->with('error', 'Belum dapat dikirim ke Tim Senat: menunggu rekomendasi dari Tim Penilai.');
                     }
-                    
+
                     $usulan->status_usulan = 'Sedang Direview Senat';
                     $logMessage = 'Usulan dikirim ke Tim Senat untuk review.';
                     break;
@@ -346,10 +348,10 @@ class PusatUsulanController extends Controller
         }
 
         $usulan = \App\Models\BackendUnivUsulan\Usulan::findOrFail($usulanId);
-        
+
         // Test helper untuk semua kategori dokumen
         $helper = new \App\Helpers\UsulanFieldHelper($usulan);
-        
+
         $debugData = [
             'basic_info' => [
                 'usulan_id' => $usulan->id,
@@ -358,14 +360,14 @@ class PusatUsulanController extends Controller
                 'status_usulan' => $usulan->status_usulan,
                 'created_at' => $usulan->created_at->format('Y-m-d H:i:s'),
             ],
-            
+
             'data_usulan_analysis' => [
                 'has_data_usulan' => !empty($usulan->data_usulan),
                 'main_keys' => array_keys($usulan->data_usulan ?? []),
                 'dokumen_usulan_exists' => isset($usulan->data_usulan['dokumen_usulan']),
                 'dokumen_usulan_keys' => array_keys($usulan->data_usulan['dokumen_usulan'] ?? []),
             ],
-            
+
             'document_path_tests' => [
                 'pakta_integritas' => $usulan->getDocumentPath('pakta_integritas'),
                 'bukti_korespondensi' => $usulan->getDocumentPath('bukti_korespondensi'),
@@ -374,15 +376,15 @@ class PusatUsulanController extends Controller
                 'bkd_semester_1' => $usulan->getDocumentPath('bkd_semester_1'),
                 'bkd_ganjil_2024_2025' => $usulan->getDocumentPath('bkd_ganjil_2024_2025'),
             ],
-            
+
             'helper_field_tests' => [],
             'helper_errors' => [],
-            
+
             'bkd_label_tests' => [],
-            
+
             'route_tests' => []
         ];
-        
+
         // Test UsulanFieldHelper untuk kategori dokumen_usulan
         $dokumenUsulanFields = ['pakta_integritas', 'bukti_korespondensi', 'turnitin', 'upload_artikel'];
         foreach ($dokumenUsulanFields as $field) {
@@ -392,7 +394,7 @@ class PusatUsulanController extends Controller
                 $debugData['helper_errors']['dokumen_usulan'][$field] = $e->getMessage();
             }
         }
-        
+
         // Test UsulanFieldHelper untuk kategori dokumen_bkd
         $bkdFields = ['bkd_semester_1', 'bkd_semester_2', 'bkd_semester_3', 'bkd_semester_4'];
         foreach ($bkdFields as $field) {
@@ -402,14 +404,14 @@ class PusatUsulanController extends Controller
                 $debugData['helper_errors']['dokumen_bkd'][$field] = $e->getMessage();
             }
         }
-        
+
         // Test BKD Labels dari model
         try {
             $debugData['bkd_label_tests'] = $usulan->getBkdDisplayLabels();
         } catch (\Exception $e) {
             $debugData['helper_errors']['bkd_labels'] = $e->getMessage();
         }
-        
+
         // Test route generation
         try {
             $debugData['route_tests'] = [
@@ -419,10 +421,10 @@ class PusatUsulanController extends Controller
         } catch (\Exception $e) {
             $debugData['helper_errors']['routes'] = $e->getMessage();
         }
-        
+
         // Detail struktur data_usulan (full dump untuk analisis)
         $debugData['full_data_usulan'] = $usulan->data_usulan;
-        
+
         return response()->json($debugData, 200, [], JSON_PRETTY_PRINT);
 }
 

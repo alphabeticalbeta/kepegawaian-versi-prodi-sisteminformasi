@@ -1,4 +1,4 @@
-<aside id="sidebar" class="w-64 bg-white shadow-lg fixed top-0 left-0 h-full z-30 flex flex-col transition-all duration-300">
+<aside id="sidebar" class="sidebar w-64 bg-white shadow-lg fixed top-0 left-0 h-full z-30 flex flex-col transition-all duration-300">
     {{-- Header Sidebar --}}
     <div class="flex items-center justify-center p-4 h-16 border-b border-gray-200 flex-shrink-0">
         <div class="flex items-center gap-3 overflow-hidden">
@@ -20,20 +20,20 @@
         {{-- Dropdown untuk semua menu usulan --}}
         @php
             $usulanMenus = [
-                ['route' => route('pegawai-unmul.usulan-jabatan.create'), 'icon' => 'file-user', 'label' => 'Usulan Jabatan', 'pattern' => 'pegawai-unmul.usulan-jabatan.*'],
-                ['route' => '#', 'icon' => 'user-check', 'label' => 'Usulan NUPTK', 'pattern' => 'backend.pegawai-unmul.usulan-nuptk.*'],
-                ['route' => '#', 'icon' => 'file-bar-chart-2', 'label' => 'Usulan Laporan LKD', 'pattern' => 'backend.pegawai-unmul.usulan-lkd.*'],
-                ['route' => '#', 'icon' => 'clipboard-check', 'label' => 'Usulan Presensi', 'pattern' => 'backend.pegawai-unmul.usulan-presensi.*'],
-                ['route' => '#', 'icon' => 'clock', 'label' => 'Usulan Penyesuaian Masa Kerja', 'pattern' => 'backend.pegawai-unmul.usulan-masa-kerja.*'],
-                ['route' => '#', 'icon' => 'book-marked', 'label' => 'Usulan Ujian Dinas & Ijazah', 'pattern' => 'backend.pegawai-unmul.usulan-ujian.*'],
-                ['route' => '#', 'icon' => 'file-check-2', 'label' => 'Usulan Laporan Serdos', 'pattern' => 'backend.pegawai-unmul.usulan-serdos.*'],
-                ['route' => '#', 'icon' => 'user-minus', 'label' => 'Usulan Pensiun', 'pattern' => 'backend.pegawai-unmul.usulan-pensiun.*'],
-                ['route' => '#', 'icon' => 'trending-up', 'label' => 'Usulan Kepangkatan', 'pattern' => 'backend.pegawai-unmul.usulan-pangkat.*'],
-                ['route' => '#', 'icon' => 'graduation-cap', 'label' => 'Usulan Pencantuman Gelar', 'pattern' => 'backend.pegawai-unmul.usulan-gelar.*'],
-                ['route' => '#', 'icon' => 'link', 'label' => 'Usulan ID SINTA ke SISTER', 'pattern' => 'backend.pegawai-unmul.usulan-sinta.*'],
-                ['route' => '#', 'icon' => 'medal', 'label' => 'Usulan Satyalancana', 'pattern' => 'backend.pegawai-unmul.usulan-satyalancana.*'],
-                ['route' => '#', 'icon' => 'book-open', 'label' => 'Usulan Tugas Belajar', 'pattern' => 'backend.pegawai-unmul.usulan-tugas-belajar.*'],
-                ['route' => '#', 'icon' => 'user-plus', 'label' => 'Usulan Pengaktifan Kembali', 'pattern' => 'backend.pegawai-unmul.usulan-pengaktifan.*'],
+                ['route' => route('pegawai-unmul.usulan-jabatan.index'), 'icon' => 'file-user', 'label' => 'Usulan Jabatan', 'pattern' => 'pegawai-unmul.usulan-jabatan.*'],
+                ['route' => route('pegawai-unmul.usulan-nuptk.index'), 'icon' => 'user-check', 'label' => 'Usulan NUPTK', 'pattern' => 'pegawai-unmul.usulan-nuptk.*'],
+                ['route' => route('pegawai-unmul.usulan-laporan-lkd.index'), 'icon' => 'file-bar-chart-2', 'label' => 'Usulan Laporan LKD', 'pattern' => 'pegawai-unmul.usulan-laporan-lkd.*'],
+                ['route' => route('pegawai-unmul.usulan-presensi.index'), 'icon' => 'clipboard-check', 'label' => 'Usulan Presensi', 'pattern' => 'pegawai-unmul.usulan-presensi.*'],
+                ['route' => route('pegawai-unmul.usulan-penyesuaian-masa-kerja.index'), 'icon' => 'clock', 'label' => 'Usulan Penyesuaian Masa Kerja', 'pattern' => 'pegawai-unmul.usulan-penyesuaian-masa-kerja.*'],
+                ['route' => route('pegawai-unmul.usulan-ujian-dinas-ijazah.index'), 'icon' => 'book-marked', 'label' => 'Usulan Ujian Dinas & Ijazah', 'pattern' => 'pegawai-unmul.usulan-ujian-dinas-ijazah.*'],
+                ['route' => route('pegawai-unmul.usulan-laporan-serdos.index'), 'icon' => 'file-check-2', 'label' => 'Usulan Laporan Serdos', 'pattern' => 'pegawai-unmul.usulan-laporan-serdos.*'],
+                ['route' => route('pegawai-unmul.usulan-pensiun.index'), 'icon' => 'user-minus', 'label' => 'Usulan Pensiun', 'pattern' => 'pegawai-unmul.usulan-pensiun.*'],
+                ['route' => route('pegawai-unmul.usulan-kepangkatan.index'), 'icon' => 'trending-up', 'label' => 'Usulan Kepangkatan', 'pattern' => 'pegawai-unmul.usulan-kepangkatan.*'],
+                ['route' => route('pegawai-unmul.usulan-pencantuman-gelar.index'), 'icon' => 'graduation-cap', 'label' => 'Usulan Pencantuman Gelar', 'pattern' => 'pegawai-unmul.usulan-pencantuman-gelar.*'],
+                ['route' => route('pegawai-unmul.usulan-id-sinta-sister.index'), 'icon' => 'link', 'label' => 'Usulan ID SINTA ke SISTER', 'pattern' => 'pegawai-unmul.usulan-id-sinta-sister.*'],
+                ['route' => route('pegawai-unmul.usulan-satyalancana.index'), 'icon' => 'medal', 'label' => 'Usulan Satyalancana', 'pattern' => 'pegawai-unmul.usulan-satyalancana.*'],
+                ['route' => route('pegawai-unmul.usulan-tugas-belajar.index'), 'icon' => 'book-open', 'label' => 'Usulan Tugas Belajar', 'pattern' => 'pegawai-unmul.usulan-tugas-belajar.*'],
+                ['route' => route('pegawai-unmul.usulan-pengaktifan-kembali.index'), 'icon' => 'user-plus', 'label' => 'Usulan Pengaktifan Kembali', 'pattern' => 'pegawai-unmul.usulan-pengaktifan-kembali.*'],
             ];
             $isUsulanActive = collect($usulanMenus)->contains(fn($menu) => request()->routeIs($menu['pattern']));
         @endphp

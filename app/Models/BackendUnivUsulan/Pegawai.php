@@ -15,9 +15,15 @@ class Pegawai extends Authenticatable
 
     protected $guarded = ['id'];
 
+    /**
+     * Guard yang digunakan untuk authentication dan permissions
+     */
+    protected $guard_name = 'pegawai';
+
     protected $fillable = [
         // Data Utama & Autentikasi
         'jenis_pegawai',
+        'jenis_jabatan',
         'status_kepegawaian',
         'nip',
         'nuptk',
@@ -26,6 +32,7 @@ class Pegawai extends Authenticatable
         'gelar_belakang',
         'email',
         'password',
+        'username',
         'nomor_kartu_pegawai',
 
         // Data Pribadi
@@ -48,6 +55,9 @@ class Pegawai extends Authenticatable
 
         // Data Pendidikan
         'pendidikan_terakhir',
+        'nama_universitas_sekolah',
+        'nama_prodi_jurusan',
+        'nama_prodi_jurusan_s2',
 
         // Data Fungsional (Khusus Dosen)
         'mata_kuliah_diampu',
@@ -128,7 +138,7 @@ class Pegawai extends Authenticatable
             'jabatan:id,jabatan,jenis_pegawai',
             'unitKerja:id,nama,sub_unit_kerja_id',
             'unitKerja.subUnitKerja:id,nama,unit_kerja_id',
-            'unitKerja.subUnitKerja.unitKerja:id,nama'
+            'unitKerja.unitKerja:id,nama'
         ]);
     }
 
@@ -156,7 +166,7 @@ class Pegawai extends Authenticatable
      */
     public function scopeByFakultas($query, int $fakultasId)
     {
-        return $query->whereHas('unitKerja.subUnitKerja.unitKerja', function ($q) use ($fakultasId) {
+        return $query->whereHas('unitKerja.unitKerja', function ($q) use ($fakultasId) {
             $q->where('id', $fakultasId);
         });
     }
@@ -181,15 +191,15 @@ class Pegawai extends Authenticatable
     public function getFullNameAttribute(): string
     {
         $name = trim($this->nama_lengkap);
-        
+
         if ($this->gelar_depan) {
             $name = $this->gelar_depan . ' ' . $name;
         }
-        
+
         if ($this->gelar_belakang) {
             $name = $name . ', ' . $this->gelar_belakang;
         }
-        
+
         return $name;
     }
 
@@ -202,7 +212,7 @@ class Pegawai extends Authenticatable
             'pangkat' => $this->pangkat?->pangkat,
             'jabatan' => $this->jabatan?->jabatan,
             'unit_kerja' => $this->unitKerja?->nama,
-            'fakultas' => $this->unitKerja?->subUnitKerja?->unitKerja?->nama
+            'fakultas' => $this->unitKerja?->unitKerja?->nama
         ];
     }
 

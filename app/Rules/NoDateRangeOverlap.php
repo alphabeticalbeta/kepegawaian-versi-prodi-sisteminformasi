@@ -52,6 +52,7 @@ class NoDateRangeOverlap implements ValidationRule, DataAwareRule
             $inputEnd = $value;
         }
 
+        // Jika salah satu tanggal kosong, skip validasi
         if (blank($inputStart) || blank($inputEnd)) {
             return;
         }
@@ -60,6 +61,11 @@ class NoDateRangeOverlap implements ValidationRule, DataAwareRule
             $start = Carbon::parse($inputStart)->startOfDay();
             $end   = Carbon::parse($inputEnd)->endOfDay();
         } catch (\Throwable $e) {
+            \Log::warning('NoDateRangeOverlap: Invalid date format', [
+                'inputStart' => $inputStart,
+                'inputEnd' => $inputEnd,
+                'error' => $e->getMessage()
+            ]);
             return; // biar rule 'date' / format lain yang nembak error
         }
 
@@ -73,23 +79,25 @@ class NoDateRangeOverlap implements ValidationRule, DataAwareRule
             ->where($this->endColumn, '>=', $start);
 
         foreach ($this->filters as $col => $val) {
-            $query->where($col, $val);
+            if (!blank($val)) {
+                $query->where($col, $val);
+            }
         }
 
         if (!is_null($this->excludeId)) {
             $query->where($this->excludeColumn, '!=', $this->excludeId);
         }
 
-        // // Tambahkan sebelum if ($query->exists())
-        // \Log::info('NoDateRangeOverlap Debug', [
-        //     'input_start' => $start,
-        //     'input_end' => $end,
-        //     'exclude_id' => $this->excludeId,
-        //     'exclude_column' => $this->excludeColumn,
-        //     'filters' => $this->filters,
-        //     'query_sql' => $query->toSql(),
-        //     'query_bindings' => $query->getBindings()
-        // ]);
+        // Debug logging
+        \Log::info('NoDateRangeOverlap Debug', [
+            'input_start' => $start,
+            'input_end' => $end,
+            'exclude_id' => $this->excludeId,
+            'exclude_column' => $this->excludeColumn,
+            'filters' => $this->filters,
+            'query_sql' => $query->toSql(),
+            'query_bindings' => $query->getBindings()
+        ]);
 
         if ($query->exists()) {
             $fail('Rentang tanggal bertabrakan dengan periode lain.');

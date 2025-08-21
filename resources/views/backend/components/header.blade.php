@@ -1,4 +1,4 @@
-<header class="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 h-16 flex items-center justify-between flex-shrink-0 z-20">
+<header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 h-16 flex items-center justify-between flex-shrink-0 z-40 sticky top-0 transition-colors">
     {{-- Bagian kiri header tidak berubah --}}
     <div class="flex items-center gap-4">
         <button onclick="toggleSidebar()" class="p-1.5 rounded-lg hover:bg-gray-100">
@@ -18,7 +18,7 @@
                 // ==========================================================
                 // Periksa setiap role yang mungkin dimiliki pengguna
                 if ($roles->contains('Admin Universitas')) {
-                    $availableDashboards['Admin Universitas'] = route('admin-universitas.dashboard-universitas');
+                    $availableDashboards['Admin Universitas'] = route('admin-universitas.dashboard');
                 }
                 if ($roles->contains('Admin Universitas Usulan')) {
                     $availableDashboards['Admin Usulan'] = route('backend.admin-univ-usulan.dashboard');
@@ -26,8 +26,14 @@
                 if ($roles->contains('Admin Fakultas')) {
                     $availableDashboards['Admin Fakultas'] = route('admin-fakultas.dashboard');
                 }
+                if ($roles->contains('Admin Keuangan')) {
+                    $availableDashboards['Admin Keuangan'] = route('admin-keuangan.dashboard');
+                }
+                if ($roles->contains('Tim Senat')) {
+                    $availableDashboards['Tim Senat'] = route('tim-senat.dashboard');
+                }
                 if ($roles->contains('Penilai Universitas')) {
-                    $availableDashboards['Penilai'] = route('penilai-universitas.dashboard-penilai-universitas');
+                    $availableDashboards['Penilai'] = route('penilai-universitas.dashboard');
                 }
 
                 // Selalu tambahkan dashboard default Pegawai
@@ -51,14 +57,22 @@
                 $profileCompleteness = round(($uploadedDocs / $totalDocs) * 100);
             @endphp
 
+                        {{-- Dark Mode Toggle --}}
+            <button
+                id="dark-mode-toggle"
+                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full relative transition-colors"
+            >
+                <i data-lucide="moon" id="dark-mode-icon" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            </button>
+
             {{-- Tombol notifikasi --}}
-            <button class="p-2 hover:bg-gray-100 rounded-full relative">
-                <i data-lucide="bell" class="w-5 h-5 text-gray-600"></i>
+            <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full relative transition-colors">
+                <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
                 {{-- Notification badge (if needed) --}}
                 {{-- <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span> --}}
             </button>
 
-            <div class="w-px h-6 bg-gray-200"></div>
+            <div class="w-px h-6 bg-gray-200 dark:bg-gray-600"></div>
 
             {{-- MENU PINDAH HALAMAN (TERPISAH) --}}
             @if(count($availableDashboards) > 1)
@@ -85,9 +99,10 @@
                 <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-100">
                     <div class="relative">
                         <img
-                            src="{{ $user->foto ? Storage::url($user->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=32&background=6366f1&color=fff' }}"
+                            src="{{ $user->foto ? route('backend.admin-univ-usulan.data-pegawai.show-document', ['pegawai' => $user->id, 'field' => 'foto']) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=32&background=6366f1&color=fff' }}"
                             alt="{{ $user->nama_lengkap }}"
                             class="w-8 h-8 rounded-full object-cover ring-2 ring-gray-200"
+                            onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($user->nama_lengkap) }}&size=32&background=6366f1&color=fff'"
                         />
                         {{-- Profile completion indicator --}}
                         @if($profileCompleteness < 100)
@@ -109,11 +124,12 @@
                     {{-- Profile Header --}}
                     <div class="px-4 py-3 border-b border-gray-100">
                         <div class="flex items-center gap-3">
-                            <img
-                                src="{{ $user->foto ? Storage::url($user->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=48&background=6366f1&color=fff' }}"
-                                alt="{{ $user->nama_lengkap }}"
-                                class="w-12 h-12 rounded-full object-cover"
-                            />
+                                                <img
+                        src="{{ $user->foto ? route('backend.admin-univ-usulan.data-pegawai.show-document', ['pegawai' => $user->id, 'field' => 'foto']) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=48&background=6366f1&color=fff' }}"
+                        alt="{{ $user->nama_lengkap }}"
+                        class="w-12 h-12 rounded-full object-cover"
+                        onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($user->nama_lengkap) }}&size=48&background=6366f1&color=fff'"
+                    />
                             <div class="flex-1 min-w-0">
                                 <div class="font-medium text-gray-900 truncate">
                                     {{ $user->gelar_depan ? $user->gelar_depan . ' ' : '' }}{{ $user->nama_lengkap }}{{ $user->gelar_belakang ? ', ' . $user->gelar_belakang : '' }}
@@ -294,54 +310,4 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
 
-        window.toggleProfileDropdown = function() {
-            document.getElementById('role-dropdown-menu')?.classList.add('hidden');
-            document.getElementById('profile-dropdown-menu')?.classList.toggle('hidden');
-        };
-
-        window.toggleRoleDropdown = function() {
-            document.getElementById('profile-dropdown-menu')?.classList.add('hidden');
-            document.getElementById('role-dropdown-menu')?.classList.toggle('hidden');
-        };
-
-        window.openPasswordModal = function() {
-            document.getElementById('profile-dropdown-menu')?.classList.add('hidden');
-            document.getElementById('passwordModal')?.classList.remove('hidden');
-        };
-
-        window.closePasswordModal = function() {
-            document.getElementById('passwordModal')?.classList.add('hidden');
-        };
-
-        window.addEventListener('click', function(e) {
-            const profileDropdown = document.getElementById('profile-dropdown-menu');
-            const profileButton = document.querySelector('button[onclick="toggleProfileDropdown()"]');
-            const roleDropdown = document.getElementById('role-dropdown-menu');
-            const roleButton = document.querySelector('button[onclick="toggleRoleDropdown()"]');
-            const passwordModal = document.getElementById('passwordModal');
-
-            if (profileDropdown && profileButton && !profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
-                profileDropdown.classList.add('hidden');
-            }
-            if (roleDropdown && roleButton && !roleButton.contains(e.target) && !roleDropdown.contains(e.target)) {
-                roleDropdown.classList.add('hidden');
-            }
-            if (passwordModal && e.target === passwordModal) {
-                closePasswordModal();
-            }
-        });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closePasswordModal();
-            }
-        });
-    });
-</script>

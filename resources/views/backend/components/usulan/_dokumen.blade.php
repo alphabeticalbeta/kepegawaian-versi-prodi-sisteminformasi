@@ -42,9 +42,9 @@
             switch ($currentRole) {
                 case 'Admin Fakultas':
                     if (in_array($field, $profilFields)) {
-                        $url = route('usulan.show-pegawai-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+                        $url = route('admin-fakultas.usulan.show-pegawai-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
                     } else {
-                        $url = route('usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+                        $url = route('admin-fakultas.usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
                     }
                     break;
                 case 'Admin Universitas Usulan':

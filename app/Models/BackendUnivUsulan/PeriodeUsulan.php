@@ -26,6 +26,7 @@ class PeriodeUsulan extends Model
     protected $fillable = [
         'nama_periode',
         'jenis_usulan',
+        'status_kepegawaian',
         'tanggal_mulai',
         'tanggal_selesai',
         'tanggal_mulai_perbaikan',
@@ -45,6 +46,7 @@ class PeriodeUsulan extends Model
         'tanggal_selesai' => 'date',
         'tanggal_mulai_perbaikan' => 'date',
         'tanggal_selesai_perbaikan' => 'date',
+        'status_kepegawaian' => 'array',
     ];
 
     /**
@@ -55,5 +57,63 @@ class PeriodeUsulan extends Model
     {
         // Kita akan membuat model Usulan di namespace yang sama
         return $this->hasMany(Usulan::class);
+    }
+
+    /**
+     * Scope untuk memfilter periode berdasarkan status kepegawaian
+     */
+    public function scopeByStatusKepegawaian($query, $statusKepegawaian)
+    {
+        return $query->whereJsonContains('status_kepegawaian', $statusKepegawaian);
+    }
+
+    /**
+     * Scope untuk memfilter periode yang aktif
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'Buka');
+    }
+
+    /**
+     * Scope untuk memfilter periode berdasarkan jenis usulan
+     */
+    public function scopeByJenisUsulan($query, $jenisUsulan)
+    {
+        return $query->where('jenis_usulan', $jenisUsulan);
+    }
+
+    /**
+     * Mendapatkan daftar status kepegawaian yang tersedia
+     */
+    public static function getAvailableStatusKepegawaian()
+    {
+        return [
+            // Dosen
+            'Dosen PNS' => 'Dosen PNS',
+            'Dosen PPPK' => 'Dosen PPPK',
+            'Dosen Non ASN' => 'Dosen Non ASN',
+
+            // Tenaga Kependidikan
+            'Tenaga Kependidikan PNS' => 'Tenaga Kependidikan PNS',
+            'Tenaga Kependidikan PPPK' => 'Tenaga Kependidikan PPPK',
+            'Tenaga Kependidikan Non ASN' => 'Tenaga Kependidikan Non ASN',
+        ];
+    }
+
+    /**
+     * Mendapatkan daftar status kepegawaian yang diizinkan untuk periode ini
+     */
+    public function getAllowedStatusKepegawaian()
+    {
+        return $this->status_kepegawaian ?? [];
+    }
+
+        /**
+     * Mengecek apakah status kepegawaian tertentu diizinkan
+     */
+    public function isStatusKepegawaianAllowed($statusKepegawaian)
+    {
+        return in_array($statusKepegawaian, $this->status_kepegawaian ?? []);
     }
 }

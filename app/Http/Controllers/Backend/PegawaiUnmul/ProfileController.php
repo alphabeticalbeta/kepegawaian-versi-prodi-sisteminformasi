@@ -33,12 +33,12 @@ class ProfileController extends Controller
         $isEditing = $request->has('edit') && $request->get('edit') == '1';
 
         // 4. Ambil data untuk dropdown HANYA JIKA sedang mode edit
-        $pangkats = $isEditing ? \App\Models\BackendUnivUsulan\Pangkat::orderBy('pangkat')->get() : [];
+        $pangkats = $isEditing ? \App\Models\BackendUnivUsulan\Pangkat::orderByHierarchy('asc')->get() : [];
         $jabatans = $isEditing ? \App\Models\BackendUnivUsulan\Jabatan::orderBy('jabatan')->get() : [];
         $unitKerjas = $isEditing ? \App\Models\BackendUnivUsulan\SubSubUnitKerja::with('subUnitKerja.unitKerja')->orderBy('nama')->get() : [];
 
         // 5. Kirim SEMUA variabel ke view di akhir metode
-        return view('backend.layouts.pegawai-unmul.profile.show', compact(
+        return view('backend.layouts.views.pegawai-unmul.profile.show', compact(
             'pegawai',
             'documentFields',
             'isEditing',
@@ -75,6 +75,8 @@ class ProfileController extends Controller
             'jenis_kelamin' => 'required|in:Laki-Laki,Perempuan',
             'nomor_handphone' => 'required|string|max:20',
             'pendidikan_terakhir' => 'required|string',
+            'nama_universitas_sekolah' => 'nullable|string|max:255',
+            'nama_prodi_jurusan' => 'nullable|string|max:255',
             'nuptk' => 'nullable|string|max:16',
             'ranting_ilmu_kepakaran' => 'nullable|string',
             'mata_kuliah_diampu' => 'nullable|string',

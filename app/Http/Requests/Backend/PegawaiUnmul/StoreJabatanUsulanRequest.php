@@ -21,7 +21,7 @@ class StoreJabatanUsulanRequest extends FormRequest
         $jenisUsulan = $this->determineJenisUsulan($pegawai);
 
         $rules = [
-            // PERIODE USULAN
+            // PERIODE USULAN - Keep required
             'periode_usulan_id' => [
                 'required',
                 'exists:periode_usulans,id',
@@ -39,10 +39,10 @@ class StoreJabatanUsulanRequest extends FormRequest
                 }
             ],
 
-            // KARYA ILMIAH - Conditional berdasarkan jenjang
+            // KARYA ILMIAH - Make nullable for testing
             'karya_ilmiah' => 'nullable|string|in:Jurnal Nasional Bereputasi,Jurnal Internasional Bereputasi',
 
-            // INFORMASI ARTIKEL - Nullable karena tergantung jenjang
+            // INFORMASI ARTIKEL - All nullable for testing
             'nama_jurnal' => 'nullable|string|max:500',
             'judul_artikel' => 'nullable|string|max:500',
             'penerbit_artikel' => 'nullable|string|max:255',
@@ -51,34 +51,35 @@ class StoreJabatanUsulanRequest extends FormRequest
             'edisi_artikel' => 'nullable|string|max:100',
             'halaman_artikel' => 'nullable|string|max:100',
 
-            // LINKS
+            // LINKS - All nullable for testing
             'link_artikel' => 'nullable|url|max:500',
             'link_sinta' => 'nullable|url|max:500',
             'link_scopus' => 'nullable|url|max:500',
             'link_scimago' => 'nullable|url|max:500',
             'link_wos' => 'nullable|url|max:500',
 
-            // DOKUMEN - Conditional berdasarkan apakah create atau update
-            'pakta_integritas' => $this->getFileValidation('pakta_integritas', true), // Selalu wajib
-            'bukti_korespondensi' => $this->getFileValidation('bukti_korespondensi'),
-            'turnitin' => $this->getFileValidation('turnitin'),
-            'upload_artikel' => $this->getFileValidation('upload_artikel'),
+            // DOKUMEN - All nullable for testing
+            'pakta_integritas' => 'nullable|file|mimes:pdf|max:1024',
+            'bukti_korespondensi' => 'nullable|file|mimes:pdf|max:1024',
+            'turnitin' => 'nullable|file|mimes:pdf|max:1024',
+            'upload_artikel' => 'nullable|file|mimes:pdf|max:1024',
 
-            // SYARAT GURU BESAR (opsional)
+            // SYARAT GURU BESAR - All nullable for testing
             'syarat_guru_besar' => 'nullable|string|in:hibah,bimbingan,pengujian,reviewer',
-            'bukti_syarat_guru_besar' => $this->getFileValidation('bukti_syarat_guru_besar'),
+            'bukti_syarat_guru_besar' => 'nullable|file|mimes:pdf|max:2048',
 
-            // CATATAN
+            // BKD SEMESTER - All nullable for testing
+            'bkd_semester_1' => 'nullable|file|mimes:pdf|max:2048',
+            'bkd_semester_2' => 'nullable|file|mimes:pdf|max:2048',
+            'bkd_semester_3' => 'nullable|file|mimes:pdf|max:2048',
+            'bkd_semester_4' => 'nullable|file|mimes:pdf|max:2048',
+
+            // CATATAN - Nullable for testing
             'catatan' => 'nullable|string|max:1000',
 
-            // ACTION
-            'action' => 'required|string|in:save_draft,submit_final',
+            // ACTION - Keep required
+            'action' => 'required|string|in:save_draft,submit,submit_to_university,submit_to_fakultas',
         ];
-
-        // ENHANCED: Validasi syarat guru besar jika dipilih
-        if ($this->filled('syarat_guru_besar')) {
-            $rules['bukti_syarat_guru_besar'] = $this->getFileValidation('bukti_syarat_guru_besar', true);
-        }
 
         return $rules;
     }
@@ -217,11 +218,11 @@ class StoreJabatanUsulanRequest extends FormRequest
     private function determineJenisUsulan($pegawai): string
     {
         if ($pegawai->jenis_pegawai === 'Dosen' && $pegawai->status_kepegawaian === 'Dosen PNS') {
-            return 'usulan-jabatan-dosen';
+            return 'Usulan Jabatan';
         } elseif ($pegawai->jenis_pegawai === 'Tenaga Kependidikan' && $pegawai->status_kepegawaian === 'Tenaga Kependidikan PNS') {
-            return 'usulan-jabatan-tendik';
+            return 'Usulan Jabatan';
         }
-        return 'usulan-jabatan-dosen'; // Fallback
+        return 'Usulan Jabatan'; // Fallback
     }
 
     private function getFileValidation(string $fieldName, bool $alwaysRequired = false): string

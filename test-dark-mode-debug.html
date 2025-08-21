@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dark Mode Debug</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-gray-900 transition-colors">
+    <div class="min-h-screen p-8">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">Test Dark Mode Debug</h1>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-colors mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Debug Info</h2>
+                <div id="debug-info" class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    Loading debug info...
+                </div>
+                <button id="dark-mode-toggle" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                    Toggle Dark Mode
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-colors">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Test Card</h3>
+                <p class="text-gray-600 dark:text-gray-300">Ini adalah test card untuk memastikan dark mode berfungsi.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define toggleDarkMode function
+        window.toggleDarkMode = function() {
+            console.log('toggleDarkMode called');
+            console.log('Before toggle - dark class exists:', document.documentElement.classList.contains('dark'));
+
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+
+            console.log('After toggle - isDark:', isDark);
+            console.log('After toggle - dark class exists:', document.documentElement.classList.contains('dark'));
+
+            updateDebugInfo();
+        };
+
+        // Update debug info
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debug-info');
+            const isDark = document.documentElement.classList.contains('dark');
+            const localStorageValue = localStorage.getItem('darkMode');
+
+            debugInfo.innerHTML = `
+                <strong>Current State:</strong><br>
+                - Dark class exists: ${isDark}<br>
+                - localStorage value: ${localStorageValue}<br>
+                - HTML class: ${document.documentElement.className}<br>
+                - Body class: ${document.body.className}
+            `;
+        }
+
+        // Add event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.getElementById('dark-mode-toggle');
+            if (toggleButton) {
+                toggleButton.addEventListener('click', function() {
+                    console.log('Button clicked');
+                    window.toggleDarkMode();
+                });
+            }
+
+            updateDebugInfo();
+        });
+
+        // Initialize dark mode
+        const darkMode = localStorage.getItem('darkMode') === 'true';
+        console.log('Initial dark mode state:', darkMode);
+
+        if (darkMode) {
+            document.documentElement.classList.add('dark');
+            console.log('Dark mode class added to html element');
+        } else {
+            document.documentElement.classList.remove('dark');
+            console.log('Dark mode class removed from html element');
+        }
+
+        console.log('Current dark class exists:', document.documentElement.classList.contains('dark'));
+    </script>
+</body>
+</html>

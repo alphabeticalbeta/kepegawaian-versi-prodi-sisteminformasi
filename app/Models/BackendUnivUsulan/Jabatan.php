@@ -173,7 +173,7 @@ class Jabatan extends Model
             }
         }
 
-        // Dosen Fungsi Tambahan tidak ada usulan (sudah pindah manual)
+        // Dosen dengan Tugas Tambahan tidak ada usulan (sudah pindah manual)
         return new Collection();
     }
 
@@ -283,7 +283,7 @@ class Jabatan extends Model
     {
         return match($this->jenis_jabatan) {
             'Dosen Fungsional' => 'bg-blue-100 text-blue-800',
-            'Dosen Fungsi Tambahan' => 'bg-purple-100 text-purple-800',
+            'Dosen dengan Tugas Tambahan' => 'bg-purple-100 text-purple-800',
             'Tenaga Kependidikan Fungsional Umum' => 'bg-green-100 text-green-800',
             'Tenaga Kependidikan Fungsional Tertentu' => 'bg-orange-100 text-orange-800',
             'Tenaga Kependidikan Struktural' => 'bg-red-100 text-red-800',

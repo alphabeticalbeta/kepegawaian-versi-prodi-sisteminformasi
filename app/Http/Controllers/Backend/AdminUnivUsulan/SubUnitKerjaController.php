@@ -6,16 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\BackendUnivUsulan\SubUnitKerja;
 use App\Models\BackendUnivUsulan\UnitKerja;
 use Illuminate\Http\Request;
+use App\Services\FileStorageService;
+use App\Services\ValidationService;
 
 class SubUnitKerjaController extends Controller
 {
+    private $fileStorage;
+    private $validationService;
+
+    public function __construct(FileStorageService $fileStorage, ValidationService $validationService)
+    {
+        $this->fileStorage = $fileStorage;
+        $this->validationService = $validationService;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $subUnitKerjas = SubUnitKerja::with('unitKerja')->orderBy('nama')->paginate(10);
-        return view('backend.layouts.admin-univ-usulan.sub-unitkerja.master-data-sub-unitkerja', compact('subUnitKerjas'));
+        return view('backend.layouts.views.admin-univ-usulan.sub-unitkerja.master-data-sub-unitkerja', compact('subUnitKerjas'));
     }
 
     /**
@@ -24,7 +35,7 @@ class SubUnitKerjaController extends Controller
     public function create()
     {
         $unitKerjas = UnitKerja::orderBy('nama')->get();
-        return view('backend.layouts.admin-univ-usulan.sub-unitkerja.form-sub-unitkerja', compact('unitKerjas'));
+        return view('backend.layouts.views.admin-univ-usulan.sub-unitkerja.form-sub-unitkerja', compact('unitKerjas'));
     }
 
     /**
@@ -49,7 +60,7 @@ class SubUnitKerjaController extends Controller
     public function edit(SubUnitKerja $subUnitKerja)
     {
         $unitKerjas = UnitKerja::orderBy('nama')->get();
-        return view('backend.layouts.admin-univ-usulan.sub-unitkerja.form-sub-unitkerja', compact('subUnitKerja', 'unitKerjas'));
+        return view('backend.layouts.views.admin-univ-usulan.sub-unitkerja.form-sub-unitkerja', compact('subUnitKerja', 'unitKerjas'));
     }
 
     /**

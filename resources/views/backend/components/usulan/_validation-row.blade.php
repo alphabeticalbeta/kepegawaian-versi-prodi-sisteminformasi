@@ -1,16 +1,9 @@
-
 @php
     $fieldHelper = new \App\Helpers\UsulanFieldHelper($usulan);
     $fieldValue = $fieldHelper->getFieldValue($category, $field);
+
     $currentStatus = $existingValidation[$category][$field]['status'] ?? 'sesuai';
     $currentKeterangan = $existingValidation[$category][$field]['keterangan'] ?? '';
-    
-    // Determine if this is a link field
-    $isLinkField = strpos($fieldValue, '<a href=') !== false;
-    
-    // Determine if this is an article field that needs smaller font
-    $articleFields = ['nama_jurnal', 'judul_artikel', 'penerbit_artikel', 'volume_artikel', 'nomor_artikel', 'edisi_artikel', 'halaman_artikel'];
-    $isArticleField = in_array($field, $articleFields);
 @endphp
 
 <tbody class="divide-y divide-gray-200">
@@ -26,12 +19,26 @@
                     </svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-lg font-semibold text-gray-900 uppercase">
-                        {{ $fieldHelper->getValidationLabel($category, $field, $bkdLabels ?? []) }}
+                    <p class="text-lg font-semibold text-gray-900 lowercase">
+                        @if ($category === 'dokumen_bkd' && Str::startsWith($field, 'bkd_'))
+                            {{-- Label BKD dinamis --}}
+                            {{ strtolower($bkdLabels[$field] ?? ucwords(str_replace('_', ' ', $field))) }}
+                        @elseif ($category === 'dokumen_pendukung')
+                            @php
+                                $labels = [
+                                    'nomor_surat_usulan' => 'Nomor Surat Usulan Fakultas',
+                                    'file_surat_usulan'  => 'Dokumen Surat Usulan Fakultas',
+                                    'nomor_berita_senat' => 'Nomor Surat Senat',
+                                    'file_berita_senat'  => 'Dokumen Surat Senat',
+                                ];
+                            @endphp
+                            {{ strtolower($labels[$field] ?? ucwords(str_replace('_', ' ', $field))) }}
+                        @else
+                            {{ strtolower(ucwords(str_replace('_', ' ', $field))) }}
+                        @endif
                     </p>
-                    <div class="{{ $isLinkField ? '' : 'border border-gray-800 px-3 py-2 rounded-md bg-gray-50' }} {{ $isArticleField ? 'text-sm' : 'text-xl' }} font-bold text-gray-800 mt-2 break-words whitespace-normal" 
-                         style="{{ $isLinkField ? '' : 'text-transform: uppercase; word-wrap: break-word; overflow-wrap: break-word;' }}">
-                        {!! $isLinkField ? $fieldValue : strtoupper(strip_tags($fieldValue)) !!}
+                    <div class="text-base text-gray-600 mt-1 break-words lowercase">
+                        {!! strtolower($fieldValue) !!}
                     </div>
                 </div>
             </div>
@@ -51,7 +58,7 @@
                     </option>
                 </select>
             @else
-                <span class="inline-flex px-3 py-1 text-base font-semibold rounded-full" style="text-transform: lowercase; {{ $currentStatus === 'sesuai' ? 'background-color:#d1fae5;color:#065f46;' : 'background-color:#fee2e2;color:#991b1b;' }}">
+                <span class="inline-flex px-3 py-1 text-base font-semibold rounded-full lowercase {{ $currentStatus === 'sesuai' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                     {{ $currentStatus === 'sesuai' ? '✓ sesuai' : '✗ tidak sesuai' }}
                 </span>
             @endif
@@ -63,20 +70,20 @@
                 <textarea name="validation[{{ $category }}][{{ $field }}][keterangan]"
                     id="keterangan_{{ $category }}_{{ $field }}"
                     rows="3"
-                    class="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed resize-none text-center"
+                    class="w-full border border-gray-300 rounded-lg shadow-sm p-3 text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed resize-none text-center lowercase"
                     placeholder="{{ $currentStatus === 'sesuai' ? 'pilih \"tidak sesuai\" untuk mengisi keterangan' : 'jelaskan mengapa item ini tidak sesuai...' }}"
-                    style="text-align: center; text-transform: lowercase;"
+                    style="text-align: center;"
                     onfocus="this.style.textAlign='left';"
                     onblur="if(this.value === '') { this.style.textAlign='center'; }"
                     {{ $currentStatus === 'sesuai' ? 'disabled' : '' }}>{{ strtolower($currentKeterangan) }}
                 </textarea>
             @else
                 @if($currentStatus === 'tidak_sesuai' && $currentKeterangan)
-                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-base text-red-800" style="text-transform: lowercase;">
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-base text-red-800 lowercase">
                         {{ strtolower($currentKeterangan) }}
                     </div>
                 @else
-                    <div class="p-3 bg-gray-50 rounded-lg text-base text-gray-500 italic text-center" style="text-transform: lowercase;">
+                    <div class="p-3 bg-gray-50 rounded-lg text-base text-gray-500 italic text-center lowercase">
                         -
                     </div>
                 @endif

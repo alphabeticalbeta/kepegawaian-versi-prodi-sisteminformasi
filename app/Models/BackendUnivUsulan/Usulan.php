@@ -64,6 +64,7 @@ class Usulan extends Model
         'jabatan_lama_id',
         'jabatan_tujuan_id',
         'status_usulan',
+        'status_kepegawaian',
         'data_usulan',
         'validasi_data',
         'catatan_verifikator',
@@ -147,13 +148,31 @@ class Usulan extends Model
     }
 
     /**
-     * Relasi many-to-many ke Pegawai (sebagai Penilai).
+     * Relasi many-to-many ke Penilai.
      */
     public function penilais(): BelongsToMany
     {
-        return $this->belongsToMany(Pegawai::class, 'usulan_penilai', 'usulan_id', 'penilai_id')
+        return $this->belongsToMany(Penilai::class, 'usulan_penilai', 'usulan_id', 'penilai_id')
                     ->withPivot('status_penilaian', 'catatan_penilaian')
                     ->withTimestamps();
+    }
+
+    /**
+     * Check if usulan is assigned to specific penilai.
+     */
+    public function isAssignedToPenilai($penilaiId): bool
+    {
+        return $this->penilais()->where('penilai_id', $penilaiId)->exists();
+    }
+
+    /**
+     * Scope to get usulans assigned to specific penilai.
+     */
+    public function scopeAssignedToPenilai($query, $penilaiId)
+    {
+        return $query->whereHas('penilais', function ($penilaiQuery) use ($penilaiId) {
+            $penilaiQuery->where('penilai_id', $penilaiId);
+        });
     }
 
     // =====================================
@@ -193,7 +212,9 @@ class Usulan extends Model
         return in_array($this->status_usulan, [
             'Draft',
             'Perlu Perbaikan',
-            'Dikembalikan'
+            'Dikembalikan',
+            'Sedang Direview',
+            'Menunggu Review Admin Univ'
         ]);
     }
 
@@ -204,7 +225,6 @@ class Usulan extends Model
     {
         return in_array($this->status_usulan, [
             'Diajukan',
-            'Sedang Direview',
             'Disetujui',
             'Direkomendasikan'
         ]);
@@ -225,6 +245,8 @@ class Usulan extends Model
     {
         return $this->created_at ? $this->created_at->diffInDays(now()) : 0;
     }
+
+
 
     // =====================================
     // DATA USULAN ACCESSORS
@@ -281,20 +303,20 @@ class Usulan extends Model
                         $sem = strtolower($m[1]); // ganjil|genap
                         $y1 = $m[2];
                         $y2 = $m[3];
-                        
+
                         // Try legacy key format
                         $legacyKey = 'bkd_' . $sem . '_' . $y1 . '_' . $y2;
-                        
+
                         // Check new structure with legacy key
                         if (!empty($this->data_usulan['dokumen_usulan'][$legacyKey]['path'])) {
                             return $this->data_usulan['dokumen_usulan'][$legacyKey]['path'];
                         }
-                        
+
                         // Check old structure with legacy key
                         if (!empty($this->data_usulan[$legacyKey])) {
                             return $this->data_usulan[$legacyKey];
                         }
-                        
+
                         // Scan all BKD keys in dokumen_usulan
                         if (!empty($this->data_usulan['dokumen_usulan'])) {
                             foreach ($this->data_usulan['dokumen_usulan'] as $k => $info) {
@@ -305,7 +327,7 @@ class Usulan extends Model
                                 }
                             }
                         }
-                        
+
                         // Scan all BKD keys in flat structure
                         if (!empty($this->data_usulan)) {
                             foreach ($this->data_usulan as $k => $info) {
@@ -603,7 +625,15 @@ class Usulan extends Model
      */
     public function getValidasiByRole(string $role): array
     {
-        return $this->validasi_data[$role] ?? [];
+        $roleData = $this->validasi_data[$role] ?? [];
+
+        // If the role data exists and has 'validation' key, return validation data
+        if (isset($roleData['validation'])) {
+            return $roleData['validation'];
+        }
+
+        // For backward compatibility, if data exists but no 'validation' key, return as is
+        return $roleData;
     }
 
     /**
@@ -613,7 +643,24 @@ class Usulan extends Model
     {
         $currentValidasi = $this->validasi_data ?? [];
 
-        $currentValidasi[$role] = array_merge($validasiData, [
+        // Preserve existing validation data and merge with new data
+        $existingValidation = $currentValidasi[$role] ?? [];
+        $existingValidationData = $existingValidation['validation'] ?? [];
+
+        // Deep merge validation data
+        foreach ($validasiData as $category => $fields) {
+            if (!isset($existingValidationData[$category])) {
+                $existingValidationData[$category] = [];
+            }
+
+            foreach ($fields as $field => $fieldData) {
+                $existingValidationData[$category][$field] = $fieldData;
+            }
+        }
+
+        // Update validation structure - preserve existing data like dokumen_pendukung
+        $currentValidasi[$role] = array_merge($existingValidation, [
+            'validation' => $existingValidationData,
             'validated_by' => $validatedBy,
             'validated_at' => now()->toISOString()
         ]);
@@ -653,7 +700,7 @@ class Usulan extends Model
         $validasi = $this->getValidasiByRole($role);
 
         foreach ($validasi as $category => $fields) {
-            if (in_array($category, ['validated_by', 'validated_at'])) {
+            if (in_array($category, ['validated_by', 'validated_at', 'dokumen_pendukung'])) {
                 continue;
             }
 
@@ -781,7 +828,7 @@ class Usulan extends Model
         if ($usulan && $usulan->periodeUsulan) {
             // Generate BKD fields based on periode
             $bkdFields = $usulan->generateBkdFieldNames();
-            
+
             // Update dokumen_bkd with dynamic fields
             $fields['dokumen_bkd'] = $bkdFields;
         }
@@ -969,7 +1016,7 @@ public function getSenateDecisionCounts(): array
     {
         // OPTIMASI: Gunakan Eloquent relationship instead of raw DB query
         $total = $this->penilais()->count();
-        
+
         if ($total === 0) {
             return false;
         }

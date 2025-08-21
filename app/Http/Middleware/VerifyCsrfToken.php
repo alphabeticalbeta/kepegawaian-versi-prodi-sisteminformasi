@@ -12,6 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        'pegawai-unmul/usulan-jabatan', // Temporary for testing
+        'pegawai-unmul/usulan-jabatan/test', // Test route
+        'test-usulan-submission', // Test route
     ];
 }

@@ -205,8 +205,8 @@ class JabatanHierarchyTest extends TestCase
             ['jabatan' => 'Lektor Kepala', 'jenis_pegawai' => 'Dosen', 'jenis_jabatan' => 'Dosen Fungsional', 'hierarchy_level' => 4],
             ['jabatan' => 'Guru Besar', 'jenis_pegawai' => 'Dosen', 'jenis_jabatan' => 'Dosen Fungsional', 'hierarchy_level' => 5],
 
-            // Dosen Fungsi Tambahan
-            ['jabatan' => 'Dekan', 'jenis_pegawai' => 'Dosen', 'jenis_jabatan' => 'Dosen Fungsi Tambahan', 'hierarchy_level' => null],
+                    // Dosen dengan Tugas Tambahan
+        ['jabatan' => 'Dekan', 'jenis_pegawai' => 'Dosen', 'jenis_jabatan' => 'Dosen dengan Tugas Tambahan', 'hierarchy_level' => null],
 
             // TK Fungsional Tertentu
             ['jabatan' => 'Arsiparis Ahli Pertama', 'jenis_pegawai' => 'Tenaga Kependidikan', 'jenis_jabatan' => 'Tenaga Kependidikan Fungsional Tertentu', 'hierarchy_level' => 1],

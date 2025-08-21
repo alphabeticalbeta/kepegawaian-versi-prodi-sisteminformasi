@@ -45,7 +45,7 @@ class UsulanPegawaiController extends Controller
                                      ->where('tanggal_selesai', '>=', now())
                                      ->get();
 
-        return view('backend.layouts.pegawai-unmul.dashboard', [
+        return view('backend.layouts.views.pegawai-unmul.dashboard', [
             'usulans' => $usulans,
             'statistics' => $statistics,
             'activePeriods' => $activePeriods,
@@ -138,7 +138,7 @@ class UsulanPegawaiController extends Controller
             ],
         ];
 
-        return view('backend.layouts.pegawai-unmul.usulan-selector', [
+        return view('backend.layouts.views.pegawai-unmul.usulan-selector', [
             'pegawai' => $pegawai,
             'jenisUsulanOptions' => $jenisUsulanOptions,
         ]);
