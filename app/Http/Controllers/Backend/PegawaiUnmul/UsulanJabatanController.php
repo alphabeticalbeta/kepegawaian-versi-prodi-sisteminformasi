@@ -668,6 +668,7 @@ class UsulanJabatanController extends BaseUsulanController
             'submit' => 'Diajukan',
             'submit_to_fakultas' => 'Diajukan', // Back to Admin Fakultas
             'submit_to_university' => 'Diusulkan ke Universitas', // Back to Admin Universitas
+            'submit_perbaikan_sister' => 'Diusulkan ke Universitas', // Submit perbaikan dari Tim Sister ke Admin Univ Usulan
             'save_draft' => 'Draft',
             default => 'Draft'
         };
@@ -759,6 +760,7 @@ class UsulanJabatanController extends BaseUsulanController
                 'submit' => 'Usulan kenaikan jabatan berhasil diperbarui dan diajukan. Tim verifikasi akan meninjau usulan Anda.',
                 'submit_to_fakultas' => 'Usulan berhasil dikembalikan ke Admin Fakultas untuk ditinjau kembali.',
                 'submit_to_university' => 'Usulan berhasil dikembalikan ke Admin Universitas untuk ditinjau kembali.',
+                'submit_perbaikan_sister' => 'Perbaikan dari Tim Sister berhasil dikirim ke Admin Universitas untuk validasi kembali.',
                 'save_draft' => 'Perubahan pada usulan Anda berhasil disimpan sebagai Draft.',
                 default => 'Perubahan pada usulan Anda berhasil disimpan.'
             };

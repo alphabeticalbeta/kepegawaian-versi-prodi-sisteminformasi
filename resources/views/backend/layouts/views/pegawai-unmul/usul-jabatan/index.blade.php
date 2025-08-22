@@ -95,7 +95,7 @@
                                     @if($existingUsulan)
                                         {{-- Jika sudah ada usulan, tampilkan tombol Lihat Detail dan Hapus --}}
                                         <div class="flex items-center justify-center space-x-2">
-                                            @if(in_array($existingUsulan->status_usulan, ['Draft', 'Perbaikan Usulan', 'Dikembalikan ke Pegawai']))
+                                            @if(in_array($existingUsulan->status_usulan, ['Draft', 'Perbaikan Usulan', 'Dikembalikan ke Pegawai', 'Perbaikan dari Tim Sister']))
                                                 <a href="{{ route('pegawai-unmul.usulan-jabatan.edit', $existingUsulan->id) }}"
                                                    class="btn-animate inline-flex items-center px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 hover:text-indigo-700">
                                                     <i data-lucide="edit" class="w-3 h-3 mr-1"></i>

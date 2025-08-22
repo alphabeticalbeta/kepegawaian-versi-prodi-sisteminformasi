@@ -21,12 +21,29 @@
                 Daftar Pendaftar
             </span>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900">
-            {{ $periode->nama_periode }}
-        </h1>
-        <p class="mt-2 text-gray-600">
-            Daftar pegawai yang telah mengajukan usulan <span class="font-semibold capitalize">{{ $periode->jenis_usulan }}</span> pada periode ini.
-        </p>
+        @php
+            // Ambil usulan pertama untuk mengecek akses periode
+            $firstUsulan = $usulans->first();
+            $periodeInfo = $firstUsulan ? $firstUsulan->getPeriodeInfo('Penilai Universitas') : null;
+        @endphp
+        @if($periodeInfo && $periodeInfo['status'] === 'accessible')
+            <h1 class="text-3xl font-bold text-gray-900">
+                {{ $periode->nama_periode }}
+            </h1>
+            <p class="mt-2 text-gray-600">
+                Daftar pegawai yang telah mengajukan usulan <span class="font-semibold capitalize">{{ $periode->jenis_usulan }}</span> pada periode ini.
+            </p>
+            <p class="mt-1 text-sm text-gray-500">
+                Periode: {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->isoFormat('D MMM YYYY') }} - {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->isoFormat('D MMM YYYY') }}
+            </p>
+        @else
+            <h1 class="text-3xl font-bold text-gray-400">
+                Periode Tidak Dapat Diakses
+            </h1>
+            <p class="mt-2 text-gray-500">
+                Periode hanya dapat diakses oleh Tim Senat dan Penilai Universitas setelah usulan dikirim
+            </p>
+        @endif
     </div>
 
     <div class="bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden">

@@ -324,11 +324,11 @@ class AdminFakultasController extends Controller
                 'formAction' => route('admin-fakultas.usulan.save-validation', $usulan->id),
                 'backUrl' => route('admin-fakultas.periode.pendaftar', $usulan->periode_usulan_id),
                 'backText' => 'Kembali ke Daftar Pengusul',
-                'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Perbaikan Usulan']),
+                'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
                 'roleConfig' => [
-                    'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Perbaikan Usulan']),
+                    'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
                     'canView' => true, // Always allow viewing data
-                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university', 'resend_to_university']
+                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
                 ]
             ]);
         } catch (\Exception $e) {
@@ -477,24 +477,29 @@ class AdminFakultasController extends Controller
 
                 case 'forward_to_university':
                     // Validasi khusus untuk aksi 'teruskan ke universitas'
-                    // Beda validasi untuk usulan pertama kali vs perbaikan
+                    // Check if this is initial submission or resend
+                    $currentValidasi = $usulan->validasi_data;
+                    $dokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
+                    $isInitialSubmission = empty($dokumenPendukung) || !isset($dokumenPendukung['file_surat_usulan_path']);
+
                     $rules = [
                         'validation' => 'required|array',
+                        'dokumen_pendukung.nomor_surat_usulan' => 'required|string|max:255',
+                        'dokumen_pendukung.nomor_berita_senat' => 'required|string|max:255',
                     ];
 
-                    $messages = [];
+                    $messages = [
+                        'dokumen_pendukung.nomor_surat_usulan.required' => 'Nomor surat usulan wajib diisi.',
+                        'dokumen_pendukung.nomor_berita_senat.required' => 'Nomor berita senat wajib diisi.',
+                    ];
 
-                    // Jika status "Perbaikan Usulan", maka perlu dokumen pendukung
-                    if ($usulan->status_usulan === 'Perbaikan Usulan') {
-                        $rules['dokumen_pendukung.nomor_surat_usulan'] = 'required|string|max:255';
-                        $rules['dokumen_pendukung.nomor_berita_senat'] = 'required|string|max:255';
+                    // Only require files for initial submission if files are provided
+                    if ($isInitialSubmission) {
+                        // Support both bracket and dot notation
                         $rules['dokumen_pendukung.file_surat_usulan'] = 'nullable|file|mimes:pdf|max:2048';
                         $rules['dokumen_pendukung.file_berita_senat'] = 'nullable|file|mimes:pdf|max:2048';
                         $rules['dokumen_pendukung[file_surat_usulan]'] = 'nullable|file|mimes:pdf|max:2048';
                         $rules['dokumen_pendukung[file_berita_senat]'] = 'nullable|file|mimes:pdf|max:2048';
-                        
-                        $messages['dokumen_pendukung.nomor_surat_usulan.required'] = 'Nomor surat usulan wajib diisi.';
-                        $messages['dokumen_pendukung.nomor_berita_senat.required'] = 'Nomor berita senat wajib diisi.';
                         $messages['dokumen_pendukung.file_surat_usulan.mimes'] = 'File surat usulan harus berformat PDF.';
                         $messages['dokumen_pendukung.file_berita_senat.mimes'] = 'File berita senat harus berformat PDF.';
                         $messages['dokumen_pendukung[file_surat_usulan].mimes'] = 'File surat usulan harus berformat PDF.';
@@ -512,55 +517,45 @@ class AdminFakultasController extends Controller
                         ]);
                     }
 
-                    // Hanya proses dokumen pendukung jika status "Perbaikan Usulan"
-                    if ($usulan->status_usulan === 'Perbaikan Usulan') {
-                        // Simpan dokumen pendukung fakultas
-                        $currentValidasi = $usulan->validasi_data;
-                        $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
+                                        // Simpan dokumen pendukung fakultas
+                    $currentValidasi = $usulan->validasi_data;
+                    $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
 
-                        // Update text fields
-                        $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
-                        $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
+                    // Update text fields
+                    $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
+                    $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
 
-                        // Handle file uploads menggunakan FileStorageService
-                        $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
-                            $request,
-                            $usulan,
-                            'file_surat_usulan',
-                            'dokumen-fakultas/surat-usulan'
-                        );
+                    // Handle file uploads menggunakan FileStorageService
+                    $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
+                        $request,
+                        $usulan,
+                        'file_surat_usulan',
+                        'dokumen-fakultas/surat-usulan'
+                    );
 
-                        $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
-                            $request,
-                            $usulan,
-                            'file_berita_senat',
-                            'dokumen-fakultas/berita-senat'
-                        );
+                    $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
+                        $request,
+                        $usulan,
+                        'file_berita_senat',
+                        'dokumen-fakultas/berita-senat'
+                    );
 
-                        $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
-                        $usulan->validasi_data = $currentValidasi;
+                    $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
+                    $usulan->validasi_data = $currentValidasi;
 
-                        // Final check untuk memastikan file sudah ada (only if files were uploaded)
-                        if (!empty($currentDokumenPendukung['file_surat_usulan_path']) || !empty($currentDokumenPendukung['file_berita_senat_path'])) {
-                            // If one file is uploaded, both should be uploaded
-                            if (empty($currentDokumenPendukung['file_surat_usulan_path']) || empty($currentDokumenPendukung['file_berita_senat_path'])) {
-                                throw \Illuminate\Validation\ValidationException::withMessages([
-                                    'file_upload' => 'Jika mengunggah file, kedua file (surat usulan dan berita senat) harus diunggah.'
-                                ]);
-                            }
+                    // Final check untuk memastikan file sudah ada (only if files were uploaded)
+                    if (!empty($currentDokumenPendukung['file_surat_usulan_path']) || !empty($currentDokumenPendukung['file_berita_senat_path'])) {
+                        // If one file is uploaded, both should be uploaded
+                        if (empty($currentDokumenPendukung['file_surat_usulan_path']) || empty($currentDokumenPendukung['file_berita_senat_path'])) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                'file_upload' => 'Jika mengunggah file, kedua file (surat usulan dan berita senat) harus diunggah.'
+                            ]);
                         }
                     }
 
-                    // Log message sesuai kondisi sebelum update status
-                    $statusLama = $usulan->status_usulan;
-                    if ($statusLama === 'Perbaikan Usulan') {
-                        $logMessage = 'Usulan diperbaiki dan dikirim kembali ke Universitas.';
-                    } else {
-                        $logMessage = 'Usulan divalidasi dan diteruskan ke Universitas.';
-                    }
-                    
                     // Update status usulan
                     $usulan->status_usulan = 'Diusulkan ke Universitas';
+                    $logMessage = 'Usulan divalidasi dan diteruskan ke Universitas.';
                     break;
 
                                 case 'resend_to_university':

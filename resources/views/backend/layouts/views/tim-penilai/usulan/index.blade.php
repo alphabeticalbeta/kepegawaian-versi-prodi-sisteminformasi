@@ -118,7 +118,19 @@
                                     <div class="text-sm text-gray-900">{{ $usulan->jenis_usulan }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $usulan->periodeUsulan->nama_periode ?? 'N/A' }}</div>
+                                    @php
+                                        $periodeInfo = $usulan->getPeriodeInfo('Tim Penilai');
+                                    @endphp
+                                    @if($periodeInfo['status'] === 'accessible')
+                                        <div class="text-sm text-gray-900">{{ $periodeInfo['nama_periode'] }}</div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $periodeInfo['tanggal_mulai'] ? \Carbon\Carbon::parse($periodeInfo['tanggal_mulai'])->format('d/m/Y') : 'N/A' }} - 
+                                            {{ $periodeInfo['tanggal_selesai'] ? \Carbon\Carbon::parse($periodeInfo['tanggal_selesai'])->format('d/m/Y') : 'N/A' }}
+                                        </div>
+                                    @else
+                                        <div class="text-sm text-gray-400">{{ $periodeInfo['nama_periode'] }}</div>
+                                        <div class="text-xs text-gray-300">{{ $periodeInfo['message'] }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php

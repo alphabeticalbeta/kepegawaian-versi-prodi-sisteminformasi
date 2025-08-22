@@ -117,6 +117,11 @@ class Pegawai extends Authenticatable
         return $this->belongsTo(SubSubUnitKerja::class, 'unit_kerja_terakhir_id');
     }
 
+    public function subSubUnitKerja()
+    {
+        return $this->belongsTo(SubSubUnitKerja::class, 'sub_sub_unit_kerja_id');
+    }
+
     public function unitKerjaPengelola()
     {
         // Relasi ini menghubungkan kolom 'unit_kerja_id' di tabel 'pegawais'

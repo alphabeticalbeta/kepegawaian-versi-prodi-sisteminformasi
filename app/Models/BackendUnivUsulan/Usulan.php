@@ -116,6 +116,77 @@ class Usulan extends Model
     }
 
     /**
+     * Check if periode can be accessed by specific role
+     * Periode hanya dapat dilihat oleh Tim Senat dan Penilai Universitas 
+     * apabila Admin Univ Usulan sudah mengirimkan usulan ke masing-masing role tersebut.
+     */
+    public function canAccessPeriode($role): bool
+    {
+        // Admin Univ Usulan selalu dapat mengakses periode
+        if ($role === 'Admin Univ Usulan') {
+            return true;
+        }
+
+        // Tim Senat dapat mengakses periode jika usulan sudah direkomendasikan
+        if ($role === 'Tim Senat') {
+            return in_array($this->status_usulan, [
+                'Direkomendasikan',
+                'Disetujui',
+                'Ditolak',
+                'Diusulkan ke Sister',
+                'Perbaikan dari Tim Sister'
+            ]);
+        }
+
+        // Penilai Universitas dapat mengakses periode jika usulan sudah dikirim ke penilai
+        if ($role === 'Penilai Universitas') {
+            return in_array($this->status_usulan, [
+                'Sedang Direview',
+                'Direkomendasikan',
+                'Perbaikan Usulan',
+                'Sedang Dinilai'
+            ]);
+        }
+
+        // Tim Penilai dapat mengakses periode jika usulan sudah dikirim ke penilai
+        if ($role === 'Tim Penilai') {
+            return in_array($this->status_usulan, [
+                'Sedang Direview',
+                'Direkomendasikan',
+                'Perbaikan Usulan',
+                'Sedang Dinilai'
+            ]);
+        }
+
+        // Role lain tidak dapat mengakses periode
+        return false;
+    }
+
+    /**
+     * Get periode information with access control
+     */
+    public function getPeriodeInfo($role): array
+    {
+        if (!$this->canAccessPeriode($role)) {
+            return [
+                'nama_periode' => 'Tidak dapat diakses',
+                'tanggal_mulai' => null,
+                'tanggal_selesai' => null,
+                'status' => 'restricted',
+                'message' => 'Periode hanya dapat diakses oleh Tim Senat dan Penilai Universitas setelah usulan dikirim'
+            ];
+        }
+
+        return [
+            'nama_periode' => $this->periodeUsulan?->nama_periode ?? 'N/A',
+            'tanggal_mulai' => $this->periodeUsulan?->tanggal_mulai,
+            'tanggal_selesai' => $this->periodeUsulan?->tanggal_selesai,
+            'status' => 'accessible',
+            'message' => null
+        ];
+    }
+
+    /**
      * Relasi ke Jabatan (jabatan lama).
      */
     public function jabatanLama(): BelongsTo
@@ -198,6 +269,8 @@ class Usulan extends Model
             'Sedang Dinilai' => 'bg-indigo-100 text-indigo-800',
             'Sedang Direview Senat' => 'bg-purple-100 text-purple-800',
             'Diusulkan ke Universitas' => 'bg-blue-100 text-blue-800',
+            'Diusulkan ke Sister' => 'bg-indigo-100 text-indigo-800',
+            'Perbaikan dari Tim Sister' => 'bg-orange-100 text-orange-800',
             'Ditolak' => 'bg-red-100 text-red-800',
             'Ditolak Universitas' => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800'
@@ -213,8 +286,7 @@ class Usulan extends Model
             'Draft',
             'Perlu Perbaikan',
             'Dikembalikan',
-            'Sedang Direview',
-            'Menunggu Review Admin Univ'
+            'Perbaikan dari Tim Sister'
         ]);
     }
 
@@ -225,8 +297,10 @@ class Usulan extends Model
     {
         return in_array($this->status_usulan, [
             'Diajukan',
+            'Sedang Direview',
             'Disetujui',
-            'Direkomendasikan'
+            'Direkomendasikan',
+            'Diusulkan ke Sister'
         ]);
     }
 
@@ -627,9 +701,10 @@ class Usulan extends Model
     {
         $roleData = $this->validasi_data[$role] ?? [];
 
-        // If the role data exists and has 'validation' key, return validation data
+        // If the role data exists but doesn't have 'validation' key, return empty array
+        // This handles both old and new data structures
         if (isset($roleData['validation'])) {
-            return $roleData['validation'];
+            return $roleData;
         }
 
         // For backward compatibility, if data exists but no 'validation' key, return as is

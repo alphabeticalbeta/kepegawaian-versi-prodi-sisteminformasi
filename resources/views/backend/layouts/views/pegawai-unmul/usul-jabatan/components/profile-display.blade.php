@@ -101,7 +101,7 @@
                                         </div>
                                     @endforeach
                                 </div>
-                            @elseif($isFieldInvalid && isset($fieldValidation['keterangan']))
+                            @elseif($isFieldInvalid)
                                 <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border-l-2 border-red-400">
                                     <div class="flex items-start gap-1">
                                         <i data-lucide="message-square" class="w-3 h-3 mt-0.5 text-red-600"></i>
@@ -183,7 +183,7 @@
                                         </div>
                                     @endforeach
                                 </div>
-                            @elseif($isFieldInvalid && isset($fieldValidation['keterangan']))
+                            @elseif($isFieldInvalid)
                                 <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border-l-2 border-red-400">
                                     <div class="flex items-start gap-1">
                                         <i data-lucide="message-square" class="w-3 h-3 mt-0.5 text-red-600"></i>
@@ -349,7 +349,7 @@
                                         </div>
                                     @endforeach
                                 </div>
-                            @elseif($isFieldInvalid && isset($fieldValidation['keterangan']))
+                            @elseif($isFieldInvalid)
                                 <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border-l-2 border-red-400">
                                     <div class="flex items-start gap-1">
                                         <i data-lucide="message-square" class="w-3 h-3 mt-0.5 text-red-600"></i>

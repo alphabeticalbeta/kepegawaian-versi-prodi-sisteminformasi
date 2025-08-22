@@ -29,7 +29,7 @@ class PenilaiService
 
         return Cache::remember($cacheKey, 300, function () use ($penilaiId, $filters) {
             $query = Usulan::query()
-                ->whereIn('status_usulan', ['Sedang Direview', 'Menunggu Review Admin Univ'])
+                ->where('status_usulan', 'Sedang Direview')
                 ->whereHas('penilais', function ($penilaiQuery) use ($penilaiId) {
                     $penilaiQuery->where('penilai_id', $penilaiId);
                 })
@@ -73,13 +73,11 @@ class PenilaiService
             return [
                 'total_assigned' => $usulans->count(),
                 'pending_review' => $usulans->where('status_usulan', 'Sedang Direview')->count(),
-                'waiting_admin_review' => $usulans->where('status_usulan', 'Menunggu Review Admin Univ')->count(),
                 'completed_review' => $usulans->where('status_usulan', 'Direkomendasikan')->count(),
                 'by_status' => [
                     'Diajukan' => $usulans->where('status_usulan', 'Diajukan')->count(),
                     'Diusulkan ke Universitas' => $usulans->where('status_usulan', 'Diusulkan ke Universitas')->count(),
                     'Sedang Direview' => $usulans->where('status_usulan', 'Sedang Direview')->count(),
-                    'Menunggu Review Admin Univ' => $usulans->where('status_usulan', 'Menunggu Review Admin Univ')->count(),
                     'Direkomendasikan' => $usulans->where('status_usulan', 'Direkomendasikan')->count(),
                     'Disetujui' => $usulans->where('status_usulan', 'Disetujui')->count(),
                     'Ditolak' => $usulans->where('status_usulan', 'Ditolak')->count(),
@@ -211,25 +209,8 @@ class PenilaiService
 
         $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
 
-        // Add recommendation data with new flow - store per penilai
+        // Add recommendation data with new flow
         $currentValidasi = $usulan->validasi_data;
-        
-        // Initialize tim_penilai array if not exists
-        if (!isset($currentValidasi['tim_penilai'])) {
-            $currentValidasi['tim_penilai'] = [];
-        }
-        
-        // Store recommendation per penilai
-        $currentValidasi['tim_penilai']['reviews'][$penilaiId] = [
-            'type' => 'rekomendasi',
-            'recommendation' => 'direkomendasikan',
-            'catatan_rekomendasi' => $request->input('catatan_umum'),
-            'tanggal_rekomendasi' => now()->toDateTimeString(),
-            'penilai_id' => $penilaiId,
-            'status' => 'menunggu_admin_univ_review'
-        ];
-        
-        // Keep backward compatibility for main fields
         $currentValidasi['tim_penilai']['recommendation'] = 'direkomendasikan';
         $currentValidasi['tim_penilai']['catatan_rekomendasi'] = $request->input('catatan_umum');
         $currentValidasi['tim_penilai']['tanggal_rekomendasi'] = now()->toDateTimeString();
@@ -266,35 +247,10 @@ class PenilaiService
             $validationData = json_decode($validationData, true);
         }
 
-        // Add logging for debugging
-        Log::info('PenilaiService handlePerbaikanUsulan', [
-            'usulan_id' => $usulan->id,
-            'penilai_id' => $penilaiId,
-            'validation_data' => $validationData,
-            'catatan_umum' => $request->input('catatan_umum'),
-            'status_before' => $usulan->status_usulan
-        ]);
-
         $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
 
-        // Add return data with new flow - store per penilai
+        // Add return data with new flow
         $currentValidasi = $usulan->validasi_data;
-        
-        // Initialize tim_penilai array if not exists
-        if (!isset($currentValidasi['tim_penilai'])) {
-            $currentValidasi['tim_penilai'] = [];
-        }
-        
-        // Store perbaikan per penilai
-        $currentValidasi['tim_penilai']['reviews'][$penilaiId] = [
-            'type' => 'perbaikan_usulan',
-            'catatan' => $request->input('catatan_umum'),
-            'tanggal_return' => now()->toDateTimeString(),
-            'penilai_id' => $penilaiId,
-            'status' => 'menunggu_admin_univ_review'
-        ];
-        
-        // Keep backward compatibility for main fields
         $currentValidasi['tim_penilai']['perbaikan_usulan'] = [
             'catatan' => $request->input('catatan_umum'),
             'tanggal_return' => now()->toDateTimeString(),
@@ -304,13 +260,6 @@ class PenilaiService
 
         $usulan->validasi_data = $currentValidasi;
         $usulan->save();
-
-        // Add logging after save
-        Log::info('PenilaiService handlePerbaikanUsulan after save', [
-            'usulan_id' => $usulan->id,
-            'status_after' => $usulan->status_usulan,
-            'validasi_data_after' => $usulan->validasi_data
-        ]);
 
         // Clear cache
         $this->clearPenilaiCache($penilaiId);

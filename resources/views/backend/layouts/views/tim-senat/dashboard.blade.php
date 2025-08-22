@@ -1,164 +1,464 @@
 @extends('backend.layouts.roles.tim-senat.app')
-@section('title', 'Dashboard Tim Senat')
+
+@section('title', 'Dashboard - Tim Senat')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50">
-    <!-- Header Section -->
-    <div class="tim-senat-bg text-white p-8 rounded-2xl mb-8 shadow-2xl">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold mb-2">Dashboard Tim Senat</h1>
-                <p class="text-orange-100">Selamat datang, {{ $user->nama_lengkap }}</p>
-                <p class="text-orange-200 text-sm">{{ $user->email }}</p>
-            </div>
-            <div class="hidden md:block">
-                <div class="text-right">
-                    <p class="text-orange-100 text-sm">{{ now()->format('l, d F Y') }}</p>
-                    <p class="text-orange-200 text-xs">{{ now()->format('H:i') }} WIB</p>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50/30">
+    {{-- Header Section --}}
+    <div class="bg-white border-b">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="py-6 flex flex-wrap gap-4 justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        Dashboard Tim Senat
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Selamat datang di panel Tim Senat
+                    </p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                        Export Laporan
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-600">Total Usulan Dosen</p>
-                    <p class="text-3xl font-bold text-orange-600">{{ number_format($stats['total_usulan_dosen']) }}</p>
+    {{-- Main Content --}}
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        @php
+            // Fallback untuk variabel $usulans jika tidak ada
+            $usulans = $usulans ?? collect();
+        @endphp
+        
+        {{-- Statistics Overview --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                <div class="flex items-center">
+                    <div class="bg-orange-100 p-3 rounded-lg">
+                        <i data-lucide="clock" class="w-6 h-6 text-orange-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Menunggu Keputusan</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Direkomendasikan')->count() }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Usulan yang perlu diputuskan</p>
+                    </div>
                 </div>
-                <div class="p-3 bg-orange-100 rounded-xl">
-                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 01-3 0m3 0V5.292a1 1 0 00-.293-.707l-1.414-1.414A1 1 0 0018 3M21 4H7.414a1 1 0 00-.707.293L5.293 5.707A1 1 0 005 6.414V21"></path>
-                    </svg>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Disetujui</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Disetujui')->count() }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Keputusan disetujui</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                <div class="flex items-center">
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <i data-lucide="x-circle" class="w-6 h-6 text-red-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Ditolak</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Ditolak')->count() }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Keputusan ditolak</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-lg">
+                        <i data-lucide="file-text" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Diproses</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->count() }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Semua usulan</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-600">Pending Review</p>
-                    <p class="text-3xl font-bold text-yellow-600">{{ number_format($stats['usulan_pending_review']) }}</p>
-                </div>
-                <div class="p-3 bg-yellow-100 rounded-xl">
-                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
+        {{-- Quick Actions --}}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Aksi Cepat</h2>
+                <i data-lucide="zap" class="w-5 h-5 text-orange-600"></i>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="{{ route('tim-senat.usulan.index') }}" 
+                   class="flex items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
+                    <div class="bg-orange-100 p-2 rounded-lg mr-3">
+                        <i data-lucide="list" class="w-5 h-5 text-orange-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-orange-900">Lihat Semua Usulan</p>
+                        <p class="text-sm text-orange-700">Kelola semua usulan yang perlu diputuskan</p>
+                    </div>
+                </a>
+                
+                <a href="{{ route('tim-senat.rapat-senat.index') }}" 
+                   class="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+                    <div class="bg-purple-100 p-2 rounded-lg mr-3">
+                        <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-purple-900">Rapat Senat</p>
+                        <p class="text-sm text-purple-700">Jadwal dan agenda rapat senat</p>
+                    </div>
+                </a>
+                
+                <a href="{{ route('tim-senat.keputusan-senat.index') }}" 
+                   class="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+                    <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                        <i data-lucide="gavel" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-blue-900">Keputusan Senat</p>
+                        <p class="text-sm text-blue-700">Riwayat keputusan senat</p>
+                    </div>
+                </a>
             </div>
         </div>
 
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-600">Sudah Direview</p>
-                    <p class="text-3xl font-bold text-green-600">{{ number_format($stats['usulan_reviewed']) }}</p>
-                </div>
-                <div class="p-3 bg-green-100 rounded-xl">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        {{-- Periode Usulan Section --}}
+        @php
+            // Filter usulan yang dapat diakses oleh Tim Senat
+            $accessibleUsulans = $usulans->filter(function($usulan) {
+                return $usulan->canAccessPeriode('Tim Senat');
+            });
+            
+            // Group by periode
+            $periodeGroups = $accessibleUsulans->groupBy('periode_usulan_id');
+        @endphp
 
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-600">Total Dosen</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ number_format($stats['total_dosen']) }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-xl">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="lg:col-span-2">
-            <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 overflow-hidden">
-                <div class="p-6 border-b border-slate-200">
-                    <h3 class="text-xl font-semibold text-slate-800">Usulan Dosen Terbaru</h3>
-                    <p class="text-slate-600 mt-1">10 usulan dosen terbaru yang masuk</p>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4">
-                        @forelse($recentUsulans as $usulan)
-                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                                <div class="flex-1">
-                                    <h4 class="font-medium text-slate-900">{{ $usulan->pegawai->nama_lengkap }}</h4>
-                                    <p class="text-sm text-slate-600">NIP: {{ $usulan->pegawai->nip }}</p>
-                                    <p class="text-sm text-orange-600">{{ $usulan->jabatanTujuan->jabatan ?? 'Jabatan tidak diketahui' }}</p>
-                                    <p class="text-xs text-slate-500">{{ $usulan->created_at->diffForHumans() }}</p>
+        @if($periodeGroups->count() > 0)
+            @foreach($periodeGroups as $periodeId => $periodeUsulans)
+                @php
+                    $firstUsulan = $periodeUsulans->first();
+                    $periode = $firstUsulan->periodeUsulan;
+                    $periodeInfo = $firstUsulan->getPeriodeInfo('Tim Senat');
+                @endphp
+                
+                @if($periodeInfo['status'] === 'accessible')
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">
+                        {{-- Periode Header --}}
+                        <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-xl font-bold text-white flex items-center">
+                                        <i data-lucide="calendar" class="w-6 h-6 mr-3"></i>
+                                        {{ $periode->nama_periode ?? 'Periode Usulan' }}
+                                    </h2>
+                                    <p class="mt-1 text-orange-100">
+                                        Periode: {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->isoFormat('D MMM YYYY') }} - {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->isoFormat('D MMM YYYY') }}
+                                    </p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="inline-block px-3 py-1 text-xs font-medium rounded-full
-                                        {{ $usulan->status_usulan === 'Disetujui' ? 'bg-green-100 text-green-800' :
-                                           ($usulan->status_usulan === 'Ditolak' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800') }}">
-                                        {{ $usulan->status_usulan }}
-                                    </span>
+                                    <p class="text-orange-100 text-sm">Total Usulan</p>
+                                    <p class="text-white text-2xl font-bold">{{ $periodeUsulans->count() }}</p>
                                 </div>
                             </div>
-                        @empty
-                            <p class="text-center text-slate-500 py-8">Belum ada usulan dosen</p>
-                        @endforelse
+                        </div>
+
+                        {{-- Usulan Table --}}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            No
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Nama
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            NIP
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Sub-sub Unit Kerja
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Unit Kerja
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Tujuan Jabatan
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Hasil Rekomendasi
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Penilai
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($periodeUsulans as $index => $usulan)
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ $index + 1 }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">
+                                                    {{ $usulan->pegawai->nama_lengkap ?? 'N/A' }}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ $usulan->pegawai->nip ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ $usulan->pegawai->subSubUnitKerja->nama ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ $usulan->pegawai->unitKerja->nama ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ $usulan->jabatanTujuan->jabatan ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if($usulan->status_usulan === 'Direkomendasikan')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
+                                                        Direkomendasikan
+                                                    </span>
+                                                @elseif($usulan->status_usulan === 'Perbaikan Usulan')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                        <i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i>
+                                                        Perbaikan
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                        {{ $usulan->status_usulan }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @php
+                                                    $penilais = $usulan->penilais ?? collect();
+                                                @endphp
+                                                @if($penilais->count() > 0)
+                                                    @foreach($penilais->take(3) as $index => $penilai)
+                                                        <div class="text-xs text-gray-600">
+                                                            Penilai {{ $index + 1 }}
+                                                        </div>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-gray-400">Belum ada penilai</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                                <div class="flex items-center justify-center space-x-2">
+                                                    @if($usulan->status_usulan === 'Direkomendasikan')
+                                                        <button onclick="showRecommendationModal({{ $usulan->id }}, 'setujui')" 
+                                                                class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1 rounded-lg transition-colors">
+                                                            <i data-lucide="check" class="w-4 h-4 inline mr-1"></i>
+                                                            Rekomendasi
+                                                        </button>
+                                                        <button onclick="showRecommendationModal({{ $usulan->id }}, 'tolak')" 
+                                                                class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors">
+                                                            <i data-lucide="x" class="w-4 h-4 inline mr-1"></i>
+                                                            Tidak Rekomendasi
+                                                        </button>
+                                                    @endif
+                                                    <a href="{{ route('tim-senat.usulan.show', $usulan->id) }}"
+                                                       class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors">
+                                                        <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
+                                                        Detail
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                @endif
+            @endforeach
+        @else
+            {{-- No Accessible Periods --}}
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-8 text-center">
+                <div class="text-gray-400 mb-4">
+                    <i data-lucide="calendar-x" class="w-16 h-16 mx-auto"></i>
                 </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Belum Ada Periode yang Dapat Diakses</h3>
+                <p class="text-gray-500">
+                    Periode hanya dapat diakses setelah Admin Univ Usulan mengirimkan usulan ke Tim Senat.
+                </p>
+            </div>
+        @endif
+
+        {{-- Recent Decisions --}}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i data-lucide="gavel" class="w-6 h-6 mr-3"></i>
+                    Keputusan Terbaru
+                </h2>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Pegawai
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Jabatan Tujuan
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Keputusan
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tanggal
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Aksi
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($usulans->whereIn('status_usulan', ['Disetujui', 'Ditolak'])->take(5) as $usulan)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                                <i data-lucide="user" class="w-5 h-5 text-orange-600"></i>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $usulan->pegawai->nama_lengkap ?? 'N/A' }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                {{ $usulan->pegawai->nip ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $usulan->jabatanTujuan->jabatan ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($usulan->status_usulan === 'Disetujui')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
+                                            Disetujui
+                                        </span>
+                                    @elseif($usulan->status_usulan === 'Ditolak')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
+                                            Ditolak
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ $usulan->updated_at ? $usulan->updated_at->format('d/m/Y H:i') : 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                    <a href="{{ route('tim-senat.usulan.show', $usulan->id) }}"
+                                       class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-lg transition-colors">
+                                        <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
+                                        Detail
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <div class="text-gray-500">
+                                        <i data-lucide="gavel" class="w-12 h-12 mx-auto mb-4 text-gray-300"></i>
+                                        <p class="text-lg font-medium">Belum ada keputusan</p>
+                                        <p class="text-sm">Tim Senat belum memberikan keputusan apapun.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="space-y-6">
-            <!-- Quick Actions -->
-            <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-                <h3 class="text-lg font-semibold text-slate-800 mb-4">Aksi Cepat</h3>
-                <div class="space-y-3">
-                    <a href="{{ route('tim-senat.rapat-senat.index') }}"
-                       class="flex items-center gap-3 p-3 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors group">
-                        <div class="p-2 bg-orange-100 group-hover:bg-orange-200 rounded-lg transition-colors">
-                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                        </div>
-                        <span class="font-medium text-slate-700">Rapat Senat</span>
-                    </a>
-
-                    <a href="{{ route('tim-senat.keputusan-senat.index') }}"
-                       class="flex items-center gap-3 p-3 bg-red-50 hover:bg-red-100 rounded-xl transition-colors group">
-                        <div class="p-2 bg-red-100 group-hover:bg-red-200 rounded-lg transition-colors">
-                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <span class="font-medium text-slate-700">Keputusan Senat</span>
-                    </a>
-                </div>
+{{-- Recommendation Modal --}}
+<div id="recommendationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-orange-100 rounded-full">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-orange-600"></i>
             </div>
-
-            <!-- System Info -->
-            <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-                <h3 class="text-lg font-semibold text-slate-800 mb-4">Informasi Sistem</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-slate-600">Role Aktif</span>
-                        <span class="text-sm font-medium text-orange-600">Tim Senat</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-slate-600">Status</span>
-                        <span class="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-slate-600">Last Login</span>
-                        <span class="text-sm text-slate-700">{{ now()->format('H:i') }}</span>
-                    </div>
+            <div class="mt-3 text-center">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Konfirmasi Keputusan</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500" id="modalMessage">
+                        Apakah Anda yakin ingin memberikan keputusan ini?
+                    </p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="confirmButton" class="px-4 py-2 bg-orange-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300">
+                        Konfirmasi
+                    </button>
+                    <button onclick="hideRecommendationModal()" class="mt-2 px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Batal
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function showRecommendationModal(usulanId, action) {
+    const modal = document.getElementById('recommendationModal');
+    const title = document.getElementById('modalTitle');
+    const message = document.getElementById('modalMessage');
+    const confirmButton = document.getElementById('confirmButton');
+    
+    if (action === 'setujui') {
+        title.textContent = 'Konfirmasi Rekomendasi';
+        message.textContent = 'Apakah Anda yakin ingin memberikan rekomendasi untuk usulan ini?';
+        confirmButton.textContent = 'Rekomendasi';
+        confirmButton.className = 'px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300';
+    } else {
+        title.textContent = 'Konfirmasi Tidak Rekomendasi';
+        message.textContent = 'Apakah Anda yakin ingin tidak merekomendasikan usulan ini?';
+        confirmButton.textContent = 'Tidak Rekomendasi';
+        confirmButton.className = 'px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300';
+    }
+    
+    confirmButton.onclick = function() {
+        // Redirect to usulan detail page with action parameter
+        window.location.href = `/tim-senat/usulan/${usulanId}?action=${action}`;
+    };
+    
+    modal.classList.remove('hidden');
+}
+
+function hideRecommendationModal() {
+    const modal = document.getElementById('recommendationModal');
+    modal.classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('recommendationModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideRecommendationModal();
+    }
+});
+</script>
 @endsection

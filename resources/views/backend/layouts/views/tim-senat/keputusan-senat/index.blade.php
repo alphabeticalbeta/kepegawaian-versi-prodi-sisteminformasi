@@ -1,6 +1,6 @@
 @extends('backend.layouts.roles.tim-senat.app')
 
-@section('title', 'Daftar Usulan - Tim Senat')
+@section('title', 'Keputusan Senat - Tim Senat')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
@@ -10,19 +10,17 @@
             <div class="py-6 flex flex-wrap gap-4 justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">
-                        Daftar Usulan Tim Senat
+                        Keputusan Senat
                     </h1>
                     <p class="mt-1 text-sm text-gray-500">
-                        Kelola usulan yang direkomendasikan untuk keputusan final senat
+                        Riwayat dan dokumentasi keputusan senat
                     </p>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <div class="bg-emerald-100 px-4 py-2 rounded-lg">
-                        <span class="text-emerald-800 text-sm font-medium">
-                            <i data-lucide="shield-check" class="w-4 h-4 inline mr-1"></i>
-                            Tim Senat
-                        </span>
-                    </div>
+                    <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                        Export Laporan
+                    </button>
                 </div>
             </div>
         </div>
@@ -32,18 +30,6 @@
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{-- Statistics Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-lg">
-                        <i data-lucide="clock" class="w-6 h-6 text-purple-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Menunggu Keputusan</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Direkomendasikan')->count() }}</p>
-                    </div>
-                </div>
-            </div>
-
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                 <div class="flex items-center">
                     <div class="bg-green-100 p-3 rounded-lg">
@@ -74,8 +60,20 @@
                         <i data-lucide="file-text" class="w-6 h-6 text-blue-600"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Total Usulan</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->count() }}</p>
+                        <p class="text-sm font-medium text-gray-600">Total Keputusan</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->whereIn('status_usulan', ['Disetujui', 'Ditolak'])->count() }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                        <i data-lucide="calendar" class="w-6 h-6 text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Bulan Ini</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->whereIn('status_usulan', ['Disetujui', 'Ditolak'])->where('updated_at', '>=', now()->startOfMonth())->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -85,16 +83,16 @@
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Filter Usulan</h3>
-                    <p class="text-sm text-gray-500">Filter usulan berdasarkan status dan periode</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Filter Keputusan</h3>
+                    <p class="text-sm text-gray-500">Filter berdasarkan periode dan status keputusan</p>
                 </div>
                 <div class="flex items-center space-x-4">
                     <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                         <option value="">Semua Status</option>
-                        <option value="Direkomendasikan">Menunggu Keputusan</option>
                         <option value="Disetujui">Disetujui</option>
                         <option value="Ditolak">Ditolak</option>
                     </select>
+                    <input type="month" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" value="{{ now()->format('Y-m') }}">
                     <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         <i data-lucide="filter" class="w-4 h-4 inline mr-1"></i>
                         Filter
@@ -103,12 +101,12 @@
             </div>
         </div>
 
-        {{-- Usulan Table --}}
+        {{-- Decisions Table --}}
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div class="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-5">
                 <h2 class="text-xl font-bold text-white flex items-center">
                     <i data-lucide="gavel" class="w-6 h-6 mr-3"></i>
-                    Daftar Usulan untuk Keputusan Senat
+                    Riwayat Keputusan Senat
                 </h2>
             </div>
 
@@ -123,13 +121,13 @@
                                 Jenis Usulan
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Periode
+                                Keputusan
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
+                                Tanggal Keputusan
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tanggal Direkomendasikan
+                                Alasan
                             </th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Aksi
@@ -137,7 +135,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($usulans as $usulan)
+                        @forelse($usulans->whereIn('status_usulan', ['Disetujui', 'Ditolak'])->sortByDesc('updated_at') as $usulan)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -166,53 +164,39 @@
                                             {{ $usulan->jabatanLama->jabatan }} → {{ $usulan->jabatanTujuan->jabatan }}
                                         </div>
                                     @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
                                     @php
                                         $periodeInfo = $usulan->getPeriodeInfo('Tim Senat');
                                     @endphp
                                     @if($periodeInfo['status'] === 'accessible')
-                                        <div class="text-sm text-gray-900">{{ $periodeInfo['nama_periode'] }}</div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ $periodeInfo['tanggal_mulai'] ? \Carbon\Carbon::parse($periodeInfo['tanggal_mulai'])->format('d/m/Y') : 'N/A' }} - 
-                                            {{ $periodeInfo['tanggal_selesai'] ? \Carbon\Carbon::parse($periodeInfo['tanggal_selesai'])->format('d/m/Y') : 'N/A' }}
+                                        <div class="text-xs text-gray-400">
+                                            Periode: {{ $periodeInfo['nama_periode'] }}
                                         </div>
-                                    @else
-                                        <div class="text-sm text-gray-400">{{ $periodeInfo['nama_periode'] }}</div>
-                                        <div class="text-xs text-gray-300">{{ $periodeInfo['message'] }}</div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    @php
-                                        $statusColors = [
-                                            'Diajukan' => 'bg-blue-100 text-blue-800',
-                                            'Diusulkan ke Universitas' => 'bg-indigo-100 text-indigo-800',
-                                            'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
-                                            'Direkomendasikan' => 'bg-purple-100 text-purple-800',
-                                            'Disetujui' => 'bg-green-100 text-green-800',
-                                            'Ditolak' => 'bg-red-100 text-red-800',
-                                            'Perbaikan Usulan' => 'bg-orange-100 text-orange-800',
-                                            'Diusulkan ke Sister' => 'bg-purple-100 text-purple-800',
-                                            'Perbaikan dari Tim Sister' => 'bg-orange-100 text-orange-800',
-                                        ];
-                                        $statusColor = $statusColors[$usulan->status_usulan] ?? 'bg-gray-100 text-gray-800';
-                                    @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColor }}">
-                                        @if($usulan->status_usulan === 'Direkomendasikan')
-                                            <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
-                                        @elseif($usulan->status_usulan === 'Disetujui')
+                                    @if($usulan->status_usulan === 'Disetujui')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
-                                        @elseif($usulan->status_usulan === 'Ditolak')
+                                            Disetujui
+                                        </span>
+                                    @elseif($usulan->status_usulan === 'Ditolak')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                             <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
-                                        @endif
-                                        {{ $usulan->status_usulan }}
-                                    </span>
+                                            Ditolak
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    @php
-                                        $recommendationLog = $usulan->logs()->where('status_baru', 'Direkomendasikan')->first();
-                                    @endphp
-                                    {{ $recommendationLog ? $recommendationLog->created_at->format('d/m/Y H:i') : ($usulan->created_at ? $usulan->created_at->format('d/m/Y H:i') : 'N/A') }}
+                                    {{ $usulan->updated_at ? $usulan->updated_at->format('d/m/Y H:i') : 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">
+                                        @if($usulan->status_usulan === 'Disetujui')
+                                            Usulan memenuhi semua persyaratan dan direkomendasikan untuk disetujui
+                                        @elseif($usulan->status_usulan === 'Ditolak')
+                                            Usulan tidak memenuhi persyaratan yang ditetapkan
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                     <div class="flex items-center justify-center space-x-2">
@@ -221,11 +205,10 @@
                                             <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
                                             Detail
                                         </a>
-                                        @if($usulan->status_usulan === 'Direkomendasikan')
-                                            <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
-                                                Menunggu Keputusan
-                                            </span>
-                                        @endif
+                                        <button class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors">
+                                            <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                                            PDF
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -234,8 +217,8 @@
                                 <td colspan="6" class="px-6 py-12 text-center">
                                     <div class="text-gray-500">
                                         <i data-lucide="gavel" class="w-12 h-12 mx-auto mb-4 text-gray-300"></i>
-                                        <p class="text-lg font-medium">Belum ada usulan</p>
-                                        <p class="text-sm">Tidak ada usulan yang perlu diputuskan oleh Tim Senat saat ini.</p>
+                                        <p class="text-lg font-medium">Belum ada keputusan</p>
+                                        <p class="text-sm">Tim Senat belum memberikan keputusan apapun.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -245,29 +228,36 @@
             </div>
 
             {{-- Pagination --}}
-            @if($usulans->hasPages())
+            @if($usulans->whereIn('status_usulan', ['Disetujui', 'Ditolak'])->count() > 10)
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     {{ $usulans->links() }}
                 </div>
             @endif
         </div>
 
-        {{-- Information Panel --}}
-        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <i data-lucide="info" class="w-6 h-6 text-blue-600"></i>
+        {{-- Summary Report --}}
+        <div class="mt-8 bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Ringkasan Keputusan</h3>
+                <i data-lucide="bar-chart-3" class="w-5 h-5 text-emerald-600"></i>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ $usulans->where('status_usulan', 'Disetujui')->count() }}</div>
+                    <div class="text-sm text-gray-600">Total Disetujui</div>
                 </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-blue-800">Informasi Tim Senat</h3>
-                    <div class="mt-2 text-sm text-blue-700">
-                        <ul class="list-disc list-inside space-y-1">
-                            <li>Tim Senat berwenang memberikan keputusan final atas usulan yang telah direkomendasikan oleh Tim Penilai</li>
-                            <li>Keputusan dapat berupa "Disetujui" atau "Ditolak" dengan alasan yang jelas</li>
-                            <li>Usulan yang disetujui akan diteruskan ke tahap berikutnya sesuai prosedur</li>
-                            <li>Usulan yang ditolak akan dikembalikan untuk perbaikan</li>
-                        </ul>
-                    </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600">{{ $usulans->where('status_usulan', 'Ditolak')->count() }}</div>
+                    <div class="text-sm text-gray-600">Total Ditolak</div>
+                </div>
+                <div class="text-center">
+                    @php
+                        $total = $usulans->whereIn('status_usulan', ['Disetujui', 'Ditolak'])->count();
+                        $approved = $usulans->where('status_usulan', 'Disetujui')->count();
+                        $percentage = $total > 0 ? round(($approved / $total) * 100, 1) : 0;
+                    @endphp
+                    <div class="text-2xl font-bold text-blue-600">{{ $percentage }}%</div>
+                    <div class="text-sm text-gray-600">Tingkat Persetujuan</div>
                 </div>
             </div>
         </div>

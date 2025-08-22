@@ -24,18 +24,12 @@
             $canEdit = in_array($usulan->status_usulan, ['Diajukan', 'Perbaikan Usulan']);
             break;
         case 'Admin Universitas':
-            // Admin Universitas can edit for multiple statuses to allow action buttons
-            $canEdit = in_array($usulan->status_usulan, [
-                'Diusulkan ke Universitas',
-                'Sedang Direview',
-                'Menunggu Review Admin Univ',
-                'Perbaikan Usulan'
-            ]);
+            // Admin Universitas can edit if status is "Diusulkan ke Universitas"
+            $canEdit = $usulan->status_usulan === 'Diusulkan ke Universitas';
             break;
         case 'Tim Penilai':
-            // Tim Penilai can edit if status is "Sedang Direview" or "Menunggu Review Admin Univ"
-            // This allows multiple penilais to provide their reviews independently
-            $canEdit = in_array($usulan->status_usulan, ['Sedang Direview', 'Menunggu Review Admin Univ']);
+            // Tim Penilai can edit if status is "Sedang Direview"
+            $canEdit = $usulan->status_usulan === 'Sedang Direview';
             break;
         case 'Tim Senat':
             // Tim Senat can edit if status is "Direkomendasikan"
@@ -49,7 +43,7 @@
     $roleConfigs = [
         'Admin Fakultas' => [
             'title' => 'Validasi Usulan Fakultas',
-            'description' => 'Validasi data usulan sebelum diteruskan ke universitas',
+            'description' => 'Validasi data usulan dan isi dokumen pendukung sebelum diteruskan ke universitas',
             'validationFields' => ['data_pribadi', 'data_kepegawaian', 'data_pendidikan', 'data_kinerja', 'dokumen_profil', 'bkd', 'karya_ilmiah', 'dokumen_usulan', 'syarat_guru_besar', 'dokumen_admin_fakultas'],
             'nextStatus' => 'Diusulkan ke Universitas',
             'actionButtons' => ['perbaikan_usulan', 'usulkan_ke_universitas'],
@@ -95,11 +89,6 @@
 
     // ENHANCED: Get existing validation data with role-specific key
     $existingValidation = $existingValidation ?? $usulan->getValidasiByRole($roleSlug) ?? [];
-
-    // ENHANCED: Define recommendation and perbaikan status for Admin Universitas
-    $penilaiReview = $usulan->validasi_data['tim_penilai'] ?? [];
-    $hasRecommendation = $penilaiReview['recommendation'] ?? false;
-    $hasPerbaikan = isset($penilaiReview['perbaikan_usulan']);
 
     // ENHANCED: Define field groups and their labels (same for all roles)
     $fieldGroups = [
@@ -271,7 +260,7 @@
             ]
         ],
         'dokumen_admin_fakultas' => [
-            'label' => $currentRole === 'Admin Fakultas' ? 'Dokumen yang Dikirim ke Universitas' : 'Dokumen Admin Fakultas',
+            'label' => 'Dokumen yang Dikirim ke Universitas',
             'icon' => 'file-text',
             'fields' => [
                 'nomor_surat_usulan' => 'Nomor Surat Usulan',
@@ -279,7 +268,7 @@
                 'nomor_berita_senat' => 'Nomor Berita Senat',
                 'file_berita_senat' => 'File Berita Senat'
             ],
-            'isEditableForm' => $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Perbaikan Usulan'])
+            'isEditableForm' => $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Diajukan', 'Perbaikan Usulan'])
         ]
     ];
 @endphp
@@ -287,20 +276,20 @@
 {{-- Content starts here --}}
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
     {{-- Header Section --}}
-    <div class="bg-white border-b">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 border-b shadow-lg">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="py-6 flex flex-wrap gap-4 justify-between items-center">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">
+                    <h1 class="text-2xl font-bold text-white">
                         {{ $config['title'] }}
                     </h1>
-                    <p class="mt-1 text-sm text-gray-500">
+                    <p class="mt-1 text-blue-100">
                         {{ $config['description'] }}
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
                     <a href="{{ url()->previous() }}"
-                       class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                       class="px-4 py-2 text-blue-700 bg-white border border-white rounded-lg hover:bg-blue-50 transition-colors shadow-sm">
                         <i data-lucide="arrow-left" class="w-4 h-4 inline mr-2"></i>
                         Kembali
                     </a>
@@ -317,364 +306,56 @@
         {{-- Status Badge --}}
         <div class="mb-6">
             @php
-                // Check if current penilai has submitted review (for Tim Penilai role)
-                $currentPenilaiHasReviewed = false;
-                $displayStatus = $usulan->status_usulan;
-                
-                if ($currentRole === 'Tim Penilai' && $usulan->status_usulan === 'Menunggu Review Admin Univ') {
-                    $currentPenilaiId = auth()->id();
-                    $penilaiValidation = $usulan->validasi_data['tim_penilai'] ?? [];
-                    
-                    // Check new structure first
-                    if (isset($penilaiValidation['reviews'][$currentPenilaiId])) {
-                        $currentPenilaiHasReviewed = true;
-                    }
-                    // Fallback to old structure
-                    elseif (isset($penilaiValidation['validated_by']) && $penilaiValidation['validated_by'] == $currentPenilaiId) {
-                        $currentPenilaiHasReviewed = true;
-                    } elseif (isset($penilaiValidation['perbaikan_usulan']['penilai_id']) && $penilaiValidation['perbaikan_usulan']['penilai_id'] == $currentPenilaiId) {
-                        $currentPenilaiHasReviewed = true;
-                    } elseif (isset($penilaiValidation['penilai_id']) && $penilaiValidation['penilai_id'] == $currentPenilaiId) {
-                        $currentPenilaiHasReviewed = true;
-                    }
-                    
-                    // If current penilai hasn't reviewed, show as waiting for penilai
-                    if (!$currentPenilaiHasReviewed) {
-                        $displayStatus = 'Menunggu Penilaian Tim Penilai';
-                    }
-                }
-                
                 $statusColors = [
                     'Draft' => 'bg-gray-100 text-gray-800 border-gray-300',
                     'Diajukan' => 'bg-blue-100 text-blue-800 border-blue-300',
                     'Sedang Direview' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-                    'Menunggu Penilaian Tim Penilai' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
                     'Disetujui' => 'bg-green-100 text-green-800 border-green-300',
                     'Direkomendasikan' => 'bg-purple-100 text-purple-800 border-purple-300',
                     'Ditolak' => 'bg-red-100 text-red-800 border-red-300',
                     'Diusulkan ke Universitas' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
-                    'Menunggu Review Admin Univ' => 'bg-purple-100 text-purple-800 border-purple-300',
                 ];
-                $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800 border-gray-300';
+                $statusColor = $statusColors[$usulan->status_usulan] ?? 'bg-gray-100 text-gray-800 border-gray-300';
             @endphp
             <div class="inline-flex items-center px-4 py-2 rounded-full border {{ $statusColor }}">
-                <span class="text-sm font-medium">Status: {{ $displayStatus }}</span>
+                <span class="text-sm font-medium">Status: {{ $usulan->status_usulan }}</span>
             </div>
         </div>
 
-        {{-- Keterangan Perbaikan Penilai (khusus untuk Admin Universitas) --}}
-        @if(($currentRole === 'Admin Universitas' || $currentRole === 'Admin Universitas Usulan') && $usulan->status_usulan === 'Menunggu Review Admin Univ')
-            
-
-            @php
-                $penilaiReview = $usulan->validasi_data['tim_penilai'] ?? [];
-                
-                // DEBUG: Check tim penilai data structure
-                $debugTimPenilai = [
-                    'has_tim_penilai_data' => !empty($penilaiReview),
-                    'tim_penilai_keys' => !empty($penilaiReview) ? array_keys($penilaiReview) : [],
-                    'has_reviews' => isset($penilaiReview['reviews']),
-                    'reviews_count' => isset($penilaiReview['reviews']) ? count($penilaiReview['reviews']) : 0,
-                    'has_old_structure' => isset($penilaiReview['perbaikan_usulan']) || isset($penilaiReview['penilai_id']),
-                ];
-                
-                // Get assigned penilais
-                $assignedPenilais = $usulan->penilais ?? collect();
-                $penilaiValidationData = $penilaiReview['validation'] ?? [];
-                
-                $debugTimPenilai['assigned_penilais_count'] = $assignedPenilais->count();
-                $debugTimPenilai['assigned_penilais_ids'] = $assignedPenilais->pluck('id')->toArray();
-                
-                // Collect all penilai reviews - check both new structure and backward compatibility
-                $allPenilaiReviews = [];
-                
-
-                
-
-                foreach ($assignedPenilais as $penilai) {
-                    $penilaiId = $penilai->id;
-                    $penilaiReviewData = [];
-                    
-                    // Always set basic penilai info
-                    $penilaiReviewData['penilai'] = $penilai;
-                    $penilaiReviewData['validation'] = [];
-                    
-                    // Check new structure first (per-penilai reviews)
-                    if (isset($penilaiReview['reviews'][$penilaiId])) {
-                        $reviewData = $penilaiReview['reviews'][$penilaiId];
-                        $penilaiReviewData['type'] = $reviewData['type'];
-                        
-                        if ($reviewData['type'] === 'perbaikan_usulan') {
-                            $penilaiReviewData['catatan'] = $reviewData['catatan'] ?? '';
-                            $penilaiReviewData['tanggal'] = $reviewData['tanggal_return'] ?? null;
-                            $penilaiReviewData['validation'] = $reviewData['validation'] ?? [];
-                        } elseif ($reviewData['type'] === 'rekomendasi') {
-                            $penilaiReviewData['catatan'] = $reviewData['catatan_rekomendasi'] ?? '';
-                            $penilaiReviewData['tanggal'] = $reviewData['tanggal_rekomendasi'] ?? null;
-                            $penilaiReviewData['recommendation'] = $reviewData['recommendation'] ?? '';
-                            $penilaiReviewData['validation'] = $reviewData['validation'] ?? [];
-                        }
-                    }
-                    // Fallback to old structure for backward compatibility
-                    else {
-                        $hasReview = false;
-                        
-                        // Check if this penilai has submitted review using old structure
-                        if (isset($penilaiReview['validated_by']) && $penilaiReview['validated_by'] == $penilaiId) {
-                            $penilaiReviewData['type'] = 'general_review';
-                            $penilaiReviewData['tanggal'] = $penilaiReview['validated_at'] ?? null;
-                            $hasReview = true;
-                        }
-                        
-                        if (isset($penilaiReview['perbaikan_usulan']['penilai_id']) && $penilaiReview['perbaikan_usulan']['penilai_id'] == $penilaiId) {
-                            $penilaiReviewData['type'] = 'perbaikan_usulan';
-                            $penilaiReviewData['catatan'] = $penilaiReview['perbaikan_usulan']['catatan'] ?? '';
-                            $penilaiReviewData['tanggal'] = $penilaiReview['perbaikan_usulan']['tanggal_return'] ?? null;
-                            $penilaiReviewData['validation'] = $penilaiValidationData; // Use global validation for old structure
-                            $hasReview = true;
-                        }
-                        
-                        if (isset($penilaiReview['penilai_id']) && $penilaiReview['penilai_id'] == $penilaiId) {
-                            $penilaiReviewData['type'] = 'rekomendasi';
-                            $penilaiReviewData['catatan'] = $penilaiReview['catatan_rekomendasi'] ?? '';
-                            $penilaiReviewData['tanggal'] = $penilaiReview['tanggal_rekomendasi'] ?? null;
-                            $penilaiReviewData['recommendation'] = $penilaiReview['recommendation'] ?? '';
-                            $penilaiReviewData['validation'] = $penilaiValidationData; // Use global validation for old structure
-                            $hasReview = true;
-                        }
-                        
-                        // If no review found, set as pending
-                        if (!$hasReview) {
-                            $penilaiReviewData['type'] = 'pending';
-                            $penilaiReviewData['catatan'] = '';
-                            $penilaiReviewData['tanggal'] = null;
-                        }
-                    }
-                    
-                    // Always add to the list (whether they have review or not)
-                    $allPenilaiReviews[] = $penilaiReviewData;
-                    
-
-                }
-                
-
-                
-
-                
-
-            @endphp
-            
-
-            
-            @if(!empty($allPenilaiReviews) || !empty($penilaiReview))
-                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-                    <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-5">
-                        <h2 class="text-xl font-bold text-white flex items-center">
-                            <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
-                            Review dari Tim Penilai Universitas
-                        </h2>
-                    </div>
-                    <div class="p-6">
-                        
-                        {{-- Ringkasan Review --}}
-                        @php
-                            $totalPenilai = count($allPenilaiReviews);
-                            $reviewedCount = 0;
-                            $pendingCount = 0;
-                            $totalInvalidFields = 0;
-                            
-                            foreach ($allPenilaiReviews as $rev) {
-                                if ($rev['type'] === 'pending') {
-                                    $pendingCount++;
-                                } else {
-                                    $reviewedCount++;
-                                    // Count invalid fields for this penilai
-                                    if (!empty($rev['validation'])) {
-                                        foreach ($rev['validation'] as $category => $fields) {
-                                            if (is_array($fields)) {
-                                                foreach ($fields as $field => $fieldData) {
-                                                    if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                                        $totalInvalidFields++;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        @endphp
-                        
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                            <h3 class="text-lg font-semibold text-blue-800 mb-3">Ringkasan Review Tim Penilai</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="text-center">
-                                    <div class="text-2xl font-bold text-blue-600">{{ $totalPenilai }}</div>
-                                    <div class="text-sm text-blue-700">Total Penilai</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="text-2xl font-bold text-green-600">{{ $reviewedCount }}</div>
-                                    <div class="text-sm text-green-700">Sudah Review</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="text-2xl font-bold text-yellow-600">{{ $pendingCount }}</div>
-                                    <div class="text-sm text-yellow-700">Belum Review</div>
-                                </div>
-                            </div>
-                            @if($totalInvalidFields > 0)
-                                <div class="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg">
-                                    <p class="text-sm font-medium text-red-800">
-                                        <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1"></i>
-                                        Total {{ $totalInvalidFields }} field perlu perbaikan dari semua penilai yang sudah melakukan review
-                                    </p>
-                                </div>
-                            @endif
-                        </div>
-                        
-                        {{-- Perbaikan Usulan dari Setiap Penilai --}}
-                        @php $penilaiIndex = 1; @endphp
-                        @foreach($allPenilaiReviews as $index => $review)
-                                        @if($review['type'] === 'perbaikan_usulan')
-                                @php
-                                    $penilaiName = $review['penilai']->nama_lengkap ?? "Penilai {$penilaiIndex}";
-                                    $catatan = $review['catatan'] ?? 'Tidak ada catatan';
-                                    $tanggal = $review['tanggal'] ?? null;
-                                    
-                                    // Get validation data for this penilai
-                                                        $validationData = $review['validation'] ?? [];
-                                    $invalidFields = [];
-                                                        
-                                                        foreach ($validationData as $category => $fields) {
-                                                            if (is_array($fields)) {
-                                                                foreach ($fields as $field => $fieldData) {
-                                                                    if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                                    $invalidFields[] = [
-                                                        'category' => $category,
-                                                                            'field' => $field,
-                                                        'keterangan' => $fieldData['keterangan'] ?? 'Perlu perbaikan'
-                                                    ];
-                                                }
-                                            }
-                                        }
-                                    }
-                                    
-                                    // Fallback: If no validation data found, check global validation data
-                                    if (empty($invalidFields) && !empty($usulan->validasi_data['tim_penilai']['validation'])) {
-                                        $globalValidation = $usulan->validasi_data['tim_penilai']['validation'];
-                                        foreach ($globalValidation as $category => $fields) {
-                                            if (is_array($fields)) {
-                                                foreach ($fields as $field => $fieldData) {
-                                                    if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                                        $invalidFields[] = [
-                                                            'category' => $category,
-                                                            'field' => $field,
-                                                            'keterangan' => $fieldData['keterangan'] ?? 'Perlu perbaikan'
-                                                        ];
-                                                    }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    @endphp
-                                    
-                                <div class="mb-6 p-4 border border-gray-200 rounded-lg">
-                                    {{-- Header Penilai --}}
-                                    <div class="flex items-center justify-between mb-3">
-                                        <h4 class="text-lg font-semibold text-gray-800 flex items-center">
-                                            <i data-lucide="edit-3" class="w-5 h-5 mr-2 text-orange-600"></i>
-                                            Perbaikan Usulan - Penilai {{ $penilaiIndex }}
-                                        </h4>
-                                        <span class="text-sm text-gray-600">{{ $penilaiName }}</span>
-                                            </div>
-                                            
-                                    {{-- Catatan Perbaikan --}}
-                                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
-                                        <div class="flex items-start gap-3">
-                                            <i data-lucide="message-square" class="w-4 h-4 text-orange-600 mt-0.5"></i>
-                                            <div>
-                                                <p class="text-sm font-medium text-orange-800 mb-1">Catatan Perbaikan:</p>
-                                                <p class="text-sm text-orange-700">{{ $catatan }}</p>
-                                                                </div>
-                                                            </div>
-                                                    </div>
-
-
-                                    {{-- Field-Field yang Bermasalah dalam Format Numbered List --}}
-                                    @if(!empty($invalidFields))
-                                        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                                            <div class="flex items-start gap-3">
-                                                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mt-0.5"></i>
-                                                <div class="w-full">
-                                                    <p class="text-sm font-medium text-red-800 mb-3">
-                                                        Field-Field yang Bermasalah ({{ count($invalidFields) }} field):
-                                                    </p>
-                                                    
-                                                    {{-- Tampilan Numbered List ke Bawah --}}
-                                                    <ol class="space-y-2">
-                                                        @foreach($invalidFields as $index => $field)
-                                                            <li class="flex items-start gap-3">
-                                                                <span class="flex-shrink-0 w-6 h-6 bg-red-100 border border-red-300 rounded-full flex items-center justify-center text-xs font-bold text-red-800">
-                                                                    {{ $index + 1 }}
-                                                                </span>
-                                                                <div class="flex-1">
-                                                                    <div class="flex items-center gap-2 mb-1">
-                                                                        <i data-lucide="x-circle" class="w-4 h-4 text-red-600"></i>
-                                                                        <span class="text-sm font-semibold text-red-800">
-                                                                            {{ ucwords(str_replace('_', ' ', $field['category'])) }} > 
-                                                                            {{ ucwords(str_replace('_', ' ', $field['field'])) }}
-                                            </span>
-                                        </div>
-                                                                    <p class="text-xs text-red-700 ml-6">
-                                                                        {{ $field['keterangan'] }}
-                                                                    </p>
-                                        </div>
-                                                            </li>
-                                                        @endforeach
-                                                    </ol>
-                                    </div>
-                                </div>
-                            </div>
-                        @else
-                                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
-                                        <div class="flex items-start gap-3">
-                                                <i data-lucide="check-circle" class="w-4 h-4 text-green-600 mt-0.5"></i>
-                                            <div>
-                                                    <p class="text-sm font-medium text-green-800">Status:</p>
-                                                    <p class="text-sm text-green-700">Tidak ada field yang bermasalah</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
-
-                                    {{-- Informasi Review --}}
-                                    <div class="mt-3 text-xs text-gray-500">
-                                        <span class="font-medium">Tanggal Review:</span>
-                                        @if($tanggal)
-                                            {{ \Carbon\Carbon::parse($tanggal)->isoFormat('D MMMM Y, HH:mm') }}
-                                        @else
-                                            Tidak tersedia
-                                                                @endif
-                                        </div>
-                                </div>
-
-                                @php $penilaiIndex++; @endphp
-                            @endif
-                        @endforeach
-
-                        {{-- Jika tidak ada data perbaikan --}}
-                        @if($reviewedCount === 0)
-                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center gap-3">
-                                    <i data-lucide="info" class="w-5 h-5 text-gray-600"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800">Info:</p>
-                                        <p class="text-sm text-gray-700">Belum ada review dari tim penilai universitas</p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+        {{-- Info History Perbaikan Section --}}
+        @if($currentRole === 'Admin Fakultas')
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-600 mr-2"></i>
+                    <h3 class="text-lg font-semibold text-gray-900">ⓘ Info History Perbaikan</h3>
                 </div>
-            @endif
+                @if(!empty($existingValidation))
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-600 mr-3 mt-0.5"></i>
+                            <div>
+                                <h4 class="font-medium text-yellow-800">Perbaikan dari Admin Universitas</h4>
+                                <p class="text-sm text-yellow-700 mt-1">
+                                    Usulan ini telah dikembalikan untuk perbaikan. Silakan periksa catatan perbaikan di bawah ini.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="w-5 h-5 text-gray-600 mr-3 mt-0.5"></i>
+                            <div>
+                                <h4 class="font-medium text-gray-800">Tidak Ada Data Perbaikan</h4>
+                                <p class="text-sm text-gray-700 mt-1">
+                                    Belum ada data perbaikan yang dikirim ke Pegawai. History akan muncul setelah Admin Fakultas mengirim perbaikan.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
 
         {{-- Informasi Usulan --}}
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
@@ -743,12 +424,13 @@
                 </div>
             </div>
         </div>
-        @endif
 
         {{-- CSRF token for autosave --}}
         @if($canEdit)
             @csrf
         @endif
+
+
 
         {{-- Validation Table --}}
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
@@ -776,35 +458,34 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($config['validationFields'] as $groupKey)
                             @if(isset($fieldGroups[$groupKey]))
-                                                @if($groupKey === 'dokumen_admin_fakultas' && $currentRole !== 'Admin Universitas' && $currentRole !== 'Admin Fakultas' && $currentRole !== 'Tim Penilai')
-                    @continue
-                @endif
-                @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Admin Fakultas' && !in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview', 'Direkomendasikan', 'Disetujui', 'Ditolak', 'Perbaikan Usulan']))
-                    @continue
-                @endif
-                {{-- Tombol "Dokumen Dikirim ke Universitas" hanya muncul setelah Admin Fakultas menekan "Usulkan ke Universitas" atau saat perbaikan --}}
-                @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Diajukan')
-                    @continue
-                @endif
+                                @if($groupKey === 'dokumen_admin_fakultas' && $currentRole !== 'Admin Universitas' && $currentRole !== 'Admin Fakultas' && $currentRole !== 'Tim Penilai')
+                                    @continue
+                                @endif
+                                @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Admin Fakultas' && !in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview', 'Direkomendasikan', 'Disetujui', 'Ditolak', 'Perbaikan Usulan', 'Diajukan']))
+                                    @continue
+                                @endif
                                 @php $group = $fieldGroups[$groupKey]; @endphp
 
                                 @if($groupKey === 'dokumen_admin_fakultas' && $group['isEditableForm'])
                                     {{-- Tampilan khusus untuk form input dokumen admin fakultas --}}
-                                    <tr class="bg-gray-50">
-                                        <td colspan="3" class="px-6 py-3">
+                                    <tr class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
+                                        <td colspan="3" class="px-6 py-4">
                                             <div class="flex items-center">
-                                                <i data-lucide="{{ $group['icon'] }}" class="w-4 h-4 mr-2 text-gray-600"></i>
-                                                <span class="font-semibold text-gray-800">{{ $group['label'] }}</span>
+                                                <i data-lucide="{{ $group['icon'] }}" class="w-5 h-5 mr-3 text-blue-600"></i>
+                                                <span class="font-bold text-blue-800 text-lg">{{ $group['label'] }}</span>
                                             </div>
+                                            <p class="text-sm text-blue-600 mt-1 ml-8">
+                                                ⓘ Isi semua field dokumen pendukung yang diperlukan sebelum mengirim ke universitas
+                                            </p>
                                         </td>
                                     </tr>
                                     {{-- Baris pertama: Nomor Surat Usulan dan File Surat Usulan --}}
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                        Nomor Surat Usulan
+                                    <tr class="hover:bg-blue-50 transition-colors">
+                                        <td class="px-6 py-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                                    <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Nomor Surat Usulan <span class="text-red-500">*</span>
                                                     </label>
                                                     @php
                                                         $dokumenPendukung = $usulan->validasi_data['admin_fakultas']['dokumen_pendukung'] ?? [];
@@ -813,42 +494,44 @@
                                                     <input type="text"
                                                            name="dokumen_pendukung[nomor_surat_usulan]"
                                                            value="{{ e($currentValue) }}"
-                                                           class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-sm"
-                                                           placeholder="Masukkan nomor surat usulan">
+                                                           class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm"
+                                                           placeholder="Contoh: 001/FK-UNMUL/2025">
+                                                    <small class="text-gray-500 mt-1">Format: Nomor/Fakultas/UNMUL/Tahun</small>
                                                 </div>
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                        File Surat Usulan
+                                                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                                    <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                                        File Surat Usulan <span class="text-red-500">*</span>
                                                     </label>
                                                     @php
                                                         $currentPath = $dokumenPendukung['file_surat_usulan_path'] ?? null;
                                                     @endphp
-                                                    <div class="space-y-2">
+                                                    <div class="space-y-3">
                                                         @if($currentPath)
-                                                            <div class="text-sm text-gray-600">
-                                                                File saat ini:
-                                                                <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Lihat</a>
+                                                            <div class="text-sm text-gray-600 bg-green-50 p-2 rounded border border-green-200">
+                                                                <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-green-600"></i>
+                                                                File saat ini: 
+                                                                <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">Lihat File</a>
                                                             </div>
                                                         @endif
                                                         <input type="file"
                                                                name="dokumen_pendukung[file_surat_usulan]"
                                                                accept=".pdf"
-                                                               class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-sm">
+                                                               class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm">
                                                         <small class="text-gray-500">Upload file baru untuk mengganti file yang ada</small>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4"></td>
-                                        <td class="px-6 py-4"></td>
+                                        <td class="px-6 py-6"></td>
+                                        <td class="px-6 py-6"></td>
                                     </tr>
                                     {{-- Baris kedua: Nomor Berita Senat dan File Berita Senat --}}
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                        Nomor Berita Senat
+                                    <tr class="hover:bg-blue-50 transition-colors">
+                                        <td class="px-6 py-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                                    <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Nomor Berita Senat <span class="text-red-500">*</span>
                                                     </label>
                                                     @php
                                                         $currentValue = $dokumenPendukung['nomor_berita_senat'] ?? '';
@@ -856,34 +539,36 @@
                                                     <input type="text"
                                                            name="dokumen_pendukung[nomor_berita_senat]"
                                                            value="{{ e($currentValue) }}"
-                                                           class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-sm"
-                                                           placeholder="Masukkan nomor berita senat">
+                                                           class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm"
+                                                           placeholder="Contoh: 001/Berita-Senat/2025">
+                                                    <small class="text-gray-500 mt-1">Format: Nomor/Berita-Senat/Tahun</small>
                                                 </div>
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                        File Berita Senat
+                                                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                                    <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                                        File Berita Senat <span class="text-red-500">*</span>
                                                     </label>
                                                     @php
                                                         $currentPath = $dokumenPendukung['file_berita_senat_path'] ?? null;
                                                     @endphp
-                                                    <div class="space-y-2">
+                                                    <div class="space-y-3">
                                                         @if($currentPath)
-                                                            <div class="text-sm text-gray-600">
-                                                                File saat ini:
-                                                                <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Lihat</a>
+                                                            <div class="text-sm text-gray-600 bg-green-50 p-2 rounded border border-green-200">
+                                                                <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-green-600"></i>
+                                                                File saat ini: 
+                                                                <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">Lihat File</a>
                                                             </div>
                                                         @endif
                                                         <input type="file"
                                                                name="dokumen_pendukung[file_berita_senat]"
                                                                accept=".pdf"
-                                                               class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-sm">
+                                                               class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm">
                                                         <small class="text-gray-500">Upload file baru untuk mengganti file yang ada</small>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4"></td>
-                                        <td class="px-6 py-4"></td>
+                                        <td class="px-6 py-6"></td>
+                                        <td class="px-6 py-6"></td>
                                     </tr>
                                 @else
                                     {{-- Tampilan normal untuk role lain atau kondisi lain --}}
@@ -1141,203 +826,8 @@
             </div>
         </div>
 
-        {{-- Hasil Penilaian Tim Penilai yang Diteruskan oleh Admin Universitas Section --}}
-        @php
-            $forwardedPenilaiResult = $usulan->validasi_data['admin_universitas']['forward_penilai_result'] ?? null;
-            $isForwardedFromPenilai = $forwardedPenilaiResult && $forwardedPenilaiResult['catatan_source'] === 'tim_penilai';
-        @endphp
-        
-        @if(($currentRole === 'Admin Fakultas' || $currentRole === 'Pegawai') && $usulan->status_usulan === 'Perbaikan Usulan' && $isForwardedFromPenilai)
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-                <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-5">
-                    <h2 class="text-xl font-bold text-white flex items-center">
-                        <i data-lucide="users" class="w-6 h-6 mr-3"></i>
-                        Hasil Penilaian dari Tim Penilai Universitas
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-start">
-                            <i data-lucide="info" class="w-5 h-5 text-blue-600 mt-0.5 mr-3"></i>
-                            <div>
-                                <h4 class="text-sm font-medium text-blue-800">Informasi Penyampaian</h4>
-                                <p class="text-sm text-blue-700 mt-1">
-                                    Admin Universitas telah menyampaikan hasil penilaian dari Tim Penilai Universitas. Silakan periksa hasil penilaian dan lakukan perbaikan sesuai catatan di bawah ini.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Hasil Penilaian Asli dari Tim Penilai --}}
-                    <div class="bg-white border border-blue-200 rounded-lg p-4 mb-4">
-                        <h4 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                            <i data-lucide="clipboard-list" class="w-4 h-4 mr-2 text-blue-600"></i>
-                            Hasil Penilaian Tim Penilai:
-                        </h4>
-                        <div class="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded">{{ $forwardedPenilaiResult['original_catatan'] }}</div>
-                    </div>
-
-                    {{-- Field-Field yang Bermasalah dari Tim Penilai --}}
-                    @php
-                        // Ambil data validasi dari Tim Penilai untuk menampilkan field bermasalah
-                        $penilaiValidationData = $usulan->validasi_data['tim_penilai'] ?? [];
-                        $invalidFieldsFromPenilai = [];
-                        
-                        // Check multiple structures untuk field bermasalah
-                        if (!empty($penilaiValidationData['reviews'])) {
-                            foreach ($penilaiValidationData['reviews'] as $review) {
-                                if (!empty($review['validation'])) {
-                                    foreach ($review['validation'] as $category => $fields) {
-                                        if (is_array($fields)) {
-                                            foreach ($fields as $field => $fieldData) {
-                                                if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                                    $invalidFieldsFromPenilai[] = [
-                                                        'category' => $category,
-                                                        'field' => $field,
-                                                        'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
-                                                    ];
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } elseif (!empty($penilaiValidationData['validation'])) {
-                            foreach ($penilaiValidationData['validation'] as $category => $fields) {
-                                if (is_array($fields)) {
-                                    foreach ($fields as $field => $fieldData) {
-                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                            $invalidFieldsFromPenilai[] = [
-                                                'category' => $category,
-                                                'field' => $field,
-                                                'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
-                                            ];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    @endphp
-
-                    @if(!empty($invalidFieldsFromPenilai))
-                        <div class="bg-white border border-red-200 rounded-lg p-4 mb-4">
-                            <h4 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                                <i data-lucide="alert-triangle" class="w-4 h-4 mr-2 text-red-600"></i>
-                                Field-Field yang Perlu Diperbaiki:
-                            </h4>
-                            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                                <div class="flex items-start gap-3">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mt-0.5"></i>
-                                    <div class="w-full">
-                                        <p class="text-sm font-medium text-red-800 mb-3">
-                                            Field-Field yang Bermasalah ({{ count($invalidFieldsFromPenilai) }} field):
-                                        </p>
-                                        <ol class="space-y-2">
-                                            @foreach($invalidFieldsFromPenilai as $index => $field)
-                                                <li class="flex items-start gap-3">
-                                                    <span class="flex-shrink-0 w-6 h-6 bg-red-100 border border-red-300 rounded-full flex items-center justify-center text-xs font-bold text-red-800">
-                                                        {{ $index + 1 }}
-                                                    </span>
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center gap-2 mb-1">
-                                                            <i data-lucide="x-circle" class="w-4 h-4 text-red-600"></i>
-                                                            <span class="text-sm font-semibold text-red-800">
-                                                                {{ ucwords(str_replace('_', ' ', $field['category'])) }} > 
-                                                                {{ ucwords(str_replace('_', ' ', $field['field'])) }}
-                                                            </span>
-                                                        </div>
-                                                        <p class="text-xs text-red-700 ml-6">
-                                                            {{ $field['keterangan'] }}
-                                                        </p>
-                                                    </div>
-                                                </li>
-                                            @endforeach
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Catatan Tambahan dari Admin Universitas (jika ada) --}}
-                    @if(!empty($forwardedPenilaiResult['admin_catatan']))
-                        <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-                            <h4 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                                <i data-lucide="message-circle" class="w-4 h-4 mr-2 text-orange-600"></i>
-                                Catatan Tambahan dari Admin Universitas:
-                            </h4>
-                            <div class="text-sm text-gray-700 whitespace-pre-wrap bg-orange-50 p-3 rounded">{{ $forwardedPenilaiResult['admin_catatan'] }}</div>
-                        </div>
-                    @endif
-
-                    {{-- Informasi Waktu Penyampaian --}}
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <div class="flex items-center justify-between text-xs text-gray-600">
-                            <span class="flex items-center">
-                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
-                                Diteruskan pada: {{ \Carbon\Carbon::parse($forwardedPenilaiResult['forwarded_at'])->format('d F Y, H:i') }}
-                            </span>
-                            <span class="flex items-center">
-                                <i data-lucide="user" class="w-3 h-3 mr-1"></i>
-                                oleh Admin Universitas
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- Perbaikan dari Admin Universitas Section (Direct Review) --}}
-        @php
-            $directReview = $usulan->validasi_data['admin_universitas']['direct_review'] ?? null;
-            $isDirectFromAdmin = $directReview && $directReview['catatan_source'] === 'admin_universitas';
-        @endphp
-        
-        @if(($currentRole === 'Admin Fakultas' || $currentRole === 'Pegawai') && $usulan->status_usulan === 'Perbaikan Usulan' && $isDirectFromAdmin)
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-                <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-5">
-                    <h2 class="text-xl font-bold text-white flex items-center">
-                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
-                        Perbaikan dari Admin Universitas
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-start">
-                            <i data-lucide="info" class="w-5 h-5 text-orange-600 mt-0.5 mr-3"></i>
-                            <div>
-                                <h4 class="text-sm font-medium text-orange-800">Catatan Perbaikan</h4>
-                                <p class="text-sm text-orange-700 mt-1">
-                                    Admin Universitas telah mengembalikan usulan ini untuk perbaikan. Silakan periksa dan perbaiki sesuai catatan di bawah ini.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-                        <h4 class="text-sm font-medium text-gray-900 mb-3">Detail Perbaikan:</h4>
-                        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ $directReview['catatan'] }}</div>
-                    </div>
-
-                    {{-- Informasi Waktu Review --}}
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <div class="flex items-center justify-between text-xs text-gray-600">
-                            <span class="flex items-center">
-                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
-                                Direview pada: {{ \Carbon\Carbon::parse($directReview['reviewed_at'])->format('d F Y, H:i') }}
-                            </span>
-                            <span class="flex items-center">
-                                <i data-lucide="user" class="w-3 h-3 mr-1"></i>
-                                oleh Admin Universitas
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- Fallback: Tampilan Lama untuk Backward Compatibility --}}
-        @if(($currentRole === 'Admin Fakultas' || $currentRole === 'Pegawai') && $usulan->status_usulan === 'Perbaikan Usulan' && !$isForwardedFromPenilai && !$isDirectFromAdmin && !empty($usulan->catatan_verifikator))
+        {{-- Perbaikan dari Admin Universitas Section --}}
+        @if($currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Perbaikan Usulan' && !empty($usulan->catatan_verifikator))
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
                 <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-5">
                     <h2 class="text-xl font-bold text-white flex items-center">
@@ -1408,6 +898,222 @@
             </div>
         @endif
 
+        {{-- Perbaikan untuk Role Pegawai Section --}}
+        @if($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Perbaikan Usulan', 'Dikembalikan']) && !empty($usulan->catatan_verifikator))
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-5">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                        Perbaikan dari Admin Fakultas
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="w-5 h-5 text-orange-600 mt-0.5 mr-3"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-orange-800">Catatan Perbaikan</h4>
+                                <p class="text-sm text-orange-700 mt-1">
+                                    Admin Fakultas telah mengembalikan usulan ini untuk perbaikan. Silakan periksa dan perbaiki sesuai catatan di bawah ini.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Keterangan Umum:</h4>
+                        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ $usulan->catatan_verifikator }}</div>
+                    </div>
+
+                    @if(isset($usulan->validasi_data['admin_fakultas']['validation']))
+                        <div class="mt-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Field dan Keterangan yang Tidak Sesuai:</h4>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                @php
+                                    $adminFakultasValidation = $usulan->validasi_data['admin_fakultas']['validation'] ?? [];
+                                    $invalidFields = [];
+                                    foreach ($adminFakultasValidation as $groupKey => $groupData) {
+                                        if (is_array($groupData)) {
+                                            foreach ($groupData as $fieldKey => $fieldData) {
+                                                if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                                    $fieldLabel = $fieldGroups[$groupKey]['fields'][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                                    $invalidFields[] = [
+                                                        'group' => $fieldGroups[$groupKey]['label'] ?? ucwords(str_replace('_', ' ', $groupKey)),
+                                                        'field' => $fieldLabel,
+                                                        'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    }
+                                @endphp
+
+                                @if(!empty($invalidFields))
+                                    <div class="space-y-2">
+                                        @foreach($invalidFields as $field)
+                                            <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                <i data-lucide="x-circle" class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0"></i>
+                                                <div>
+                                                    <div class="text-sm font-medium text-red-800">{{ $field['group'] }} - {{ $field['field'] }}</div>
+                                                    <div class="text-sm text-red-700 mt-1">{{ $field['keterangan'] }}</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-600">Tidak ada field spesifik yang perlu diperbaiki.</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        {{-- Perbaikan dari Admin Universitas untuk Role Pegawai Section --}}
+        @if($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Perbaikan Usulan', 'Dikembalikan']) && !empty($usulan->catatan_verifikator) && isset($usulan->validasi_data['admin_universitas']['validation']))
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                        Perbaikan dari Admin Universitas
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="w-5 h-5 text-red-600 mt-0.5 mr-3"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-red-800">Catatan Perbaikan</h4>
+                                <p class="text-sm text-red-700 mt-1">
+                                    Admin Universitas telah mengembalikan usulan ini untuk perbaikan. Silakan periksa dan perbaiki sesuai catatan di bawah ini.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Keterangan Umum:</h4>
+                        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ $usulan->catatan_verifikator }}</div>
+                    </div>
+
+                    @if(isset($usulan->validasi_data['admin_universitas']['validation']))
+                        <div class="mt-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Field dan Keterangan yang Tidak Sesuai:</h4>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                @php
+                                    $adminUnivValidation = $usulan->validasi_data['admin_universitas']['validation'] ?? [];
+                                    $invalidFields = [];
+                                    foreach ($adminUnivValidation as $groupKey => $groupData) {
+                                        if (is_array($groupData)) {
+                                            foreach ($groupData as $fieldKey => $fieldData) {
+                                                if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                                    $fieldLabel = $fieldGroups[$groupKey]['fields'][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                                    $invalidFields[] = [
+                                                        'group' => $fieldGroups[$groupKey]['label'] ?? ucwords(str_replace('_', ' ', $groupKey)),
+                                                        'field' => $fieldLabel,
+                                                        'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    }
+                                @endphp
+
+                                @if(!empty($invalidFields))
+                                    <div class="space-y-2">
+                                        @foreach($invalidFields as $field)
+                                            <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                <i data-lucide="x-circle" class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0"></i>
+                                                <div>
+                                                    <div class="text-sm font-medium text-red-800">{{ $field['group'] }} - {{ $field['field'] }}</div>
+                                                    <div class="text-sm text-red-700 mt-1">{{ $field['keterangan'] }}</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-600">Tidak ada field spesifik yang perlu diperbaiki.</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        {{-- Perbaikan dari Tim Sister untuk Role Pegawai Section --}}
+        @if($currentRole === 'Pegawai' && $usulan->status_usulan === 'Perbaikan dari Tim Sister' && !empty($usulan->catatan_verifikator))
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                        Perbaikan dari Tim Sister
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="w-5 h-5 text-purple-600 mt-0.5 mr-3"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-purple-800">Catatan Perbaikan</h4>
+                                <p class="text-sm text-purple-700 mt-1">
+                                    Tim Sister telah mengembalikan usulan ini untuk perbaikan. Silakan periksa dan perbaiki sesuai catatan di bawah ini.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Keterangan Umum:</h4>
+                        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ $usulan->catatan_verifikator }}</div>
+                    </div>
+
+                    @if(isset($usulan->validasi_data['tim_sister']['validation']))
+                        <div class="mt-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Field dan Keterangan yang Tidak Sesuai:</h4>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                @php
+                                    $timSisterValidation = $usulan->validasi_data['tim_sister']['validation'] ?? [];
+                                    $invalidFields = [];
+                                    foreach ($timSisterValidation as $groupKey => $groupData) {
+                                        if (is_array($groupData)) {
+                                            foreach ($groupData as $fieldKey => $fieldData) {
+                                                if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                                    $fieldLabel = $fieldGroups[$groupKey]['fields'][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                                    $invalidFields[] = [
+                                                        'group' => $fieldGroups[$groupKey]['label'] ?? ucwords(str_replace('_', ' ', $groupKey)),
+                                                        'field' => $fieldLabel,
+                                                        'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    }
+                                @endphp
+
+                                @if(!empty($invalidFields))
+                                    <div class="space-y-2">
+                                        @foreach($invalidFields as $field)
+                                            <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                <i data-lucide="x-circle" class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0"></i>
+                                                <div>
+                                                    <div class="text-sm font-medium text-red-800">{{ $field['group'] }} - {{ $field['field'] }}</div>
+                                                    <div class="text-sm text-red-700 mt-1">{{ $field['keterangan'] }}</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-600">Tidak ada field spesifik yang perlu diperbaiki.</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         {{-- Action Bar: View-only for certain roles, Edit mode for others --}}
         @if($canEdit)
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mt-6">
@@ -1423,102 +1129,22 @@
 
                     @if($currentRole === 'Admin Universitas')
                         {{-- Admin Universitas Action Buttons --}}
-                        @php
-                            // Cek apakah sudah ada hasil penilaian dari Tim Penilai
-                            $penilaiReview = $usulan->validasi_data['tim_penilai'] ?? [];
-                            
-                            // Deteksi apakah ada review dari penilai (multiple ways)
-                            $hasPenilaiReview = false;
-                            $catatanPenilai = '';
-                            
-                            // Check new structure first
-                            if (!empty($penilaiReview['reviews'])) {
-                                $hasPenilaiReview = true;
-                                // Get first review's catatan
-                                foreach ($penilaiReview['reviews'] as $review) {
-                                    if (!empty($review['perbaikan_usulan']['catatan'])) {
-                                        $catatanPenilai = $review['perbaikan_usulan']['catatan'];
-                                        break;
-                                    }
-                                }
-                            }
-                            // Check old structure
-                            elseif (!empty($penilaiReview['perbaikan_usulan']['catatan'])) {
-                                $hasPenilaiReview = true;
-                                $catatanPenilai = $penilaiReview['perbaikan_usulan']['catatan'];
-                            }
-                            // Check if there's any validation data from penilai
-                            elseif (!empty($penilaiReview['validation'])) {
-                                $hasPenilaiReview = true;
-                                $catatanPenilai = 'Hasil penilaian dari Tim Penilai Universitas';
-                            }
-                        @endphp
+                        @if($usulan->status_usulan === 'Diusulkan ke Universitas')
+                            {{-- Initial validation buttons --}}
+                            <button type="button" id="btn-perbaikan-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="user-x" class="w-4 h-4"></i>
+                                Perbaikan ke Pegawai
+                            </button>
 
-                        {{-- Button untuk Admin Universitas - selalu tampil --}}
-                        <div class="flex gap-2 flex-wrap">
-                            @if($hasPenilaiReview)
-                                {{-- SKENARIO 2: Sudah dinilai oleh Tim Penilai - Teruskan hasil penilaian --}}
-                                <button type="button" id="btn-teruskan-ke-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
-                                    <i data-lucide="user-x" class="w-4 h-4"></i>
-                                    Teruskan ke Pegawai
-                                </button>
+                            <button type="button" id="btn-perbaikan-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="building-2" class="w-4 h-4"></i>
+                                Perbaikan ke Fakultas
+                            </button>
 
-                                <button type="button" id="btn-teruskan-ke-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
-                                    <i data-lucide="building-2" class="w-4 h-4"></i>
-                                    Teruskan ke Fakultas
-                                </button>
-
-                                {{-- Button Teruskan ke Tim Senat - aktif jika penilai merekomendasikan --}}
-                                @if($hasRecommendation === 'direkomendasikan')
-                                    <button type="button" id="btn-teruskan-senat" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
-                                        <i data-lucide="crown" class="w-4 h-4"></i>
-                                        Teruskan ke Tim Senat
-                                    </button>
-                                @endif
-                            @else
-                                {{-- SKENARIO 1: Belum dinilai oleh Tim Penilai - Admin Univ input catatan sendiri --}}
-                                <button type="button" id="btn-perbaikan-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
-                                    <i data-lucide="user-x" class="w-4 h-4"></i>
-                                    Perbaikan ke Pegawai
-                                </button>
-
-                                <button type="button" id="btn-perbaikan-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
-                                    <i data-lucide="building-2" class="w-4 h-4"></i>
-                                    Perbaikan ke Fakultas
-                                </button>
-                            @endif
-
-                            {{-- Button Teruskan ke Penilai - selalu tampil --}}
                             <button type="button" id="btn-teruskan-penilai" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="user-check" class="w-4 h-4"></i>
                                 Teruskan ke Penilai
                             </button>
-                        </div>
-
-                        {{-- Info messages --}}
-                        @if($hasPenilaiReview)
-                            {{-- Info: Menampilkan hasil penilaian yang akan diteruskan --}}
-                            @if($catatanPenilai)
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-                                    <div class="flex items-start gap-2">
-                                        <i data-lucide="info" class="w-4 h-4 text-blue-600 mt-0.5"></i>
-                                        <div class="text-sm text-blue-800">
-                                            <p class="font-medium mb-1">Hasil Penilaian dari Tim Penilai yang akan diteruskan:</p>
-                                            <p class="text-xs bg-blue-100 p-2 rounded">{{ $catatanPenilai }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        @else
-                            {{-- Info: Admin Univ akan input catatan sendiri --}}
-                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="edit" class="w-4 h-4 text-yellow-600"></i>
-                                    <span class="text-sm text-yellow-800">
-                                        Belum ada hasil penilaian dari Tim Penilai. Admin Universitas akan memberikan catatan perbaikan sendiri.
-                                    </span>
-                                </div>
-                            </div>
                         @endif
 
                         @if($usulan->status_usulan === 'Direkomendasikan')
@@ -1540,80 +1166,42 @@
                         {{-- NEW: Handle Review dari Tim Penilai --}}
                         @if($usulan->status_usulan === 'Menunggu Review Admin Univ')
                             @php
-                                // Get assigned penilais to check if all have submitted
-                                $assignedPenilais = $usulan->penilais ?? collect();
-                                $totalPenilais = $assignedPenilais->count();
-                                $penilaisWithReview = 0;
-                                
-                                if ($totalPenilais > 0) {
-                                    // Count penilais who have submitted review
-                                    foreach ($assignedPenilais as $penilai) {
-                                        $penilaiValidation = $usulan->validasi_data['tim_penilai'] ?? [];
-                                        $penilaiId = $penilai->id;
-                                        
-                                        // Check new structure first
-                                        if (isset($penilaiValidation['reviews'][$penilaiId])) {
-                                            $penilaisWithReview++;
-                                        }
-                                        // Fallback to old structure
-                                        elseif (isset($penilaiValidation['validated_by']) && $penilaiValidation['validated_by'] == $penilaiId) {
-                                            $penilaisWithReview++;
-                                        } elseif (isset($penilaiValidation['perbaikan_usulan']['penilai_id']) && $penilaiValidation['perbaikan_usulan']['penilai_id'] == $penilaiId) {
-                                            $penilaisWithReview++;
-                                        } elseif (isset($penilaiValidation['penilai_id']) && $penilaiValidation['penilai_id'] == $penilaiId) {
-                                            $penilaisWithReview++;
-                                        }
-                                    }
-                                }
-                                
-                                $allPenilaisSubmitted = $totalPenilais === 0 || $penilaisWithReview === $totalPenilais;
+                                $penilaiReview = $usulan->validasi_data['tim_penilai'] ?? [];
+                                $hasRecommendation = $penilaiReview['recommendation'] ?? false;
+                                $hasPerbaikan = isset($penilaiReview['perbaikan_usulan']);
                             @endphp
 
                             <div class="flex flex-col gap-2 w-full">
                                 <div class="text-sm font-medium text-gray-700 mb-2">
                                     <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
                                     Review Hasil Tim Penilai
-                                    @if($totalPenilais > 0)
-                                        <span class="text-xs text-gray-500 ml-2">
-                                            ({{ $penilaisWithReview }}/{{ $totalPenilais }} penilai telah submit)
-                                        </span>
-                                    @endif
                                 </div>
 
-                                @if($allPenilaisSubmitted)
-                                    @if($hasPerbaikan)
-                                        {{-- Note: Perbaikan dari penilai otomatis disetujui, Admin Univ dapat langsung mengambil tindakan --}}
-                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                                            <div class="flex items-center gap-2">
-                                                <i data-lucide="info" class="w-4 h-4 text-blue-600"></i>
-                                                <span class="text-sm text-blue-800">
-                                                    Perbaikan dari Tim Penilai telah diterima. Silakan pilih tindakan selanjutnya.
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
+                                @if($hasPerbaikan)
+                                    {{-- Review Perbaikan Usulan --}}
+                                    <div class="flex gap-2">
+                                        <button type="button" id="btn-approve-perbaikan" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                            Setujui Perbaikan
+                                        </button>
+                                        <button type="button" id="btn-reject-perbaikan" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                            Tolak Perbaikan
+                                        </button>
+                                    </div>
+                                @endif
 
-                                    @if($hasRecommendation === 'direkomendasikan')
-                                        {{-- Note: Rekomendasi dari penilai otomatis disetujui, Admin Univ dapat langsung mengambil tindakan --}}
-                                        <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                                            <div class="flex items-center gap-2">
-                                                <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
-                                                <span class="text-sm text-green-800">
-                                                    Rekomendasi dari Tim Penilai telah diterima. Silakan pilih tindakan selanjutnya.
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- Note: Action buttons moved to main section above for better accessibility --}}
-                                @else
-                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                        <div class="flex items-center gap-2">
-                                            <i data-lucide="clock" class="w-5 h-5 text-yellow-600"></i>
-                                            <span class="text-sm text-yellow-800">
-                                                Menunggu semua penilai menyelesaikan review ({{ $penilaisWithReview }}/{{ $totalPenilais }})
-                                            </span>
-                                        </div>
+                                @if($hasRecommendation === 'direkomendasikan')
+                                    {{-- Review Rekomendasi --}}
+                                    <div class="flex gap-2">
+                                        <button type="button" id="btn-approve-rekomendasi" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+                                            <i data-lucide="crown" class="w-4 h-4"></i>
+                                            Setujui Rekomendasi
+                                        </button>
+                                        <button type="button" id="btn-reject-rekomendasi" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                            Tolak Rekomendasi
+                                        </button>
                                     </div>
                                 @endif
                             </div>
@@ -1621,28 +1209,32 @@
                     @elseif($currentRole === 'Admin Fakultas')
                         {{-- Admin Fakultas Action Buttons --}}
                         @if($usulan->status_usulan === 'Perbaikan Usulan')
-                            {{-- Kondisi 2: Admin Univ Usulan meminta perbaikan - hanya tampilkan "Kirim Kembali ke Universitas" --}}
-                            <button type="button" id="btn-kirim-ke-universitas" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                            {{-- Admin Fakultas Action Buttons for Perbaikan --}}
+                            <button type="button" id="btn-kirim-ke-universitas" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
                                 <i data-lucide="send" class="w-4 h-4"></i>
-                                Kirim Kembali ke Universitas
+                                Kirim ke Universitas
                             </button>
                         @elseif($usulan->status_usulan === 'Diajukan')
-                            {{-- Kondisi 1: Usulan pertama kali dari pegawai - tampilkan 2 button --}}
-                            <div class="flex gap-3">
-                                <button type="button" id="btn-perbaikan" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                            {{-- Admin Fakultas Action Buttons for Initial Validation --}}
+                            <div class="flex flex-col sm:flex-row gap-3 w-full">
+                                @if($config['canReturn'])
+                                <button type="button" id="btn-perbaikan" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2 shadow-lg">
                                     <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
                                     Perbaikan ke Pegawai
                                 </button>
+                                @endif
 
-                                <button type="button" id="btn-forward" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                                @if($config['canForward'])
+                                <button type="button" id="btn-forward" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
                                     <i data-lucide="send" class="w-4 h-4"></i>
-                                    Usulkan ke Universitas
+                                    Kirim ke Universitas
                                 </button>
+                                @endif
                             </div>
                         @endif
                     @elseif($currentRole === 'Tim Penilai')
                         {{-- Tim Penilai Action Buttons --}}
-                        @if(in_array($usulan->status_usulan, ['Sedang Direview', 'Menunggu Review Admin Univ']))
+                        @if($usulan->status_usulan === 'Sedang Direview')
                             <div class="flex flex-col gap-2 w-full">
                                 <div class="text-sm font-medium text-gray-700 mb-2">
                                     <i data-lucide="clipboard-check" class="w-4 h-4 inline mr-1"></i>
@@ -1652,7 +1244,7 @@
                                 <div class="flex gap-2">
                                     <button type="button" id="btn-perbaikan" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                                         <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
-                                        Perbaikan Usulan
+                                        Perbaikan ke Admin Univ
                                     </button>
 
                                     <button type="button" id="btn-rekomendasikan" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
@@ -1672,7 +1264,7 @@
                         @if($config['canReturn'])
                         <button type="button" id="btn-perbaikan" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                             <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
-                            Perbaikan Usulan
+                            Perbaikan ke Pegawai
                         </button>
                         @endif
 
@@ -1696,48 +1288,33 @@
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mt-6">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div class="text-sm">
-                    @php
-                        // Check if current penilai has submitted review (for Tim Penilai role)
-                        $currentPenilaiHasReviewed = false;
-                        if ($currentRole === 'Tim Penilai' && $usulan->status_usulan === 'Menunggu Review Admin Univ') {
-                            $currentPenilaiId = auth()->id();
-                            $penilaiValidation = $usulan->validasi_data['tim_penilai'] ?? [];
-                            
-                            // Check new structure first
-                            if (isset($penilaiValidation['reviews'][$currentPenilaiId])) {
-                                $currentPenilaiHasReviewed = true;
-                            }
-                            // Fallback to old structure
-                            elseif (isset($penilaiValidation['validated_by']) && $penilaiValidation['validated_by'] == $currentPenilaiId) {
-                                $currentPenilaiHasReviewed = true;
-                            } elseif (isset($penilaiValidation['perbaikan_usulan']['penilai_id']) && $penilaiValidation['perbaikan_usulan']['penilai_id'] == $currentPenilaiId) {
-                                $currentPenilaiHasReviewed = true;
-                            } elseif (isset($penilaiValidation['penilai_id']) && $penilaiValidation['penilai_id'] == $currentPenilaiId) {
-                                $currentPenilaiHasReviewed = true;
-                            }
-                        }
-                        
-                        $statusMessages = [
-                            'Diusulkan ke Universitas' => [
-                                'icon' => 'send',
-                                'color' => 'text-blue-600',
-                                'message' => 'Usulan sudah dikirim ke universitas. Data tidak dapat diubah lagi.'
-                            ],
-                            'Sedang Direview' => [
-                                'icon' => 'clock',
-                                'color' => 'text-yellow-600',
-                                'message' => 'Usulan sedang dalam proses review. Data tidak dapat diubah.'
-                            ],
-                            'Menunggu Review Admin Univ' => [
-                                'icon' => $currentRole === 'Tim Penilai' && !$currentPenilaiHasReviewed ? 'clock' : 'eye',
-                                'color' => $currentRole === 'Tim Penilai' && !$currentPenilaiHasReviewed ? 'text-yellow-600' : 'text-purple-600',
-                                'message' => $currentRole === 'Tim Penilai' && !$currentPenilaiHasReviewed 
-                                    ? 'Menunggu penilaian Tim Penilai Universitas.'
-                                    : 'Usulan menunggu review dari Admin Universitas.'
-                            ],
-                            'Direkomendasikan' => [
-                                'icon' => 'thumbs-up',
-                                'color' => 'text-green-600',
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i data-lucide="eye" class="w-4 h-4 mr-2 text-gray-600"></i>
+                            <span class="font-medium text-gray-800">👁️ Mode tampilan detail usulan. Tidak dapat mengedit data.</span>
+                        </div>
+                    </div>
+                </div>
+                @php
+                    $statusMessages = [
+                        'Diusulkan ke Universitas' => [
+                            'icon' => 'send',
+                            'color' => 'text-blue-600',
+                            'message' => 'Usulan sudah dikirim ke universitas. Data tidak dapat diubah lagi.'
+                        ],
+                        'Sedang Direview' => [
+                            'icon' => 'clock',
+                            'color' => 'text-yellow-600',
+                            'message' => 'Usulan sedang dalam proses review. Data tidak dapat diubah.'
+                        ],
+                        'Menunggu Review Admin Univ' => [
+                            'icon' => 'eye',
+                            'color' => 'text-purple-600',
+                            'message' => 'Usulan menunggu review dari Admin Universitas.'
+                        ],
+                        'Direkomendasikan' => [
+                            'icon' => 'thumbs-up',
+                            'color' => 'text-green-600',
                                 'message' => 'Usulan sudah direkomendasikan. Data tidak dapat diubah.'
                             ],
                             'Disetujui' => [
@@ -1975,7 +1552,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ENHANCED: Action button handlers
-// Note: btn-perbaikan event listener is handled in the Tim Penilai section below
+if (document.getElementById('btn-perbaikan')) {
+    document.getElementById('btn-perbaikan').addEventListener('click', function() {
+        // Show perbaikan modal
+        showPerbaikanModal();
+    });
+}
 
 if (document.getElementById('btn-forward')) {
     document.getElementById('btn-forward').addEventListener('click', function() {
@@ -2005,20 +1587,9 @@ if (document.getElementById('btn-teruskan-penilai')) {
 
 if (document.getElementById('btn-teruskan-senat')) {
     document.getElementById('btn-teruskan-senat').addEventListener('click', function() {
-        showTeruskanKeSenatModal();
-    });
-}
-
-// NEW: Button handlers untuk meneruskan hasil penilaian
-if (document.getElementById('btn-teruskan-ke-pegawai')) {
-    document.getElementById('btn-teruskan-ke-pegawai').addEventListener('click', function() {
-        showTeruskanKePegawaiModal();
-    });
-}
-
-if (document.getElementById('btn-teruskan-ke-fakultas')) {
-    document.getElementById('btn-teruskan-ke-fakultas').addEventListener('click', function() {
-        showTeruskanKeFakultasModal();
+        if (!this.disabled) {
+            showTeruskanKeSenaModal();
+        }
     });
 }
 
@@ -2035,57 +1606,64 @@ if (document.getElementById('btn-kirim-ke-universitas')) {
     });
 }
 
-function showKirimKembaliKeUniversitasModal() {
-    Swal.fire({
-        title: 'Kirim Kembali ke Universitas',
-        text: 'Usulan akan dikirim kembali ke universitas setelah perbaikan. Pastikan semua data sudah diperbaiki.',
-        input: 'textarea',
-        inputPlaceholder: 'Catatan untuk universitas (opsional)...',
-        inputAttributes: {
-            'aria-label': 'Catatan untuk universitas'
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Kirim Kembali ke Universitas',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#2563eb',
-        preConfirm: (catatan) => {
-            // Check if dokumen pendukung is filled
-            const nomorSurat = document.querySelector('input[name="dokumen_pendukung[nomor_surat_usulan]"]')?.value;
-            const fileSurat = document.querySelector('input[name="dokumen_pendukung[file_surat_usulan]"]')?.files[0];
-            const nomorBerita = document.querySelector('input[name="dokumen_pendukung[nomor_berita_senat]"]')?.value;
-            const fileBerita = document.querySelector('input[name="dokumen_pendukung[file_berita_senat]"]')?.files[0];
+function showPerbaikanModal() {
+    // Implementation for perbaikan modal based on role
+    const currentRole = '{{ $currentRole ?? "" }}';
 
-            // For resend, we check if files exist (either current or new upload)
-            const currentSuratPath = '{{ $usulan->validasi_data["admin_fakultas"]["dokumen_pendukung"]["file_surat_usulan_path"] ?? "" }}';
-            const currentBeritaPath = '{{ $usulan->validasi_data["admin_fakultas"]["dokumen_pendukung"]["file_berita_senat_path"] ?? "" }}';
-
-            if (!nomorSurat && !currentSuratPath) {
-                Swal.showValidationMessage('Nomor Surat Usulan harus diisi');
-                return false;
+    if (currentRole === 'Tim Penilai') {
+        Swal.fire({
+            title: 'Perbaikan ke Admin Universitas',
+            text: 'Usulan akan dikirim ke Admin Universitas untuk review. Silakan berikan catatan perbaikan yang detail.',
+            input: 'textarea',
+            inputPlaceholder: 'Masukkan catatan perbaikan untuk Admin Universitas...',
+            inputAttributes: {
+                'aria-label': 'Catatan perbaikan'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Kirim ke Admin Univ',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#d97706',
+            preConfirm: (catatan) => {
+                if (!catatan || catatan.trim() === '') {
+                    Swal.showValidationMessage('Catatan perbaikan wajib diisi');
+                    return false;
+                }
+                return catatan;
             }
-            if (!fileSurat && !currentSuratPath) {
-                Swal.showValidationMessage('File Surat Usulan harus diunggah');
-                return false;
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitAction('perbaikan_usulan', result.value);
             }
-            if (!nomorBerita && !currentBeritaPath) {
-                Swal.showValidationMessage('Nomor Berita Senat harus diisi');
-                return false;
+        });
+    } else if (currentRole === 'Admin Fakultas') {
+        Swal.fire({
+            title: 'Perbaikan ke Pegawai',
+            text: 'Usulan akan dikembalikan ke pegawai untuk perbaikan. Silakan berikan catatan perbaikan yang detail.',
+            input: 'textarea',
+            inputPlaceholder: 'Masukkan catatan perbaikan untuk pegawai...',
+            inputAttributes: {
+                'aria-label': 'Catatan perbaikan'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Kembalikan ke Pegawai',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#d97706',
+            preConfirm: (catatan) => {
+                if (!catatan || catatan.trim() === '') {
+                    Swal.showValidationMessage('Catatan perbaikan wajib diisi');
+                    return false;
+                }
+                return catatan;
             }
-            if (!fileBerita && !currentBeritaPath) {
-                Swal.showValidationMessage('File Berita Senat harus diunggah');
-                return false;
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitAction('return_to_pegawai', result.value);
             }
-
-            return catatan || '';
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitAction('resend_to_university', result.value);
-        }
-    });
+        });
+    } else {
+        console.log('Show perbaikan modal for', currentRole);
+    }
 }
-
-// Function showPerbaikanModal() removed - replaced with specific event listeners
 
 function showForwardModal() {
     // Implementation for forward modal based on role
@@ -2123,35 +1701,28 @@ function showForwardModal() {
             cancelButtonText: 'Batal',
             confirmButtonColor: '#2563eb',
             preConfirm: (catatan) => {
-                // Untuk usulan pertama kali (status "Diajukan"), tidak perlu dokumen pendukung
-                // Dokumen pendukung hanya diperlukan saat perbaikan (status "Perbaikan Usulan")
-                const currentStatus = '{{ $usulan->status_usulan }}';
-                
-                if (currentStatus === 'Perbaikan Usulan') {
-                    // Check if dokumen pendukung is filled for revision
-                    const nomorSurat = document.querySelector('input[name="dokumen_pendukung[nomor_surat_usulan]"]')?.value;
-                    const fileSurat = document.querySelector('input[name="dokumen_pendukung[file_surat_usulan]"]')?.files[0];
-                    const nomorBerita = document.querySelector('input[name="dokumen_pendukung[nomor_berita_senat]"]')?.value;
-                    const fileBerita = document.querySelector('input[name="dokumen_pendukung[file_berita_senat]"]')?.files[0];
+                // Check if dokumen pendukung is filled
+                const nomorSurat = document.querySelector('input[name="dokumen_pendukung[nomor_surat_usulan]"]')?.value;
+                const fileSurat = document.querySelector('input[name="dokumen_pendukung[file_surat_usulan]"]')?.files[0];
+                const nomorBerita = document.querySelector('input[name="dokumen_pendukung[nomor_berita_senat]"]')?.value;
+                const fileBerita = document.querySelector('input[name="dokumen_pendukung[file_berita_senat]"]')?.files[0];
 
-                    // For resend, we check if files exist (either current or new upload)
-                    const currentSuratPath = '{{ $usulan->validasi_data["admin_fakultas"]["dokumen_pendukung"]["file_surat_usulan_path"] ?? "" }}';
-                    const currentBeritaPath = '{{ $usulan->validasi_data["admin_fakultas"]["dokumen_pendukung"]["file_berita_senat_path"] ?? "" }}';
-
-                    if (!nomorSurat && !currentSuratPath) {
-                        Swal.showValidationMessage('Nomor Surat Usulan harus diisi');
+                // Check if field exists (meaning this is initial submission)
+                if (document.querySelector('input[name="dokumen_pendukung[nomor_surat_usulan]"]')) {
+                    if (!nomorSurat) {
+                        Swal.showValidationMessage('Nomor Surat Usulan harus diisi sebelum mengirim ke universitas');
                         return false;
                     }
-                    if (!fileSurat && !currentSuratPath) {
-                        Swal.showValidationMessage('File Surat Usulan harus diunggah');
+                    if (!fileSurat) {
+                        Swal.showValidationMessage('File Surat Usulan harus diunggah sebelum mengirim ke universitas');
                         return false;
                     }
-                    if (!nomorBerita && !currentBeritaPath) {
-                        Swal.showValidationMessage('Nomor Berita Senat harus diisi');
+                    if (!nomorBerita) {
+                        Swal.showValidationMessage('Nomor Berita Senat harus diisi sebelum mengirim ke universitas');
                         return false;
                     }
-                    if (!fileBerita && !currentBeritaPath) {
-                        Swal.showValidationMessage('File Berita Senat harus diunggah');
+                    if (!fileBerita) {
+                        Swal.showValidationMessage('File Berita Senat harus diunggah sebelum mengirim ke universitas');
                         return false;
                     }
                 }
@@ -2314,25 +1885,22 @@ function showTeruskanKePenilaiModal() {
     });
 }
 
-function showTeruskanKeSenatModal() {
+function showTeruskanKeSenaModal() {
     Swal.fire({
         title: 'Teruskan ke Tim Senat',
-        text: 'Usulan akan diteruskan ke Tim Senat untuk keputusan final. Pastikan rekomendasi dari Tim Penilai sudah lengkap.',
+        text: 'Usulan akan diteruskan ke tim senat untuk keputusan final. Pastikan sudah ada rekomendasi dari tim penilai.',
         input: 'textarea',
-        inputPlaceholder: 'Catatan untuk Tim Senat (opsional)...',
+        inputPlaceholder: 'Catatan untuk tim senat (opsional)...',
         inputAttributes: {
-            'aria-label': 'Catatan untuk Tim Senat'
+            'aria-label': 'Catatan untuk tim senat'
         },
         showCancelButton: true,
-        confirmButtonText: 'Teruskan ke Tim Senat',
+        confirmButtonText: 'Teruskan ke Senat',
         cancelButtonText: 'Batal',
-        confirmButtonColor: '#7c3aed',
-        preConfirm: (catatan) => {
-            return catatan || '';
-        }
+        confirmButtonColor: '#7c3aed'
     }).then((result) => {
         if (result.isConfirmed) {
-            submitAction('forward_to_senat', result.value);
+            submitAction('forward_to_senat', result.value || '');
         }
     });
 }
@@ -2360,54 +1928,6 @@ function showKembalikanDariPenilaiModal() {
     }).then((result) => {
         if (result.isConfirmed) {
             submitAction('return_from_penilai', result.value);
-        }
-    });
-}
-
-// NEW: Function untuk meneruskan hasil penilaian ke Pegawai
-function showTeruskanKePegawaiModal() {
-    Swal.fire({
-        title: 'Teruskan Hasil Penilaian ke Pegawai',
-        text: 'Hasil penilaian dari Tim Penilai Universitas akan diteruskan ke Pegawai untuk perbaikan. Anda dapat menambahkan catatan tambahan jika diperlukan.',
-        input: 'textarea',
-        inputPlaceholder: 'Catatan tambahan (opsional)...',
-        inputAttributes: {
-            'aria-label': 'Catatan tambahan'
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Teruskan ke Pegawai',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#dc2626',
-        preConfirm: (catatan) => {
-            return catatan || '';
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitAction('return_to_pegawai', result.value);
-        }
-    });
-}
-
-// NEW: Function untuk meneruskan hasil penilaian ke Fakultas
-function showTeruskanKeFakultasModal() {
-    Swal.fire({
-        title: 'Teruskan Hasil Penilaian ke Fakultas',
-        text: 'Hasil penilaian dari Tim Penilai Universitas akan diteruskan ke Admin Fakultas untuk perbaikan. Anda dapat menambahkan catatan tambahan jika diperlukan.',
-        input: 'textarea',
-        inputPlaceholder: 'Catatan tambahan (opsional)...',
-        inputAttributes: {
-            'aria-label': 'Catatan tambahan'
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Teruskan ke Fakultas',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#d97706',
-        preConfirm: (catatan) => {
-            return catatan || '';
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitAction('return_to_fakultas', result.value);
         }
     });
 }
@@ -2608,32 +2128,6 @@ function submitAction(actionType, catatan) {
             }).then((result) => {
                 if (data.redirect) {
                     window.location.href = data.redirect;
-                } else {
-                    // Reload halaman setelah aksi perbaikan berhasil
-                    // Khusus untuk aksi yang mengubah status usulan
-                    const reloadActions = [
-                        'return_to_pegawai',      // Admin Fakultas mengembalikan ke pegawai
-                        'forward_to_university',  // Admin Fakultas mengirim ke universitas
-                        'resend_to_university',   // Admin Fakultas kirim kembali ke universitas
-                        'return_to_fakultas',     // Admin Univ mengembalikan ke fakultas
-                        'return_to_pegawai',      // Admin Univ mengembalikan ke pegawai
-                        'forward_to_penilai',     // Admin Univ mengirim ke penilai
-                        'perbaikan_usulan',       // Tim Penilai mengembalikan untuk perbaikan
-                        'rekomendasikan',         // Tim Penilai merekomendasikan
-                        'approve_perbaikan',      // Admin Univ menyetujui perbaikan
-                        'reject_perbaikan',       // Admin Univ menolak perbaikan
-                        'approve_rekomendasi',    // Admin Univ menyetujui rekomendasi
-                        'reject_rekomendasi',     // Admin Univ menolak rekomendasi
-                        'setujui_usulan',         // Tim Senat menyetujui usulan
-                        'tolak_usulan'            // Tim Senat menolak usulan
-                    ];
-                    
-                    if (reloadActions.includes(actionType)) {
-                        // Reload halaman setelah 1 detik untuk memastikan data tersimpan
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
-                    }
                 }
             });
         } else {
@@ -2659,63 +2153,117 @@ function submitAction(actionType, catatan) {
     });
 }
 
-// REMOVED: Button handlers untuk review dari Tim Penilai - button sudah dihapus sesuai permintaan user
-
+// NEW: Button handlers untuk review dari Tim Penilai
 document.addEventListener('DOMContentLoaded', function() {
+    // Approve Perbaikan
+    const btnApprovePerbaikan = document.getElementById('btn-approve-perbaikan');
+    if (btnApprovePerbaikan) {
+        btnApprovePerbaikan.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Setujui Perbaikan',
+                text: 'Apakah Anda yakin ingin menyetujui hasil perbaikan dari Tim Penilai?',
+                input: 'textarea',
+                inputPlaceholder: 'Catatan tambahan (opsional)...',
+                showCancelButton: true,
+                confirmButtonText: 'Setujui',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#059669',
+                preConfirm: (catatan) => {
+                    return catatan || '';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitAction('approve_perbaikan', result.value);
+                }
+            });
+        });
+    }
+
+    // Reject Perbaikan
+    const btnRejectPerbaikan = document.getElementById('btn-reject-perbaikan');
+    if (btnRejectPerbaikan) {
+        btnRejectPerbaikan.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Tolak Perbaikan',
+                text: 'Apakah Anda yakin ingin menolak hasil perbaikan dari Tim Penilai?',
+                input: 'textarea',
+                inputPlaceholder: 'Alasan penolakan...',
+                showCancelButton: true,
+                confirmButtonText: 'Tolak',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626',
+                preConfirm: (catatan) => {
+                    if (!catatan || catatan.trim() === '') {
+                        Swal.showValidationMessage('Alasan penolakan wajib diisi');
+                        return false;
+                    }
+                    return catatan;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitAction('reject_perbaikan', result.value);
+                }
+            });
+        });
+    }
+
+    // Approve Rekomendasi
+    const btnApproveRekomendasi = document.getElementById('btn-approve-rekomendasi');
+    if (btnApproveRekomendasi) {
+        btnApproveRekomendasi.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Setujui Rekomendasi',
+                text: 'Apakah Anda yakin ingin menyetujui rekomendasi dari Tim Penilai?',
+                input: 'textarea',
+                inputPlaceholder: 'Catatan tambahan (opsional)...',
+                showCancelButton: true,
+                confirmButtonText: 'Setujui',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#7c3aed',
+                preConfirm: (catatan) => {
+                    return catatan || '';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitAction('approve_rekomendasi', result.value);
+                }
+            });
+        });
+    }
+
+    // Reject Rekomendasi
+    const btnRejectRekomendasi = document.getElementById('btn-reject-rekomendasi');
+    if (btnRejectRekomendasi) {
+        btnRejectRekomendasi.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Tolak Rekomendasi',
+                text: 'Apakah Anda yakin ingin menolak rekomendasi dari Tim Penilai?',
+                input: 'textarea',
+                inputPlaceholder: 'Alasan penolakan...',
+                showCancelButton: true,
+                confirmButtonText: 'Tolak',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626',
+                preConfirm: (catatan) => {
+                    if (!catatan || catatan.trim() === '') {
+                        Swal.showValidationMessage('Alasan penolakan wajib diisi');
+                        return false;
+                    }
+                    return catatan;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitAction('reject_rekomendasi', result.value);
+                }
+            });
+        });
+    }
+
     // Tim Penilai Button Handlers
     const btnPerbaikan = document.getElementById('btn-perbaikan');
     if (btnPerbaikan) {
         btnPerbaikan.addEventListener('click', function() {
-            const currentRole = '{{ $currentRole ?? "" }}';
-            
-            if (currentRole === 'Tim Penilai') {
-                Swal.fire({
-                    title: 'Perbaikan Usulan',
-                    text: 'Usulan akan dikirim ke Admin Universitas untuk review. Silakan berikan catatan perbaikan.',
-                    input: 'textarea',
-                    inputPlaceholder: 'Masukkan catatan perbaikan...',
-                    showCancelButton: true,
-                    confirmButtonText: 'Kirim ke Admin Univ',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#d97706',
-                    preConfirm: (catatan) => {
-                        if (!catatan || catatan.trim() === '') {
-                            Swal.showValidationMessage('Catatan perbaikan wajib diisi');
-                            return false;
-                        }
-                        return catatan;
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        submitAction('perbaikan_usulan', result.value);
-                    }
-                });
-            } else if (currentRole === 'Admin Fakultas') {
-                Swal.fire({
-                    title: 'Perbaikan ke Pegawai',
-                    text: 'Usulan akan dikembalikan ke pegawai untuk perbaikan. Silakan berikan catatan perbaikan yang detail.',
-                    input: 'textarea',
-                    inputPlaceholder: 'Masukkan catatan perbaikan untuk pegawai...',
-                    inputAttributes: {
-                        'aria-label': 'Catatan perbaikan'
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: 'Kembalikan ke Pegawai',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#d97706',
-                    preConfirm: (catatan) => {
-                        if (!catatan || catatan.trim() === '') {
-                            Swal.showValidationMessage('Catatan perbaikan wajib diisi');
-                            return false;
-                        }
-                        return catatan;
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        submitAction('return_to_pegawai', result.value);
-                    }
-                });
-            }
+            showPerbaikanModal();
         });
     }
 
@@ -2744,3 +2292,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endif
+

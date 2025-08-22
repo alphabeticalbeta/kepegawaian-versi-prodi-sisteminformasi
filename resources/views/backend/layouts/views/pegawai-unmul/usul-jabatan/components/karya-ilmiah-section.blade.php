@@ -75,7 +75,7 @@
                         </div>
                     @endforeach
                 </div>
-            @elseif($isKaryaIlmiahInvalid && $karyaIlmiahValidation && isset($karyaIlmiahValidation['keterangan']))
+            @elseif($isKaryaIlmiahInvalid && $karyaIlmiahValidation)
                 {{-- Fallback untuk struktur data lama --}}
                 <div class="mt-3 text-xs text-red-700 bg-red-100 p-3 rounded border-l-2 border-red-400">
                     <div class="flex items-start gap-2">
@@ -183,7 +183,7 @@
                     @error($name)<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
 
                     {{-- Tampilkan catatan spesifik dari admin jika tidak valid --}}
-                    @if($isFieldInvalid && isset($fieldValidation['keterangan']))
+                    @if($isFieldInvalid)
                         <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border-l-2 border-red-400">
                             <div class="flex items-start gap-1">
                                 <i data-lucide="message-square" class="w-3 h-3 mt-0.5 text-red-600"></i>
@@ -271,7 +271,7 @@
                                 </div>
                             @endforeach
                         </div>
-                    @elseif($isFieldInvalid && $fieldValidation && isset($fieldValidation['keterangan']))
+                    @elseif($isFieldInvalid && $fieldValidation)
                         {{-- Fallback untuk struktur data lama --}}
                         <div class="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded border-l-2 border-red-400">
                             <div class="flex items-start gap-1">

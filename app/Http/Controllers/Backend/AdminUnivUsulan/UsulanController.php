@@ -97,20 +97,12 @@ class UsulanController extends Controller
         // Get existing validation data
         $existingValidation = $usulan->getValidasiByRole('admin_universitas') ?? [];
 
-        // Determine if can edit based on status
-        $canEdit = in_array($usulan->status_usulan, [
-            'Diusulkan ke Universitas',
-            'Sedang Direview',
-            'Menunggu Review Admin Univ',
-            'Perbaikan Usulan'
-        ]);
-
         // Get penilais data for popup
         $penilais = \App\Models\BackendUnivUsulan\Pegawai::whereHas('roles', function($query) {
             $query->where('name', 'Penilai Universitas');
         })->orderBy('nama_lengkap')->get();
 
-        return view('backend.layouts.views.admin-univ-usulan.usulan.detail', compact('usulan', 'existingValidation', 'penilais', 'canEdit'));
+        return view('backend.layouts.views.admin-univ-usulan.usulan.detail', compact('usulan', 'existingValidation', 'penilais'));
     }
 
     /**

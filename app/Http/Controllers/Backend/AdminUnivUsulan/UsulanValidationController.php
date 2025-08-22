@@ -57,7 +57,7 @@ class UsulanValidationController extends Controller
         ]);
 
         // Check if usulan is in correct status for Admin Universitas
-        $allowedStatuses = ['Diusulkan ke Universitas', 'Perbaikan Usulan', 'Sedang Direview', 'Menunggu Review Admin Univ'];
+        $allowedStatuses = ['Diusulkan ke Universitas', 'Perbaikan Usulan', 'Sedang Direview'];
         if (!in_array($usulan->status_usulan, $allowedStatuses)) {
             return redirect()->route('backend.admin-univ-usulan.usulan.index')
                 ->with('error', 'Usulan tidak dapat divalidasi karena status tidak sesuai.');
@@ -66,29 +66,8 @@ class UsulanValidationController extends Controller
         // Get existing validation data
         $existingValidation = $usulan->getValidasiByRole('admin_universitas') ?? [];
 
-        // Clear all related caches to ensure fresh data
-        $cacheKeys = [
-            "usulan_validation_{$usulan->id}_admin_universitas",
-            "usulan_validation_{$usulan->id}_tim_penilai",
-            "usulan_validation_{$usulan->id}_admin_fakultas",
-            "usulan_{$usulan->id}_full_data"
-        ];
-        
-        foreach ($cacheKeys as $key) {
-            Cache::forget($key);
-        }
-
-        // Add logging for debugging
-        Log::info('AdminUnivUsulan show method', [
-            'usulan_id' => $usulan->id,
-            'status_usulan' => $usulan->status_usulan,
-            'allowed_statuses' => ['Diusulkan ke Universitas', 'Perbaikan Usulan', 'Sedang Direview', 'Menunggu Review Admin Univ'],
-            'existing_validation' => $existingValidation,
-            'validasi_data_full' => $usulan->validasi_data
-        ]);
-
         // Determine if Admin Universitas can edit (based on status)
-        $canEdit = in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Perbaikan Usulan', 'Sedang Direview', 'Menunggu Review Admin Univ']);
+        $canEdit = in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Perbaikan Usulan', 'Sedang Direview']);
 
         // Get active penilais for selection
         $penilais = \App\Models\BackendUnivUsulan\Penilai::getActivePenilais();
@@ -111,7 +90,6 @@ class UsulanValidationController extends Controller
         if (in_array($actionType, ['return_to_pegawai', 'return_to_fakultas', 'forward_to_penilai', 'return_from_penilai'])) {
             $allowedStatuses[] = 'Perbaikan Usulan';
             $allowedStatuses[] = 'Sedang Direview';
-            $allowedStatuses[] = 'Menunggu Review Admin Univ';
         }
 
         // For penilai review actions, allow usulans waiting for admin review

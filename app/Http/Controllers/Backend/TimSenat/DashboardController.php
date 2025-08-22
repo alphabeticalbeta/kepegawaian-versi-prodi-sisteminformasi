@@ -20,6 +20,7 @@ class DashboardController extends Controller
                 return view('backend.layouts.views.tim-senat.dashboard', [
                     'stats' => $this->getDefaultStats(),
                     'recentUsulans' => collect(),
+                    'usulans' => collect(),
                     'user' => null
                 ]);
             }
@@ -34,6 +35,26 @@ class DashboardController extends Controller
                 'total_dosen' => Pegawai::where('jenis_pegawai', 'Dosen')->count(),
             ];
 
+            // Get all usulans for Tim Senat dashboard with all required relationships
+            $usulans = Usulan::with([
+                'pegawai:id,nama_lengkap,nip,unit_kerja_id,sub_sub_unit_kerja_id',
+                'pegawai.unitKerja:id,nama',
+                'pegawai.subSubUnitKerja:id,nama',
+                'jabatanLama:id,jabatan',
+                'jabatanTujuan:id,jabatan',
+                'periodeUsulan:id,nama_periode,tanggal_mulai,tanggal_selesai',
+                'penilais:id,nama_lengkap,nip'
+            ])
+            ->whereIn('status_usulan', [
+                'Direkomendasikan',
+                'Disetujui',
+                'Ditolak',
+                'Diusulkan ke Sister',
+                'Perbaikan dari Tim Sister'
+            ])
+            ->latest()
+            ->get();
+
             // Recent activities
             $recentUsulans = Usulan::with(['pegawai:id,nama_lengkap,nip', 'jabatanTujuan'])
                 ->whereHas('pegawai', function($q) {
@@ -46,6 +67,7 @@ class DashboardController extends Controller
             return view('backend.layouts.views.tim-senat.dashboard', [
                 'stats' => $stats,
                 'recentUsulans' => $recentUsulans,
+                'usulans' => $usulans,
                 'user' => $user
             ]);
         } catch (\Exception $e) {
@@ -59,6 +81,7 @@ class DashboardController extends Controller
             return view('backend.layouts.views.tim-senat.dashboard', [
                 'stats' => $this->getDefaultStats(),
                 'recentUsulans' => collect(),
+                'usulans' => collect(),
                 'user' => Auth::guard('pegawai')->user(),
                 'error' => 'Terjadi kesalahan saat memuat dashboard. Silakan coba lagi.'
             ]);
