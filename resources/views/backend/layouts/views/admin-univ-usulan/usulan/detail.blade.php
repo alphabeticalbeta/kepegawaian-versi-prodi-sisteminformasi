@@ -7,6 +7,8 @@
         'usulan' => $usulan,
         'role' => 'Admin Universitas',
         'existingValidation' => $existingValidation,
-        'canEdit' => $canEdit
+        'canEdit' => $canEdit,
+        'penilaiProgressData' => $penilaiProgressData ?? null,
+        'consistencyCheck' => $consistencyCheck ?? null
     ])
 @endsection

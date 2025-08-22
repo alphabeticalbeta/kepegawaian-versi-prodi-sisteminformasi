@@ -7,8 +7,8 @@
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-2xl mb-6 shadow-2xl">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold mb-2">{{ $namaUsulan }}</h1>
-                <p class="text-blue-100">Kelola usulan untuk periode {{ $periode->nama_periode }}</p>
+                <h1 class="text-2xl font-bold mb-2">Daftar Pengusul {{ $namaUsulan }}</h1>
+                <p class="text-blue-100">Periode: {{ $periode->nama_periode }} - Status: {{ $periode->status }}</p>
                 <div class="flex items-center mt-2 space-x-4 text-blue-200 text-sm">
                     <span>📅 {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('d M Y') }}</span>
                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
@@ -96,14 +96,6 @@
 
     <!-- Action Buttons -->
     <div class="flex flex-wrap gap-4 mb-6">
-        <a href="{{ route('backend.admin-univ-usulan.usulan.create', ['jenis' => $jenisUsulan]) }}"
-           class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Buat Usulan Baru
-        </a>
-
         <form action="{{ route('backend.admin-univ-usulan.usulan.toggle-periode') }}" method="POST" class="inline">
             @csrf
             <input type="hidden" name="jenis" value="{{ $jenisUsulan }}">
@@ -147,13 +139,13 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-xl font-semibold text-slate-800">Daftar {{ $namaUsulan }}</h3>
-                    <p class="text-slate-600 mt-1">Periode: {{ $periode->nama_periode }}</p>
+                    <h3 class="text-xl font-semibold text-slate-800">Daftar Pengusul {{ $namaUsulan }}</h3>
+                    <p class="text-slate-600 mt-1">Periode: {{ $periode->nama_periode }} | Total: {{ $usulans->total() }} pengusul</p>
                 </div>
                 <div class="flex gap-2">
                     <div class="relative">
                         <input type="text"
-                               placeholder="Cari usulan..."
+                               placeholder="Cari pengusul berdasarkan nama atau NIP..."
                                class="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <svg class="w-4 h-4 absolute right-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -170,7 +162,9 @@
                         <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">No</th>
                         <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Pegawai</th>
                         <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis Pegawai</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal Usulan</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nama Sub-Sub Unit Kerja</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Unit Kerja</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jabatan yang Dituju</th>
                         <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
                     </tr>
@@ -183,15 +177,21 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div>
-                                    <div class="text-sm font-medium text-slate-900">{{ $usulan->pegawai->nama_lengkap }}</div>
-                                    <div class="text-sm text-slate-500">NIP: {{ $usulan->pegawai->nip }}</div>
+                                    <div class="text-sm font-medium text-slate-900">{{ $usulan->pegawai->nama_lengkap ?? 'N/A' }}</div>
+                                    <div class="text-sm text-slate-500">NIP: {{ $usulan->pegawai->nip ?? 'N/A' }}</div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                {{ $usulan->pegawai->jenis_pegawai }}
+                                {{ $usulan->pegawai->jenis_pegawai ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                {{ $usulan->created_at->format('d M Y H:i') }}
+                                {{ $usulan->pegawai->unitKerja->subUnitKerja->nama ?? 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                {{ $usulan->pegawai->unitKerja->subUnitKerja->unitKerja->nama ?? 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                {{ $usulan->jabatanTujuan->jabatan ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
@@ -206,31 +206,18 @@
                                        class="text-blue-600 hover:text-blue-900 px-3 py-1 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                                         Detail
                                     </a>
-                                    <a href="#"
-                                       class="text-indigo-600 hover:text-indigo-900 px-3 py-1 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-                                        Edit
-                                    </a>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="text-slate-500">
                                     <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                     </svg>
-                                    <h3 class="mt-2 text-sm font-medium text-slate-900">Belum ada usulan</h3>
-                                    <p class="mt-1 text-sm text-slate-500">Belum ada usulan untuk {{ $namaUsulan }} pada periode ini.</p>
-                                    <div class="mt-6">
-                                        <a href="{{ route('backend.admin-univ-usulan.usulan.create', ['jenis' => $jenisUsulan]) }}"
-                                           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                            </svg>
-                                            Buat Usulan Pertama
-                                        </a>
-                                    </div>
+                                    <h3 class="mt-2 text-sm font-medium text-slate-900">Belum ada pengusul</h3>
+                                    <p class="mt-1 text-sm text-slate-500">Belum ada pengusul untuk {{ $namaUsulan }} pada periode ini.</p>
                                 </div>
                             </td>
                         </tr>

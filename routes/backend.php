@@ -980,6 +980,8 @@ Route::bind('usulan', function ($value) {
                     ->name('show');
                 Route::post('/{usulan}/save-validation', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'saveValidation'])
                     ->name('save-validation');
+                Route::post('/{usulan}/submit-penilaian', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'submitPenilaian'])
+                    ->name('submit-penilaian');
                 Route::get('/{usulan}/document/{field}', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'showDocument'])
                     ->name('show-document');
                 Route::get('/{usulan}/pegawai-document/{field}', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'showPegawaiDocument'])

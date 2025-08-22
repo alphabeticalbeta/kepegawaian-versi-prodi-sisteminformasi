@@ -36,6 +36,7 @@ class DashboardController extends Controller
                           ->latest()
                           ->limit(5);
                 }])
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             // Get recent usulans for validation (status: Diusulkan ke Universitas)
@@ -45,18 +46,10 @@ class DashboardController extends Controller
                 ->limit(10)
                 ->get();
 
-            // Get usulans waiting for admin review (NEW STATUS)
-            $usulansWaitingReview = \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Menunggu Review Admin Univ')
-                ->with(['pegawai:id,nama_lengkap,nip', 'periodeUsulan'])
-                ->latest()
-                ->limit(10)
-                ->get();
-
             // Get statistics
             $stats = [
                 'total_periods' => $activePeriods->count(),
                 'total_usulans_pending' => $recentUsulans->count(),
-                'total_usulans_waiting_review' => $usulansWaitingReview->count(),
                 'total_usulans_all' => \App\Models\BackendUnivUsulan\Usulan::count(),
                 'usulans_by_status' => [
                     'Diajukan' => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Diajukan')->count(),
@@ -72,7 +65,6 @@ class DashboardController extends Controller
             return view('backend.layouts.views.admin-univ-usulan.dashboard', [
                 'activePeriods' => $activePeriods,
                 'recentUsulans' => $recentUsulans,
-                'usulansWaitingReview' => $usulansWaitingReview,
                 'stats' => $stats,
                 'user' => Auth::user()
             ]);

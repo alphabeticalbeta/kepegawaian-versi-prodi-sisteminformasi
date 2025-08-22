@@ -484,13 +484,13 @@ class AdminFakultasController extends Controller
 
                     $rules = [
                         'validation' => 'required|array',
-                        'dokumen_pendukung.nomor_surat_usulan' => 'required|string|max:255',
-                        'dokumen_pendukung.nomor_berita_senat' => 'required|string|max:255',
+                        'dokumen_pendukung.nomor_surat_usulan' => 'nullable|string|max:255',
+                        'dokumen_pendukung.nomor_berita_senat' => 'nullable|string|max:255',
                     ];
 
                     $messages = [
-                        'dokumen_pendukung.nomor_surat_usulan.required' => 'Nomor surat usulan wajib diisi.',
-                        'dokumen_pendukung.nomor_berita_senat.required' => 'Nomor berita senat wajib diisi.',
+                        'dokumen_pendukung.nomor_surat_usulan.max' => 'Nomor surat usulan maksimal 255 karakter.',
+                        'dokumen_pendukung.nomor_berita_senat.max' => 'Nomor berita senat maksimal 255 karakter.',
                     ];
 
                     // Only require files for initial submission if files are provided
@@ -510,20 +510,30 @@ class AdminFakultasController extends Controller
 
                     $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
 
-                    // Cek lagi setelah data validasi disimpan
+                    // Cek lagi setelah data validasi disimpan (warning only, not blocking)
                     if ($usulan->hasInvalidFields('admin_fakultas')) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'validation' => 'Tidak dapat meneruskan usulan. Masih ada item yang tidak sesuai dalam validasi.'
+                        $invalidFields = $usulan->getInvalidFields('admin_fakultas');
+                        Log::warning('Admin Fakultas mengirim usulan dengan field yang tidak sesuai', [
+                            'usulan_id' => $usulan->id,
+                            'admin_id' => $adminId,
+                            'invalid_fields_count' => count($invalidFields),
+                            'invalid_fields' => $invalidFields
                         ]);
+                        // Don't throw exception, just log warning and continue
+                        // This makes the validation more flexible
                     }
 
                                         // Simpan dokumen pendukung fakultas
                     $currentValidasi = $usulan->validasi_data;
                     $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
 
-                    // Update text fields
-                    $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
-                    $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
+                    // Update text fields (handle null values)
+                    if (isset($validatedData['dokumen_pendukung']['nomor_surat_usulan'])) {
+                        $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
+                    }
+                    if (isset($validatedData['dokumen_pendukung']['nomor_berita_senat'])) {
+                        $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
+                    }
 
                     // Handle file uploads menggunakan FileStorageService
                     $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
@@ -543,13 +553,18 @@ class AdminFakultasController extends Controller
                     $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
                     $usulan->validasi_data = $currentValidasi;
 
-                    // Final check untuk memastikan file sudah ada (only if files were uploaded)
+                    // Final check untuk memastikan file sudah ada (warning only, not blocking)
                     if (!empty($currentDokumenPendukung['file_surat_usulan_path']) || !empty($currentDokumenPendukung['file_berita_senat_path'])) {
                         // If one file is uploaded, both should be uploaded
                         if (empty($currentDokumenPendukung['file_surat_usulan_path']) || empty($currentDokumenPendukung['file_berita_senat_path'])) {
-                            throw \Illuminate\Validation\ValidationException::withMessages([
-                                'file_upload' => 'Jika mengunggah file, kedua file (surat usulan dan berita senat) harus diunggah.'
+                            Log::warning('Admin Fakultas mengirim usulan dengan file upload tidak lengkap', [
+                                'usulan_id' => $usulan->id,
+                                'admin_id' => $adminId,
+                                'has_surat_path' => !empty($currentDokumenPendukung['file_surat_usulan_path']),
+                                'has_berita_path' => !empty($currentDokumenPendukung['file_berita_senat_path'])
                             ]);
+                            // Don't throw exception, just log warning and continue
+                            // This makes the validation more flexible
                         }
                     }
 
@@ -575,11 +590,17 @@ class AdminFakultasController extends Controller
                     // Simpan validasi data
                     $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
 
-                    // Cek apakah masih ada field yang tidak valid
+                    // Cek apakah masih ada field yang tidak valid (warning only, not blocking)
                     if ($usulan->hasInvalidFields('admin_fakultas')) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'validation' => 'Tidak dapat mengirim kembali usulan. Masih ada item yang tidak sesuai dalam validasi.'
+                        $invalidFields = $usulan->getInvalidFields('admin_fakultas');
+                        Log::warning('Admin Fakultas mengirim kembali usulan dengan field yang tidak sesuai', [
+                            'usulan_id' => $usulan->id,
+                            'admin_id' => $adminId,
+                            'invalid_fields_count' => count($invalidFields),
+                            'invalid_fields' => $invalidFields
                         ]);
+                        // Don't throw exception, just log warning and continue
+                        // This makes the validation more flexible
                     }
 
                     // Log request details sebelum validasi
@@ -617,47 +638,45 @@ class AdminFakultasController extends Controller
                     ]);
 
                     if (!empty($dokumenErrors)) {
-                        Log::warning('Dokumen pendukung validation failed', [
+                        Log::warning('Dokumen pendukung validation failed (warning only)', [
                             'usulan_id' => $usulan->id,
                             'errors' => $dokumenErrors
                         ]);
-
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'dokumen_pendukung' => $dokumenErrors
-                        ]);
+                        // Don't throw exception, just log warning and continue
+                        // This makes the validation more flexible
                     }
 
                     // Update dokumen pendukung menggunakan FileStorageService
-                    if (!empty($validatedData['dokumen_pendukung'])) {
-                        $currentValidasi = $usulan->validasi_data;
-                        $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
+                    // SELALU update dokumen pendukung, tidak peduli apakah ada file baru atau tidak
+                    $currentValidasi = $usulan->validasi_data;
+                    $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
 
-                        // Update text fields
-                        if (isset($validatedData['dokumen_pendukung']['nomor_surat_usulan'])) {
-                            $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
-                        }
-                        if (isset($validatedData['dokumen_pendukung']['nomor_berita_senat'])) {
-                            $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
-                        }
-
-                        // Handle file uploads menggunakan FileStorageService
-                        $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
-                            $request,
-                            $usulan,
-                            'file_surat_usulan',
-                            'dokumen-fakultas/surat-usulan'
-                        );
-
-                        $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
-                            $request,
-                            $usulan,
-                            'file_berita_senat',
-                            'dokumen-fakultas/berita-senat'
-                        );
-
-                        $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
-                        $usulan->validasi_data = $currentValidasi;
+                    // Update text fields jika ada
+                    if (isset($validatedData['dokumen_pendukung']['nomor_surat_usulan'])) {
+                        $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
                     }
+                    if (isset($validatedData['dokumen_pendukung']['nomor_berita_senat'])) {
+                        $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
+                    }
+
+                    // Handle file uploads menggunakan FileStorageService
+                    // FileStorageService akan mengembalikan file yang sudah ada jika tidak ada file baru
+                    $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
+                        $request,
+                        $usulan,
+                        'file_surat_usulan',
+                        'dokumen-fakultas/surat-usulan'
+                    );
+
+                    $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
+                        $request,
+                        $usulan,
+                        'file_berita_senat',
+                        'dokumen-fakultas/berita-senat'
+                    );
+
+                    $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
+                    $usulan->validasi_data = $currentValidasi;
 
                     // Update status usulan
                     $usulan->status_usulan = 'Diusulkan ke Universitas';

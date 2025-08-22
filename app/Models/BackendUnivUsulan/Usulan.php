@@ -1195,4 +1195,162 @@ public function getSenateDecisionCounts(): array
         });
     }
 
+    // Status constants for Tim Penilai assessment
+    const STATUS_PERBAIKAN_DARI_TIM_PENILAI = 'Perbaikan Dari Tim Penilai';
+    const STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI = 'Usulan Direkomendasi Tim Penilai';
+    const STATUS_TIDAK_DIREKOMENDASI = 'Tidak Direkomendasikan';
+    const STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI = 'Menunggu Hasil Penilaian Tim Penilai';
+
+    /**
+     * Determine final status based on Tim Penilai assessment results
+     */
+    public function determinePenilaiFinalStatus()
+    {
+        $penilais = $this->penilais;
+        $totalPenilai = $penilais->count();
+        
+        if ($totalPenilai === 0) {
+            return null; // No penilai assigned
+        }
+        
+        // Check if all penilai have completed their assessment
+        $completedPenilai = $penilais->whereNotNull('pivot.hasil_penilaian')->count();
+        
+        // If not all penilai have completed, return intermediate status
+        if ($completedPenilai < $totalPenilai) {
+            return self::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
+        }
+        
+        // If any penilai gives 'perbaikan', result is perbaikan
+        $hasPerbaikan = $penilais->where('pivot.hasil_penilaian', 'perbaikan')->count() > 0;
+        if ($hasPerbaikan) {
+            return self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
+        }
+        
+        // Count recommendations
+        $rekomendasiCount = $penilais->where('pivot.hasil_penilaian', 'rekomendasi')->count();
+        $tidakRekomendasiCount = $penilais->where('pivot.hasil_penilaian', 'tidak_rekomendasi')->count();
+        
+        // Logic based on number of penilai
+        switch ($totalPenilai) {
+            case 1:
+                return $rekomendasiCount > 0 ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
+                
+            case 2:
+                return ($rekomendasiCount == 2) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
+                
+            case 3:
+                return ($rekomendasiCount >= 2) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
+                
+            default:
+                // For more than 3 penilai, use majority vote
+                return ($rekomendasiCount > $tidakRekomendasiCount) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
+        }
+    }
+
+    /**
+     * Auto-update status based on current penilai assessment progress
+     * This method ensures status transitions correctly when penilai assessment changes
+     */
+    public function autoUpdateStatusBasedOnPenilaiProgress()
+    {
+        // Only auto-update if usulan is in penilai assessment phase
+        $penilaiAssessmentStatuses = [
+            'Sedang Direview',
+            'Menunggu Hasil Penilaian Tim Penilai',
+            'Perbaikan Dari Tim Penilai',
+            'Usulan Direkomendasi Tim Penilai'
+        ];
+
+        if (!in_array($this->status_usulan, $penilaiAssessmentStatuses)) {
+            return false; // Not in penilai assessment phase
+        }
+
+        $penilais = $this->penilais;
+        $totalPenilai = $penilais->count();
+        
+        if ($totalPenilai === 0) {
+            return false; // No penilai assigned
+        }
+
+        $completedPenilai = $penilais->whereNotNull('pivot.hasil_penilaian')->count();
+        $newStatus = $this->determinePenilaiFinalStatus();
+
+        // Only update if status has changed
+        if ($newStatus && $newStatus !== $this->status_usulan) {
+            $oldStatus = $this->status_usulan;
+            $this->status_usulan = $newStatus;
+            
+            // Log the status transition
+            \Log::info('Auto status transition for usulan', [
+                'usulan_id' => $this->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'total_penilai' => $totalPenilai,
+                'completed_penilai' => $completedPenilai,
+                'is_intermediate' => ($completedPenilai < $totalPenilai)
+            ]);
+
+            return true; // Status was updated
+        }
+
+        return false; // No status change needed
+    }
+
+    /**
+     * Check if usulan is in intermediate penilai assessment status
+     */
+    public function isInIntermediatePenilaiStatus()
+    {
+        return $this->status_usulan === self::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
+    }
+
+    /**
+     * Check if usulan is in final penilai assessment status
+     */
+    public function isInFinalPenilaiStatus()
+    {
+        return in_array($this->status_usulan, [
+            self::STATUS_PERBAIKAN_DARI_TIM_PENILAI,
+            self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI
+        ]);
+    }
+
+    /**
+     * Get penilai assessment progress information
+     */
+    public function getPenilaiAssessmentProgress()
+    {
+        $penilais = $this->penilais ?? collect();
+        $totalPenilai = $penilais->count();
+        $completedPenilai = $penilais->whereNotNull('pivot.hasil_penilaian')->count();
+        
+        return [
+            'total_penilai' => $totalPenilai,
+            'completed_penilai' => $completedPenilai,
+            'remaining_penilai' => max(0, $totalPenilai - $completedPenilai),
+            'progress_percentage' => $totalPenilai > 0 ? ($completedPenilai / $totalPenilai) * 100 : 0,
+            'is_complete' => ($totalPenilai > 0) && ($completedPenilai === $totalPenilai),
+            'is_intermediate' => ($totalPenilai > 0) && ($completedPenilai < $totalPenilai),
+            'current_status' => $this->status_usulan
+        ];
+    }
+
+    /**
+     * Check if usulan can be submitted in current period
+     */
+    public function canBeSubmittedInCurrentPeriod()
+    {
+        // If usulan was not recommended, it cannot be submitted in current period
+        if ($this->status_usulan === self::STATUS_TIDAK_DIREKOMENDASI) {
+            return false;
+        }
+        
+        // Check if current period is still open
+        if ($this->periodeUsulan && $this->periodeUsulan->status === 'Buka') {
+            return true;
+        }
+        
+        return false;
+    }
 }

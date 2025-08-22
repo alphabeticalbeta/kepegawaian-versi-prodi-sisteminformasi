@@ -200,41 +200,218 @@
                     @csrf
             @endif
 
-            {{-- Notification for Revision Status --}}
-            @if($isEditMode && $usulan && $usulan->status_usulan === 'Perbaikan Usulan')
-            @php
-                // Determine which role sent the revision request
-                $adminUnivValidation = $usulan->getValidasiByRole('admin_universitas');
-                $adminFakultasValidation = $usulan->getValidasiByRole('admin_fakultas');
+            {{-- Detail Field Bermasalah untuk Pegawai --}}
+            @if($isEditMode && $usulan && !empty($validationData))
+                @php
+                    // Define role labels and colors
+                    $roleConfigs = [
+                        'admin_fakultas' => [
+                            'label' => 'Admin Fakultas',
+                            'color' => 'amber',
+                            'icon' => 'building-2'
+                        ],
+                        'admin_universitas' => [
+                            'label' => 'Admin Universitas',
+                            'color' => 'blue',
+                            'icon' => 'university'
+                        ],
+                        'tim_penilai' => [
+                            'label' => 'Tim Penilai',
+                            'color' => 'purple',
+                            'icon' => 'users'
+                        ]
+                    ];
 
-                $revisionFromRole = 'Admin Fakultas'; // Default
-                $revisionFromRoleColor = 'amber';
+                    // Define field group labels
+                    $fieldGroupLabels = [
+                        'data_pribadi' => 'Data Pribadi',
+                        'data_kepegawaian' => 'Data Kepegawaian',
+                        'data_pendidikan' => 'Data Pendidikan & Fungsional',
+                        'data_kinerja' => 'Data Kinerja',
+                        'dokumen_profil' => 'Dokumen Profil',
+                        'bkd' => 'Beban Kinerja Dosen (BKD)',
+                        'karya_ilmiah' => 'Karya Ilmiah',
+                        'dokumen_usulan' => 'Dokumen Usulan',
+                        'syarat_guru_besar' => 'Syarat Guru Besar'
+                    ];
 
-                if (!empty($adminUnivValidation)) {
-                    $revisionFromRole = 'Admin Universitas';
-                    $revisionFromRoleColor = 'blue';
-                } elseif (!empty($adminFakultasValidation)) {
-                    $revisionFromRole = 'Admin Fakultas';
-                    $revisionFromRoleColor = 'amber';
+                    // Define field labels
+                    $fieldLabels = [
+                        'data_pribadi' => [
+                            'jenis_pegawai' => 'Jenis Pegawai',
+                            'status_kepegawaian' => 'Status Kepegawaian',
+                            'nip' => 'NIP',
+                            'nuptk' => 'NUPTK',
+                            'gelar_depan' => 'Gelar Depan',
+                            'nama_lengkap' => 'Nama Lengkap',
+                            'gelar_belakang' => 'Gelar Belakang',
+                            'email' => 'Email',
+                            'tempat_lahir' => 'Tempat Lahir',
+                            'tanggal_lahir' => 'Tanggal Lahir',
+                            'jenis_kelamin' => 'Jenis Kelamin',
+                            'nomor_handphone' => 'Nomor Handphone'
+                        ],
+                        'data_kepegawaian' => [
+                            'pangkat_saat_usul' => 'Pangkat',
+                            'tmt_pangkat' => 'TMT Pangkat',
+                            'jabatan_saat_usul' => 'Jabatan',
+                            'tmt_jabatan' => 'TMT Jabatan',
+                            'tmt_cpns' => 'TMT CPNS',
+                            'tmt_pns' => 'TMT PNS',
+                            'unit_kerja_saat_usul' => 'Unit Kerja'
+                        ],
+                        'data_pendidikan' => [
+                            'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                            'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                            'nama_prodi_jurusan' => 'Nama Program Studi/Jurusan',
+                            'mata_kuliah_diampu' => 'Mata Kuliah Diampu',
+                            'ranting_ilmu_kepakaran' => 'Bidang Kepakaran',
+                            'url_profil_sinta' => 'Profil SINTA'
+                        ],
+                        'data_kinerja' => [
+                            'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                            'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                            'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1)
+                        ],
+                        'dokumen_profil' => [
+                            'ijazah_terakhir' => 'Ijazah Terakhir',
+                            'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir',
+                            'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                            'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                            'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
+                            'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
+                            'pak_konversi' => 'PAK Konversi ' . (date('Y') - 1),
+                            'sk_cpns' => 'SK CPNS',
+                            'sk_pns' => 'SK PNS',
+                            'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                            'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir'
+                        ],
+                        'karya_ilmiah' => [
+                            'karya_ilmiah' => 'Karya Ilmiah',
+                            'nama_jurnal' => 'Nama Jurnal',
+                            'judul_artikel' => 'Judul Artikel',
+                            'penerbit_artikel' => 'Penerbit Artikel',
+                            'volume_artikel' => 'Volume Artikel',
+                            'nomor_artikel' => 'Nomor Artikel',
+                            'edisi_artikel' => 'Edisi Artikel',
+                            'halaman_artikel' => 'Halaman Artikel',
+                            'link_artikel' => 'Link Artikel',
+                            'link_sinta' => 'Link SINTA',
+                            'link_scopus' => 'Link Scopus',
+                            'link_scimago' => 'Link Scimago',
+                            'link_wos' => 'Link Web of Science'
+                        ],
+                        'dokumen_usulan' => [
+                            'pakta_integritas' => 'Pakta Integritas',
+                            'bukti_korespondensi' => 'Bukti Korespondensi',
+                            'turnitin' => 'Turnitin',
+                            'upload_artikel' => 'Upload Artikel',
+                            'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                        ],
+                        'syarat_guru_besar' => [
+                            'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                        ]
+                    ];
+
+                    // Collect all invalid fields from all roles
+                    $allInvalidFields = [];
+                    foreach ($validationData as $roleKey => $roleValidation) {
+                        if (isset($roleConfigs[$roleKey])) {
+                            $roleConfig = $roleConfigs[$roleKey];
+                            $invalidFields = [];
+                            
+                            foreach ($roleValidation as $groupKey => $groupData) {
+                                if (isset($fieldGroupLabels[$groupKey])) {
+                                    $groupLabel = $fieldGroupLabels[$groupKey];
+                                    
+                                    foreach ($groupData as $fieldKey => $fieldData) {
+                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                            $fieldLabel = $fieldLabels[$groupKey][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                            $invalidFields[] = [
+                                                'group' => $groupLabel,
+                                                'field' => $fieldLabel,
+                                                'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan spesifik'
+                                            ];
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (!empty($invalidFields)) {
+                                $allInvalidFields[$roleKey] = [
+                                    'config' => $roleConfig,
+                                    'fields' => $invalidFields
+                                ];
+                            }
+                        }
                 }
             @endphp
 
-            <div class="mb-6 bg-{{ $revisionFromRoleColor }}-50 border border-{{ $revisionFromRoleColor }}-200 rounded-lg p-4">
+                @if(!empty($allInvalidFields))
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+                        <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                            <h2 class="text-xl font-bold text-white flex items-center">
+                                <i data-lucide="alert-circle" class="w-6 h-6 mr-3"></i>
+                                Detail Field yang Perlu Diperbaiki
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                <div class="flex items-start">
+                                    <i data-lucide="info" class="w-5 h-5 text-red-600 mt-0.5 mr-3"></i>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-red-800">Informasi Perbaikan</h4>
+                                        <p class="text-sm text-red-700 mt-1">
+                                            Berikut adalah daftar lengkap field yang memerlukan perbaikan berdasarkan feedback dari tim verifikasi. 
+                                            Silakan perbaiki semua field yang disebutkan sebelum mengajukan kembali usulan Anda.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @foreach($allInvalidFields as $roleKey => $roleData)
+                                <div class="mb-6 last:mb-0">
+                                    <div class="bg-gradient-to-r from-{{ $roleData['config']['color'] }}-100 to-{{ $roleData['config']['color'] }}-200 px-4 py-3 rounded-t-lg border-l-4 border-{{ $roleData['config']['color'] }}-500">
+                                        <h5 class="text-sm font-bold text-{{ $roleData['config']['color'] }}-800 flex items-center">
+                                            <i data-lucide="{{ $roleData['config']['icon'] }}" class="w-4 h-4 mr-2"></i>
+                                            Feedback dari {{ $roleData['config']['label'] }}
+                                        </h5>
+                                    </div>
+                                    <div class="bg-gray-50 border border-gray-200 rounded-b-lg p-4">
+                                        <div class="space-y-3">
+                                            @foreach($roleData['fields'] as $field)
+                                                <div class="flex items-start gap-3 p-3 bg-white border border-red-200 rounded-lg">
+                                                    <i data-lucide="x-circle" class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0"></i>
+                                                    <div class="flex-1">
+                                                        <div class="text-sm font-medium text-red-800">
+                                                            {{ $field['group'] }} - {{ $field['field'] }}
+                                                        </div>
+                                                        <div class="text-sm text-red-700 mt-1">
+                                                            {{ $field['keterangan'] }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <i data-lucide="alert-triangle" class="w-5 h-5 text-{{ $revisionFromRoleColor }}-600"></i>
+                                    <i data-lucide="lightbulb" class="w-5 h-5 text-blue-600 mt-0.5 mr-3"></i>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-blue-800">Tips Perbaikan</h4>
+                                        <p class="text-sm text-blue-700 mt-1">
+                                            Pastikan untuk memperbaiki semua field yang disebutkan di atas sebelum mengajukan kembali usulan Anda. 
+                                            Jika ada yang tidak jelas, hubungi admin terkait untuk klarifikasi lebih lanjut.
+                                        </p>
+                                    </div>
+                                </div>
                     </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-{{ $revisionFromRoleColor }}-800">
-                            Usulan Dikembalikan untuk Perbaikan
-                        </h3>
-                        <div class="mt-2 text-sm text-{{ $revisionFromRoleColor }}-700">
-                            <p class="mb-2"><strong>Catatan dari {{ $revisionFromRole }}:</strong></p>
-                            <p class="bg-white p-3 rounded border border-{{ $revisionFromRoleColor }}-200">{{ $usulan->catatan_verifikator ?? 'Tidak ada catatan spesifik' }}</p>
                         </div>
                     </div>
-                </div>
-            </div>
+                @endif
             @endif
 
             {{-- Informasi Periode Usulan --}}

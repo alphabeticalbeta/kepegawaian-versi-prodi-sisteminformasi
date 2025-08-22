@@ -49,14 +49,43 @@ class UsulanController extends Controller
 
         $namaUsulan = $jenisMapping[$jenisUsulan] ?? 'Usulan Jabatan';
 
-        // Cari atau buat periode untuk jenis usulan ini
-        $periode = $this->findOrCreatePeriode($namaUsulan, $jenisUsulan);
+        // Debug: Log untuk melihat mapping yang digunakan
+        \Log::info('UsulanController - Mapping Debug', [
+            'jenisUsulan' => $jenisUsulan,
+            'namaUsulan' => $namaUsulan,
+            'mapping' => $jenisMapping
+        ]);
+
+        // Cari periode yang sesuai dengan logika yang sama seperti DashboardPeriodeController
+        $periode = $this->findPeriodeByJenisUsulan($namaUsulan, $jenisUsulan);
+
+        // Debug: Log untuk melihat periode yang ditemukan
+        \Log::info('UsulanController - Periode Debug', [
+            'periode_id' => $periode->id ?? 'null',
+            'periode_nama' => $periode->nama_periode ?? 'null',
+            'periode_jenis' => $periode->jenis_usulan ?? 'null',
+            'periode_status' => $periode->status ?? 'null',
+            'periode_tahun' => $periode->tahun_periode ?? 'null'
+        ]);
 
         // Ambil usulan untuk periode ini
         $usulans = $periode->usulans()
-            ->with(['pegawai:id,nama_lengkap,nip,jenis_pegawai'])
+            ->with([
+                'pegawai:id,nama_lengkap,nip,jenis_pegawai',
+                'pegawai.unitKerja:id,nama_unit_kerja',
+                'pegawai.unitKerja.subUnitKerja:id,nama_sub_unit_kerja,unit_kerja_id',
+                'pegawai.unitKerja.subUnitKerja.unitKerja:id,nama_unit_kerja',
+                'jabatanTujuan:id,jabatan'
+            ])
             ->latest()
             ->paginate(15);
+
+        // Debug: Log untuk melihat jumlah usulan yang ditemukan
+        \Log::info('UsulanController - Usulans Debug', [
+            'periode_id' => $periode->id,
+            'total_usulans' => $usulans->total(),
+            'usulans_count' => $usulans->count()
+        ]);
 
         // Statistik untuk periode ini
         $stats = [
@@ -140,6 +169,90 @@ class UsulanController extends Controller
             'jenisUsulan',
             'namaUsulan'
         ));
+    }
+
+    /**
+     * Mencari periode berdasarkan jenis usulan dengan logika yang sama seperti DashboardPeriodeController
+     */
+    private function findPeriodeByJenisUsulan($namaUsulan, $jenisUsulan)
+    {
+        // Debug: Log parameter yang diterima
+        \Log::info('UsulanController - findPeriodeByJenisUsulan called', [
+            'namaUsulan' => $namaUsulan,
+            'jenisUsulan' => $jenisUsulan
+        ]);
+
+        // Gunakan logika yang sama seperti DashboardPeriodeController
+        $periodes = \App\Models\BackendUnivUsulan\PeriodeUsulan::where(function($query) use ($namaUsulan, $jenisUsulan) {
+                // Exact match untuk jenis usulan utama
+                $query->where('jenis_usulan', $namaUsulan);
+
+                // Jika jenis usulan adalah jabatan, juga ambil sub-jenis
+                if ($jenisUsulan === 'jabatan') {
+                    $query->orWhereIn('jenis_usulan', ['usulan-jabatan-dosen', 'usulan-jabatan-tendik']);
+                }
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Debug: Log untuk melihat semua periode yang ditemukan
+        \Log::info('UsulanController - All Periodes Found', [
+            'namaUsulan' => $namaUsulan,
+            'jenisUsulan' => $jenisUsulan,
+            'total_periodes' => $periodes->count(),
+            'periodes' => $periodes->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'jenis_usulan' => $p->jenis_usulan,
+                    'status' => $p->status,
+                    'tahun_periode' => $p->tahun_periode
+                ];
+            })->toArray()
+        ]);
+
+        // Jika tidak ada periode yang ditemukan dengan logika DashboardPeriodeController,
+        // gunakan logika lama sebagai fallback
+        if ($periodes->count() === 0) {
+            \Log::warning('UsulanController - No periode found with DashboardPeriodeController logic, using fallback');
+            
+            $tahunSekarang = \Carbon\Carbon::now()->year;
+            $activePeriode = \App\Models\BackendUnivUsulan\PeriodeUsulan::where('jenis_usulan', $namaUsulan)
+                ->where('tahun_periode', $tahunSekarang)
+                ->where('status', 'Buka')
+                ->first();
+
+            if (!$activePeriode) {
+                // Jika masih tidak ada, ambil periode terbaru dengan jenis usulan yang sama
+                $activePeriode = \App\Models\BackendUnivUsulan\PeriodeUsulan::where('jenis_usulan', $namaUsulan)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
+
+            if (!$activePeriode) {
+                // Jika masih tidak ada, buat periode baru
+                \Log::warning('UsulanController - No periode found, creating new one');
+                $activePeriode = $this->findOrCreatePeriode($namaUsulan, $jenisUsulan);
+            }
+        } else {
+            // Ambil periode yang aktif (status Buka) atau periode terbaru
+            $activePeriode = $periodes->where('status', 'Buka')->first();
+            
+            if (!$activePeriode) {
+                // Jika tidak ada periode aktif, ambil periode terbaru
+                $activePeriode = $periodes->first();
+            }
+        }
+
+        // Debug: Log periode yang dipilih
+        \Log::info('UsulanController - Selected Periode', [
+            'periode_id' => $activePeriode->id ?? 'null',
+            'periode_nama' => $activePeriode->nama_periode ?? 'null',
+            'periode_jenis' => $activePeriode->jenis_usulan ?? 'null',
+            'periode_status' => $activePeriode->status ?? 'null'
+        ]);
+
+        return $activePeriode;
     }
 
     /**
