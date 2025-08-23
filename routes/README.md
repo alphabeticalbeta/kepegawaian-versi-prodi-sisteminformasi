@@ -34,8 +34,8 @@ Route::prefix('admin-universitas')
 
 ### **2. Admin Universitas Usulan**
 ```php
-Route::prefix('admin-univ-usulan')
-    ->name('backend.admin-univ-usulan.')
+Route::prefix('kepegawaian-universitas')
+    ->name('backend.kepegawaian-universitas.')
     ->middleware(['role:Admin Universitas Usulan'])
     ->group(function () {
         // Routes here
@@ -45,76 +45,76 @@ Route::prefix('admin-univ-usulan')
 **Available Routes:**
 
 #### **Dashboard**
-- `GET /admin-univ-usulan/dashboard` - Dashboard Admin Univ Usulan
+- `GET /kepegawaian-universitas/dashboard` - Dashboard Admin Univ Usulan
 
 #### **Master Data**
-- `GET /admin-univ-usulan/data-pegawai` - Index Data Pegawai
-- `POST /admin-univ-usulan/data-pegawai` - Store Data Pegawai
-- `GET /admin-univ-usulan/data-pegawai/{pegawai}/edit` - Edit Data Pegawai
-- `PUT /admin-univ-usulan/data-pegawai/{pegawai}` - Update Data Pegawai
-- `DELETE /admin-univ-usulan/data-pegawai/{pegawai}` - Delete Data Pegawai
-- `GET /admin-univ-usulan/data-pegawai/{pegawai}/dokumen/{field}` - Show Document
+- `GET /kepegawaian-universitas/data-pegawai` - Index Data Pegawai
+- `POST /kepegawaian-universitas/data-pegawai` - Store Data Pegawai
+- `GET /kepegawaian-universitas/data-pegawai/{pegawai}/edit` - Edit Data Pegawai
+- `PUT /kepegawaian-universitas/data-pegawai/{pegawai}` - Update Data Pegawai
+- `DELETE /kepegawaian-universitas/data-pegawai/{pegawai}` - Delete Data Pegawai
+- `GET /kepegawaian-universitas/data-pegawai/{pegawai}/dokumen/{field}` - Show Document
 
 #### **Unit Kerja**
-- `GET /admin-univ-usulan/unitkerja` - Index Unit Kerja
-- `POST /admin-univ-usulan/unitkerja` - Store Unit Kerja
-- `GET /admin-univ-usulan/unitkerja/{unitkerja}/edit` - Edit Unit Kerja
-- `PUT /admin-univ-usulan/unitkerja/{unitkerja}` - Update Unit Kerja
-- `DELETE /admin-univ-usulan/unitkerja/{unitkerja}` - Delete Unit Kerja
+- `GET /kepegawaian-universitas/unitkerja` - Index Unit Kerja
+- `POST /kepegawaian-universitas/unitkerja` - Store Unit Kerja
+- `GET /kepegawaian-universitas/unitkerja/{unitkerja}/edit` - Edit Unit Kerja
+- `PUT /kepegawaian-universitas/unitkerja/{unitkerja}` - Update Unit Kerja
+- `DELETE /kepegawaian-universitas/unitkerja/{unitkerja}` - Delete Unit Kerja
 
 #### **Sub Unit Kerja**
-- `GET /admin-univ-usulan/sub-unitkerja` - Index Sub Unit Kerja
-- `POST /admin-univ-usulan/sub-unitkerja` - Store Sub Unit Kerja
-- `GET /admin-univ-usulan/sub-unitkerja/{sub_unitkerja}/edit` - Edit Sub Unit Kerja
-- `PUT /admin-univ-usulan/sub-unitkerja/{sub_unitkerja}` - Update Sub Unit Kerja
-- `DELETE /admin-univ-usulan/sub-unitkerja/{sub_unitkerja}` - Delete Sub Unit Kerja
+- `GET /kepegawaian-universitas/sub-unitkerja` - Index Sub Unit Kerja
+- `POST /kepegawaian-universitas/sub-unitkerja` - Store Sub Unit Kerja
+- `GET /kepegawaian-universitas/sub-unitkerja/{sub_unitkerja}/edit` - Edit Sub Unit Kerja
+- `PUT /kepegawaian-universitas/sub-unitkerja/{sub_unitkerja}` - Update Sub Unit Kerja
+- `DELETE /kepegawaian-universitas/sub-unitkerja/{sub_unitkerja}` - Delete Sub Unit Kerja
 
 #### **Sub Sub Unit Kerja**
-- `GET /admin-univ-usulan/sub-sub-unitkerja` - Index Sub Sub Unit Kerja
-- `POST /admin-univ-usulan/sub-sub-unitkerja` - Store Sub Sub Unit Kerja
-- `GET /admin-univ-usulan/sub-sub-unitkerja/{sub_sub_unitkerja}/edit` - Edit Sub Sub Unit Kerja
-- `PUT /admin-univ-usulan/sub-sub-unitkerja/{sub_sub_unitkerja}` - Update Sub Sub Unit Kerja
-- `DELETE /admin-univ-usulan/sub-sub-unitkerja/{sub_sub_unitkerja}` - Delete Sub Sub Unit Kerja
-- `GET /admin-univ-usulan/get-sub-unit-kerjas` - Get Sub Unit Kerjas (API)
+- `GET /kepegawaian-universitas/sub-sub-unitkerja` - Index Sub Sub Unit Kerja
+- `POST /kepegawaian-universitas/sub-sub-unitkerja` - Store Sub Sub Unit Kerja
+- `GET /kepegawaian-universitas/sub-sub-unitkerja/{sub_sub_unitkerja}/edit` - Edit Sub Sub Unit Kerja
+- `PUT /kepegawaian-universitas/sub-sub-unitkerja/{sub_sub_unitkerja}` - Update Sub Sub Unit Kerja
+- `DELETE /kepegawaian-universitas/sub-sub-unitkerja/{sub_sub_unitkerja}` - Delete Sub Sub Unit Kerja
+- `GET /kepegawaian-universitas/get-sub-unit-kerjas` - Get Sub Unit Kerjas (API)
 
 #### **Jabatan**
-- `GET /admin-univ-usulan/jabatan` - Index Jabatan
-- `POST /admin-univ-usulan/jabatan` - Store Jabatan
-- `GET /admin-univ-usulan/jabatan/{jabatan}/edit` - Edit Jabatan
-- `PUT /admin-univ-usulan/jabatan/{jabatan}` - Update Jabatan
-- `DELETE /admin-univ-usulan/jabatan/{jabatan}` - Delete Jabatan
-- `GET /admin-univ-usulan/jabatan-export` - Export Jabatan
+- `GET /kepegawaian-universitas/jabatan` - Index Jabatan
+- `POST /kepegawaian-universitas/jabatan` - Store Jabatan
+- `GET /kepegawaian-universitas/jabatan/{jabatan}/edit` - Edit Jabatan
+- `PUT /kepegawaian-universitas/jabatan/{jabatan}` - Update Jabatan
+- `DELETE /kepegawaian-universitas/jabatan/{jabatan}` - Delete Jabatan
+- `GET /kepegawaian-universitas/jabatan-export` - Export Jabatan
 
 #### **Pangkat**
-- `GET /admin-univ-usulan/pangkat` - Index Pangkat
-- `POST /admin-univ-usulan/pangkat` - Store Pangkat
-- `GET /admin-univ-usulan/pangkat/{pangkat}/edit` - Edit Pangkat
-- `PUT /admin-univ-usulan/pangkat/{pangkat}` - Update Pangkat
-- `DELETE /admin-univ-usulan/pangkat/{pangkat}` - Delete Pangkat
+- `GET /kepegawaian-universitas/pangkat` - Index Pangkat
+- `POST /kepegawaian-universitas/pangkat` - Store Pangkat
+- `GET /kepegawaian-universitas/pangkat/{pangkat}/edit` - Edit Pangkat
+- `PUT /kepegawaian-universitas/pangkat/{pangkat}` - Update Pangkat
+- `DELETE /kepegawaian-universitas/pangkat/{pangkat}` - Delete Pangkat
 
 #### **Pusat Usulan**
-- `GET /admin-univ-usulan/pusat-usulan` - Index Pusat Usulan
-- `GET /admin-univ-usulan/pusat-usulan/{usulan}` - Show Pusat Usulan
-- `POST /admin-univ-usulan/pusat-usulan/{usulan}/process` - Process Pusat Usulan
-- `GET /admin-univ-usulan/pusat-usulan/{usulan}/dokumen/{field}` - Show Document
+- `GET /kepegawaian-universitas/pusat-usulan` - Index Pusat Usulan
+- `GET /kepegawaian-universitas/pusat-usulan/{usulan}` - Show Pusat Usulan
+- `POST /kepegawaian-universitas/pusat-usulan/{usulan}/process` - Process Pusat Usulan
+- `GET /kepegawaian-universitas/pusat-usulan/{usulan}/dokumen/{field}` - Show Document
 
 #### **Periode Usulan**
-- `GET /admin-univ-usulan/periode-usulan` - Index Periode Usulan
-- `POST /admin-univ-usulan/periode-usulan` - Store Periode Usulan
-- `GET /admin-univ-usulan/periode-usulan/{periode_usulan}/edit` - Edit Periode Usulan
-- `PUT /admin-univ-usulan/periode-usulan/{periode_usulan}` - Update Periode Usulan
-- `DELETE /admin-univ-usulan/periode-usulan/{periode_usulan}` - Delete Periode Usulan
-- `GET /admin-univ-usulan/periode-usulan/{periodeUsulan}/pendaftar` - Show Pendaftar
+- `GET /kepegawaian-universitas/periode-usulan` - Index Periode Usulan
+- `POST /kepegawaian-universitas/periode-usulan` - Store Periode Usulan
+- `GET /kepegawaian-universitas/periode-usulan/{periode_usulan}/edit` - Edit Periode Usulan
+- `PUT /kepegawaian-universitas/periode-usulan/{periode_usulan}` - Update Periode Usulan
+- `DELETE /kepegawaian-universitas/periode-usulan/{periode_usulan}` - Delete Periode Usulan
+- `GET /kepegawaian-universitas/periode-usulan/{periodeUsulan}/pendaftar` - Show Pendaftar
 
 #### **Role Pegawai**
-- `GET /admin-univ-usulan/role-pegawai` - Index Role Pegawai
-- `GET /admin-univ-usulan/role-pegawai/{pegawai}/edit` - Edit Role Pegawai
-- `PUT /admin-univ-usulan/role-pegawai/{pegawai}` - Update Role Pegawai
+- `GET /kepegawaian-universitas/role-pegawai` - Index Role Pegawai
+- `GET /kepegawaian-universitas/role-pegawai/{pegawai}/edit` - Edit Role Pegawai
+- `PUT /kepegawaian-universitas/role-pegawai/{pegawai}` - Update Role Pegawai
 
 #### **Manajemen Akun Pegawai**
-- `GET /admin-univ-usulan/pegawai` - Index Pegawai
-- `GET /admin-univ-usulan/pegawai/{pegawai}/edit` - Edit Pegawai
-- `PUT /admin-univ-usulan/pegawai/{pegawai}` - Update Pegawai
+- `GET /kepegawaian-universitas/pegawai` - Index Pegawai
+- `GET /kepegawaian-universitas/pegawai/{pegawai}/edit` - Edit Pegawai
+- `PUT /kepegawaian-universitas/pegawai/{pegawai}` - Update Pegawai
 
 ### **3. Pegawai UNMUL**
 ```php
@@ -273,14 +273,14 @@ Route::prefix('debug')->middleware(['auth:pegawai'])->name('debug.')->group(func
 
 ### **Prefix Pattern**
 - `admin-universitas.*` - Admin Universitas routes
-- `backend.admin-univ-usulan.*` - Admin Univ Usulan routes
+- `backend.kepegawaian-universitas.*` - Admin Univ Usulan routes
 - `pegawai-unmul.*` - Pegawai UNMUL routes
 - `admin-fakultas.*` - Admin Fakultas routes
 - `penilai-universitas.*` - Penilai Universitas routes
 
 ### **Naming Examples**
 - `admin-universitas.dashboard` - Dashboard Admin Universitas
-- `backend.admin-univ-usulan.dashboard` - Dashboard Admin Univ Usulan
+- `backend.kepegawaian-universitas.dashboard` - Dashboard Admin Univ Usulan
 - `pegawai-unmul.dashboard-pegawai-unmul` - Dashboard Pegawai
 - `admin-fakultas.dashboard` - Dashboard Admin Fakultas
 - `penilai-universitas.dashboard-penilai-universitas` - Dashboard Penilai
@@ -328,15 +328,15 @@ Route::prefix('debug')->middleware(['auth:pegawai'])->name('debug.')->group(func
 ```php
 // Dashboard routes
 route('admin-universitas.dashboard')
-route('backend.admin-univ-usulan.dashboard')
+route('backend.kepegawaian-universitas.dashboard')
 route('pegawai-unmul.dashboard-pegawai-unmul')
 route('admin-fakultas.dashboard')
 route('penilai-universitas.dashboard-penilai-universitas')
 
 // Resource routes
-route('backend.admin-univ-usulan.data-pegawai.index')
-route('backend.admin-univ-usulan.data-pegawai.show', $pegawai)
-route('backend.admin-univ-usulan.data-pegawai.edit', $pegawai)
+route('backend.kepegawaian-universitas.data-pegawai.index')
+route('backend.kepegawaian-universitas.data-pegawai.show', $pegawai)
+route('backend.kepegawaian-universitas.data-pegawai.edit', $pegawai)
 
 // Custom routes
 route('pegawai-unmul.usulan-jabatan.show-document', [$usulan, 'pakta_integritas'])
@@ -352,7 +352,7 @@ return redirect()->route('admin-universitas.dashboard');
 return redirect()->route('pegawai-unmul.usulan-jabatan.show-document', [$usulan, 'dokumen']);
 
 // Redirect with flash message
-return redirect()->route('backend.admin-univ-usulan.data-pegawai.index')
+return redirect()->route('backend.kepegawaian-universitas.data-pegawai.index')
     ->with('success', 'Data berhasil disimpan');
 ```
 

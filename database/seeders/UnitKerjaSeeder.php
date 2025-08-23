@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\BackendUnivUsulan\UnitKerja;
-use App\Models\BackendUnivUsulan\SubUnitKerja;
-use App\Models\BackendUnivUsulan\SubSubUnitKerja;
+use App\Models\KepegawaianUniversitas\UnitKerja;
+use App\Models\KepegawaianUniversitas\SubUnitKerja;
+use App\Models\KepegawaianUniversitas\SubSubUnitKerja;
 
 class UnitKerjaSeeder extends Seeder
 {

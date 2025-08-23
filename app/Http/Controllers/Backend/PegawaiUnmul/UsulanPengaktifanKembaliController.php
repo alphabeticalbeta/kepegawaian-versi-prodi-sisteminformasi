@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Backend\PegawaiUnmul;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 use Illuminate\Http\Request;
-use App\Models\BackendUnivUsulan\UsulanLog;
+use App\Models\KepegawaianUniversitas\UsulanLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 

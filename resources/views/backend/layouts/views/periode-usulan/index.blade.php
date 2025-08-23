@@ -69,15 +69,15 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            <a href="{{ route('backend.admin-univ-usulan.pusat-usulan.show-pendaftar', $periode->id) }}"
+                            <a href="{{ route('backend.kepegawaian-universitas.pusat-usulan.show-pendaftar', $periode->id) }}"
                                class="text-indigo-600 hover:text-indigo-900 font-medium">
                                 {{ $periode->usulans_count ?? 0 }} orang
                             </a>
                         </td>
                         <td class="px-6 py-4 flex items-center gap-2">
-                            <a href="{{ route('backend.admin-univ-usulan.periode-usulan.edit', $periode->id) }}"
+                            <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.edit', $periode->id) }}"
                                class="font-medium text-indigo-600 hover:text-indigo-900">Edit</a>
-                            <form action="{{ route('backend.admin-univ-usulan.periode-usulan.destroy', $periode->id) }}"
+                            <form action="{{ route('backend.kepegawaian-universitas.periode-usulan.destroy', $periode->id) }}"
                                   method="POST" onsubmit="return confirm('Anda yakin ingin menghapus data ini?');">
                                 @csrf
                                 @method('DELETE')

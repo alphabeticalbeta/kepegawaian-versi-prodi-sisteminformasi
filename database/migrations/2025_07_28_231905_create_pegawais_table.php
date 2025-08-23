@@ -18,7 +18,7 @@ return new class extends Migration
             // Kolom Relasi
             $table->foreignId('pangkat_terakhir_id')->constrained('pangkats');
             $table->foreignId('jabatan_terakhir_id')->constrained('jabatans');
-            $table->foreignId('unit_kerja_terakhir_id')->constrained('sub_sub_unit_kerjas');
+            $table->foreignId('unit_kerja_id')->constrained('sub_sub_unit_kerjas');
 
             // Data Utama & Autentikasi
             $table->string('jenis_pegawai'); // Dosen, Tenaga Kependidikan

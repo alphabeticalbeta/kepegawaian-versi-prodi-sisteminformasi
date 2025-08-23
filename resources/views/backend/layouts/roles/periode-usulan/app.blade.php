@@ -283,7 +283,7 @@
 
     <div class="flex h-screen bg-gray-50">
         {{-- Sidebar --}}
-        @include('backend.components.sidebar-admin-universitas-usulan')
+        @include('backend.components.sidebar-kepegawaian-universitas')
 
         {{-- Main Content --}}
         <div id="main-content" class="flex-1 flex flex-col overflow-hidden ml-64">

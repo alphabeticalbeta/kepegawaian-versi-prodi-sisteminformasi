@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Backend\AdminUniversitas;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

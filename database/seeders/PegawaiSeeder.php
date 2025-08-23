@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\Pangkat;
-use App\Models\BackendUnivUsulan\Jabatan;
-use App\Models\BackendUnivUsulan\SubSubUnitKerja;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\Pangkat;
+use App\Models\KepegawaianUniversitas\Jabatan;
+use App\Models\KepegawaianUniversitas\SubSubUnitKerja;
 
 class PegawaiSeeder extends Seeder
 {
@@ -48,7 +48,7 @@ class PegawaiSeeder extends Seeder
                 'is_admin' => true,
                 'pangkat' => $pangkatPNS,
                 'jabatan' => $jabatanDosen,
-                'roles' => ['Admin Fakultas', 'Admin Universitas Usulan']
+                'roles' => ['Admin Fakultas', 'Kepegawaian Universitas']
             ],
             [
                 'nip' => '199001012015011001',
@@ -220,7 +220,7 @@ class PegawaiSeeder extends Seeder
             $baseData = [
                 'pangkat_terakhir_id' => $pegawaiData['pangkat']->id,
                 'jabatan_terakhir_id' => $pegawaiData['jabatan']->id,
-                'unit_kerja_terakhir_id' => $subSubUnitKerja->id,
+                'unit_kerja_id' => $subSubUnitKerja->id,
                 'gelar_depan' => null,
                 'gelar_belakang' => 'S.Kom., M.Kom.',
                 'nomor_kartu_pegawai' => '1234567890123456',
@@ -302,7 +302,7 @@ class PegawaiSeeder extends Seeder
         $dosenCount = Pegawai::where('jenis_pegawai', 'Dosen')->count();
         $tenagaKependidikanCount = Pegawai::where('jenis_pegawai', 'Tenaga Kependidikan')->count();
         $adminCount = Pegawai::whereHas('roles', function($q) {
-            $q->whereIn('name', ['Admin Fakultas', 'Admin Universitas Usulan']);
+            $q->whereIn('name', ['Admin Fakultas', 'Kepegawaian Universitas']);
         })->count();
 
         $this->command->info("✅ PegawaiSeeder berhasil dijalankan!");

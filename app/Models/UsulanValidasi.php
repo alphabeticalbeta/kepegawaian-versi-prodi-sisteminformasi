@@ -21,11 +21,11 @@ class UsulanValidasi extends Model
 
     public function usulan()
     {
-        return $this->belongsTo(\App\Models\BackendUnivUsulan\Usulan::class);
+        return $this->belongsTo(\App\Models\KepegawaianUniversitas\Usulan::class);
     }
 
     public function submittedBy()
     {
-        return $this->belongsTo(\App\Models\BackendUnivUsulan\Pegawai::class, 'submitted_by');
+        return $this->belongsTo(\App\Models\KepegawaianUniversitas\Pegawai::class, 'submitted_by');
     }
 }

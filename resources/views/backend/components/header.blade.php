@@ -20,8 +20,8 @@
                 if ($roles->contains('Admin Universitas')) {
                     $availableDashboards['Admin Universitas'] = route('admin-universitas.dashboard');
                 }
-                if ($roles->contains('Admin Universitas Usulan')) {
-                    $availableDashboards['Admin Usulan'] = route('backend.admin-univ-usulan.dashboard');
+                if ($roles->contains('Kepegawaian Universitas')) {
+                    $availableDashboards['Kepegawaian Universitas'] = route('backend.kepegawaian-universitas.dashboard');
                 }
                 if ($roles->contains('Admin Fakultas')) {
                     $availableDashboards['Admin Fakultas'] = route('admin-fakultas.dashboard');
@@ -99,7 +99,7 @@
                 <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-100">
                     <div class="relative">
                         <img
-                            src="{{ $user->foto ? route('backend.admin-univ-usulan.data-pegawai.show-document', ['pegawai' => $user->id, 'field' => 'foto']) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=32&background=6366f1&color=fff' }}"
+                            src="{{ $user->foto ? route('backend.kepegawaian-universitas.data-pegawai.show-document', ['pegawai' => $user->id, 'field' => 'foto']) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=32&background=6366f1&color=fff' }}"
                             alt="{{ $user->nama_lengkap }}"
                             class="w-8 h-8 rounded-full object-cover ring-2 ring-gray-200"
                             onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($user->nama_lengkap) }}&size=32&background=6366f1&color=fff'"
@@ -125,7 +125,7 @@
                     <div class="px-4 py-3 border-b border-gray-100">
                         <div class="flex items-center gap-3">
                                                 <img
-                        src="{{ $user->foto ? route('backend.admin-univ-usulan.data-pegawai.show-document', ['pegawai' => $user->id, 'field' => 'foto']) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=48&background=6366f1&color=fff' }}"
+                        src="{{ $user->foto ? route('backend.kepegawaian-universitas.data-pegawai.show-document', ['pegawai' => $user->id, 'field' => 'foto']) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nama_lengkap) . '&size=48&background=6366f1&color=fff' }}"
                         alt="{{ $user->nama_lengkap }}"
                         class="w-12 h-12 rounded-full object-cover"
                         onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($user->nama_lengkap) }}&size=48&background=6366f1&color=fff'"

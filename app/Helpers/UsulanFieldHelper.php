@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use Carbon\Carbon;
 
 class UsulanFieldHelper
@@ -86,7 +86,7 @@ class UsulanFieldHelper
             if (request()->is('admin-fakultas/*')) {
                 $route = route('admin-fakultas.usulan.show-pegawai-document', [$this->usulan->id, $field]);
             } else {
-                $route = route('backend.admin-univ-usulan.data-pegawai.show-document', [$this->usulan->pegawai_id, $field]);
+                $route = route('backend.kepegawaian-universitas.data-pegawai.show-document', [$this->usulan->pegawai_id, $field]);
             }
             return '<a href="' . $route . '" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">✓ Lihat Dokumen</a>';
         }
@@ -153,7 +153,7 @@ class UsulanFieldHelper
             } elseif (request()->is('admin-fakultas/*')) {
                 $route = route('admin-fakultas.usulan.show-document', [$this->usulan->id, $field]);
             } else {
-                $route = route('backend.admin-univ-usulan.pusat-usulan.show-document', [$this->usulan->id, $field]);
+                $route = route('backend.kepegawaian-universitas.pusat-usulan.show-document', [$this->usulan->id, $field]);
             }
             // Judul baris sudah menampilkan label semesternya, jadi link cukup "Lihat Dokumen"
             $label = '✓ Lihat Dokumen';

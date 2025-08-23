@@ -80,7 +80,7 @@ class DashboardController extends Controller
         // Get quick actions data
         $quickActions = $this->getQuickActions();
 
-        return view('backend.layouts.views.admin-univ-usulan.dashboard', [
+        return view('backend.layouts.views.kepegawaian-universitas.dashboard', [
             'statistics' => $statistics,
             'recentUsulans' => $recentUsulans,
             'chartData' => $chartData,
@@ -112,7 +112,7 @@ class PusatUsulanController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('backend.layouts.views.admin-univ-usulan.pusat-usulan.index', [
+        return view('backend.layouts.views.kepegawaian-universitas.pusat-usulan.index', [
             'periodeUsulans' => $periodeUsulans
         ]);
     }
@@ -122,7 +122,7 @@ class PusatUsulanController extends Controller
         // Get usulan details with relationships
         $usulan->load(['pegawai', 'periodeUsulan', 'jabatan']);
         
-        return view('backend.layouts.views.admin-univ-usulan.pusat-usulan.detail-usulan', [
+        return view('backend.layouts.views.kepegawaian-universitas.pusat-usulan.detail-usulan', [
             'usulan' => $usulan,
             'canEdit' => $this->canEditUsulan($usulan),
             'validationFields' => $this->getValidationFields($usulan)

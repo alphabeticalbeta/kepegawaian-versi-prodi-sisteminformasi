@@ -15,7 +15,7 @@
                 // METHOD 1: Admin Fakultas - Direct unit_kerja_id
                 if ($currentAdmin->unit_kerja_id) {
                     $debugInfo['method_1'] = 'Testing Admin Fakultas (unit_kerja_id)';
-                    $unitKerja = \App\Models\BackendUnivUsulan\UnitKerja::find($currentAdmin->unit_kerja_id);
+                    $unitKerja = \App\Models\KepegawaianUniversitas\UnitKerja::find($currentAdmin->unit_kerja_id);
 
                     if ($unitKerja) {
                         $debugInfo['method_1_result'] = 'SUCCESS: ' . $unitKerja->nama;
@@ -24,14 +24,14 @@
                     }
                 }
 
-                // METHOD 2: Pegawai Biasa - Hierarki melalui unit_kerja_terakhir_id (HANYA jika method 1 gagal)
-                if (!$unitKerja && $currentAdmin->unit_kerja_terakhir_id) {
-                    $debugInfo['method_2'] = 'Testing Pegawai Hierarki (unit_kerja_terakhir_id)';
+                // METHOD 2: Pegawai Biasa - Hierarki melalui unit_kerja_id (HANYA jika method 1 gagal)
+                if (!$unitKerja && $currentAdmin->unit_kerja_id) {
+                    $debugInfo['method_2'] = 'Testing Pegawai Hierarki (unit_kerja_id)';
 
                     // Ambil SubSubUnitKerja dengan relasi lengkap
-                    $subSubUnitKerja = \App\Models\BackendUnivUsulan\SubSubUnitKerja::with([
+                    $subSubUnitKerja = \App\Models\KepegawaianUniversitas\SubSubUnitKerja::with([
                         'subUnitKerja.unitKerja'
-                    ])->find($currentAdmin->unit_kerja_terakhir_id);
+                    ])->find($currentAdmin->unit_kerja_id);
 
                     if ($subSubUnitKerja && $subSubUnitKerja->subUnitKerja && $subSubUnitKerja->subUnitKerja->unitKerja) {
                         $unitKerja = $subSubUnitKerja->subUnitKerja->unitKerja;
@@ -47,7 +47,7 @@
                     \Log::debug('Unit Kerja Resolver (Hierarki)', array_merge([
                         'admin_id' => $currentAdmin->id,
                         'unit_kerja_id' => $currentAdmin->unit_kerja_id,
-                        'unit_kerja_terakhir_id' => $currentAdmin->unit_kerja_terakhir_id,
+                        'unit_kerja_id' => $currentAdmin->unit_kerja_id,
                         'final_result' => $unitKerja ? $unitKerja->nama : 'FAILED'
                     ], $debugInfo));
                 }

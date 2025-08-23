@@ -47,17 +47,17 @@
                         $url = route('admin-fakultas.usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
                     }
                     break;
-                case 'Admin Universitas Usulan':
+                case 'Kepegawaian Universitas':
                     if (in_array($field, $profilFields)) {
-                        $url = route('backend.admin-univ-usulan.data-pegawai.show-document', ['pegawai' => $usulan->pegawai_id, 'field' => $fieldParam]);
+                        $url = route('backend.kepegawaian-universitas.data-pegawai.show-document', ['pegawai' => $usulan->pegawai_id, 'field' => $fieldParam]);
                     } else {
-                        $url = route('backend.admin-univ-usulan.pusat-usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+                        $url = route('backend.kepegawaian-universitas.pusat-usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
                     }
                     break;
                 // Tambahkan case lain jika ada role lain
                 default:
                     // Fallback: gunakan route pusat-usulan
-                    $url = route('backend.admin-univ-usulan.pusat-usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
+                    $url = route('backend.kepegawaian-universitas.pusat-usulan.show-document', ['usulan' => $usulan->id, 'field' => $fieldParam]);
             }
         } else {
             $url = '#';

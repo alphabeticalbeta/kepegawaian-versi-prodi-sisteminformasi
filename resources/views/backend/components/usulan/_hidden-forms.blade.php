@@ -110,7 +110,7 @@
                     <div class="space-y-2 max-h-48 overflow-y-auto">
                         @php
                             // Get all assessors (pegawai with Penilai Universitas role)
-                            $assessors = \App\Models\BackendUnivUsulan\Pegawai::whereHas('roles', function($query) {
+                            $assessors = \App\Models\KepegawaianUniversitas\Pegawai::whereHas('roles', function($query) {
                                 $query->where('name', 'Penilai Universitas');
                             })->orderBy('nama_lengkap')->get();
                         @endphp

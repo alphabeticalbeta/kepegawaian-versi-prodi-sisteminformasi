@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use Illuminate\Support\Facades\Log;
 
 class ValidationService

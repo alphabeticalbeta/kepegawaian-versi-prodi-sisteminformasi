@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Services\PenilaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 
 class DashboardController extends Controller
 {

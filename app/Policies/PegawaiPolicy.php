@@ -2,7 +2,7 @@
 namespace App\Policies;
 
 // PERBAIKAN: Ubah use statement ini untuk menunjuk ke model Pegawai yang benar
-use App\Models\BackendUnivUsulan\Pegawai;
+use App\Models\KepegawaianUniversitas\Pegawai;
 
 class PegawaiPolicy
 {
@@ -12,7 +12,7 @@ class PegawaiPolicy
     public function viewAny(Pegawai $pegawai): bool
     {
         // Kode ini sekarang akan berfungsi karena tipe $pegawai sudah benar
-        return $pegawai->roles->contains('name', 'Admin Universitas Usulan');
+        return $pegawai->roles->contains('name', 'Kepegawaian Universitas');
     }
 
     /**
@@ -20,6 +20,6 @@ class PegawaiPolicy
      */
     public function update(Pegawai $pegawai, Pegawai $model): bool
     {
-        return $pegawai->roles->contains('name', 'Admin Universitas Usulan');
+        return $pegawai->roles->contains('name', 'Kepegawaian Universitas');
     }
 }

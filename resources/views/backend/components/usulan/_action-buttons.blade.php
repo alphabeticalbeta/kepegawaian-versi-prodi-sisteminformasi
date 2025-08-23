@@ -143,7 +143,7 @@
                 @endif
 
                 {{-- Back to List Button --}}
-                <a href="{{ route('backend.admin-univ-usulan.periode-usulan.pendaftar', $usulan->periode_usulan_id) }}"
+                <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.pendaftar', $usulan->periode_usulan_id) }}"
                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700
                           flex items-center gap-2 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

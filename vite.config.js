@@ -11,7 +11,7 @@ export default defineConfig({
                 'resources/js/pegawai/pegawai-profil.js',
                 'resources/js/pegawai/pegawai-usulan.js',
                 'resources/js/admin-universitas/index.js',
-                'resources/js/admin-universitas/admin-univ-usulan.js',
+                'resources/js/admin-universitas/kepegawaian-universitas.js',
                 'resources/js/admin-universitas/data-pegawai.js',
                 'resources/js/admin-universitas/jabatan.js',
                 'resources/js/admin-universitas/documents.js',

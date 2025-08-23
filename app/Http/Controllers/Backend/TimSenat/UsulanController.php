@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend\TimSenat;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -46,7 +46,7 @@ class UsulanController extends Controller
         $existingValidation = $usulan->getValidasiByRole('tim_senat') ?? [];
 
         // Get penilais data for popup
-        $penilais = \App\Models\BackendUnivUsulan\Pegawai::whereHas('roles', function($query) {
+        $penilais = \App\Models\KepegawaianUniversitas\Pegawai::whereHas('roles', function($query) {
             $query->where('name', 'Penilai Universitas');
         })->orderBy('nama_lengkap')->get();
 

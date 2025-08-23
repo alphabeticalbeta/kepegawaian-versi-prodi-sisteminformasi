@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\Penilai;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\Penilai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +34,7 @@ class PenilaiService
                     $penilaiQuery->where('penilai_id', $penilaiId);
                 })
                 ->with([
-                    'pegawai:id,nama_lengkap,email,nip,jenis_pegawai,unit_kerja_terakhir_id',
+                    'pegawai:id,nama_lengkap,email,nip,jenis_pegawai,unit_kerja_id',
                     'pegawai.unitKerja:id,nama,sub_unit_kerja_id',
                     'pegawai.unitKerja.subUnitKerja:id,nama,unit_kerja_id',
                     'pegawai.unitKerja.subUnitKerja.unitKerja:id,nama',
@@ -221,7 +221,7 @@ class PenilaiService
         ]);
 
         // Update usulan status - KIRIM KE ADMIN UNIV USULAN DULU
-        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -261,7 +261,7 @@ class PenilaiService
         ]);
 
         // Update usulan status - KIRIM KE ADMIN UNIV USULAN DULU
-        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -335,7 +335,7 @@ class PenilaiService
         return Cache::remember($cacheKey, 300, function () use ($penilaiId) {
             // Get active periods that have usulans assigned to this penilai
             // PERBAIKAN: Tidak mempedulikan status usulan, hanya mengecek apakah penilai ditugaskan
-            $activePeriods = \App\Models\BackendUnivUsulan\PeriodeUsulan::where('status', 'Buka')
+            $activePeriods = \App\Models\KepegawaianUniversitas\PeriodeUsulan::where('status', 'Buka')
                 ->whereHas('usulans', function($query) use ($penilaiId) {
                     $query->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
                         $penilaiQuery->where('penilai_id', $penilaiId);
@@ -506,7 +506,7 @@ class PenilaiService
         }
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
 
         // Save validation data
         $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
@@ -553,7 +553,7 @@ class PenilaiService
         }
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
 
         // Save validation data
         $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);

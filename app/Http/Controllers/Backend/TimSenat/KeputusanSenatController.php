@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Backend\TimSenat;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 
 class KeputusanSenatController extends Controller
 {

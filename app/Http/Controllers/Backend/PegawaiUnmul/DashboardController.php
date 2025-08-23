@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Backend\PegawaiUnmul;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 
 class DashboardController extends Controller
 {

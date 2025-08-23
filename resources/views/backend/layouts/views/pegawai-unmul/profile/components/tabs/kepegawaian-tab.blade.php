@@ -268,12 +268,12 @@
                 Unit Kerja
             </label>
             @if($isEditing)
-                <select name="unit_kerja_terakhir_id"
+                <select name="unit_kerja_id"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                     <option value="">-- Pilih Unit Kerja --</option>
                     @foreach($unitKerjas as $unit)
                         <option value="{{ $unit->id }}"
-                                {{ old('unit_kerja_terakhir_id', $pegawai->unit_kerja_terakhir_id) == $unit->id ? 'selected' : '' }}>
+                                {{ old('unit_kerja_id', $pegawai->unit_kerja_id) == $unit->id ? 'selected' : '' }}>
                             {{ $unit->nama }}
                         </option>
                     @endforeach

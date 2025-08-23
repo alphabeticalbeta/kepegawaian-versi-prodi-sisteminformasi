@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Backend\PegawaiUnmul;
 
 use App\Http\Requests\Backend\PegawaiUnmul\StoreJabatanUsulanRequest;
-use App\Models\BackendUnivUsulan\Jabatan;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\UsulanDokumen;
-use App\Models\BackendUnivUsulan\UsulanLog;
+use App\Models\KepegawaianUniversitas\Jabatan;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\UsulanDokumen;
+use App\Models\KepegawaianUniversitas\UsulanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -181,7 +181,7 @@ class UsulanJabatanController extends BaseUsulanController
      */
     public function create()
     {
-        /** @var \App\Models\BackendUnivUsulan\Pegawai $pegawai */
+        /** @var \App\Models\KepegawaianUniversitas\Pegawai $pegawai */
         $pegawai = Pegawai::with(['jabatan', 'pangkat', 'unitKerja'])
                 ->findOrFail(Auth::id());
 
@@ -519,7 +519,7 @@ class UsulanJabatanController extends BaseUsulanController
             $pegawai = Auth::user();
 
             // Get active periode
-            $periode = \App\Models\BackendUnivUsulan\PeriodeUsulan::where('jenis_usulan', 'Usulan Jabatan')
+            $periode = \App\Models\KepegawaianUniversitas\PeriodeUsulan::where('jenis_usulan', 'Usulan Jabatan')
                 ->where('status', 'Buka')
                 ->first();
 
@@ -528,7 +528,7 @@ class UsulanJabatanController extends BaseUsulanController
             }
 
             // Create usulan with minimal data
-            $usulan = new \App\Models\BackendUnivUsulan\Usulan();
+            $usulan = new \App\Models\KepegawaianUniversitas\Usulan();
             $usulan->pegawai_id = $pegawai->id;
             $usulan->periode_usulan_id = $periode->id;
             $usulan->jenis_usulan = 'Usulan Jabatan';
@@ -537,7 +537,7 @@ class UsulanJabatanController extends BaseUsulanController
             $usulan->save();
 
             // Create usulan log
-            $usulanLog = new \App\Models\BackendUnivUsulan\UsulanLog();
+            $usulanLog = new \App\Models\KepegawaianUniversitas\UsulanLog();
             $usulanLog->usulan_id = $usulan->id;
             $usulanLog->dilakukan_oleh_id = $pegawai->id;
             $usulanLog->status_sebelumnya = null;

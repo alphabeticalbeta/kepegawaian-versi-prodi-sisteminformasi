@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Backend\AdminUniversitas;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 use Illuminate\Support\Facades\Auth;
 
 class PeriodeUsulanController extends Controller

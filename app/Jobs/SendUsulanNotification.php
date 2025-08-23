@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use App\Mail\UsulanSubmitted;
 use App\Mail\UsulanStatusChanged;
 use Illuminate\Bus\Queueable;

@@ -135,18 +135,18 @@
                 // Test 1: Admin Fakultas (unit_kerja_id)
                 if ($currentAdmin->unit_kerja_id) {
                     try {
-                        $adminUnitKerja = \App\Models\BackendUnivUsulan\UnitKerja::find($currentAdmin->unit_kerja_id);
+                        $adminUnitKerja = \App\Models\KepegawaianUniversitas\UnitKerja::find($currentAdmin->unit_kerja_id);
                         $manualTest['admin_direct'] = $adminUnitKerja ? $adminUnitKerja->nama : 'NULL';
                     } catch (\Exception $e) {
                         $manualTest['admin_direct'] = 'ERROR: ' . $e->getMessage();
                     }
                 }
 
-                // Test 2: Pegawai Hierarki (unit_kerja_terakhir_id)
-                if ($currentAdmin->unit_kerja_terakhir_id) {
+                // Test 2: Pegawai Hierarki (unit_kerja_id)
+                if ($currentAdmin->unit_kerja_id) {
                     try {
-                        $subSubUnit = \App\Models\BackendUnivUsulan\SubSubUnitKerja::with(['subUnitKerja.unitKerja'])
-                            ->find($currentAdmin->unit_kerja_terakhir_id);
+                        $subSubUnit = \App\Models\KepegawaianUniversitas\SubSubUnitKerja::with(['subUnitKerja.unitKerja'])
+                            ->find($currentAdmin->unit_kerja_id);
 
                         if ($subSubUnit && $subSubUnit->subUnitKerja && $subSubUnit->subUnitKerja->unitKerja) {
                             $manualTest['pegawai_hierarki'] = $subSubUnit->subUnitKerja->unitKerja->nama;
@@ -160,12 +160,12 @@
                 }
 
                 // Test 3: Raw query hierarki
-                if ($currentAdmin->unit_kerja_terakhir_id) {
+                if ($currentAdmin->unit_kerja_id) {
                     try {
                         $rawHierarki = \DB::table('sub_sub_unit_kerjas as ssuk')
                             ->join('sub_unit_kerjas as suk', 'ssuk.sub_unit_kerja_id', '=', 'suk.id')
                             ->join('unit_kerjas as uk', 'suk.unit_kerja_id', '=', 'uk.id')
-                            ->where('ssuk.id', $currentAdmin->unit_kerja_terakhir_id)
+                            ->where('ssuk.id', $currentAdmin->unit_kerja_id)
                             ->select('uk.nama as unit_kerja', 'suk.nama as sub_unit', 'ssuk.nama as sub_sub_unit')
                             ->first();
 

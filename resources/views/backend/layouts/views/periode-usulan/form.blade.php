@@ -26,7 +26,7 @@
         </div>
 
         <div class="px-6 py-8">
-            <form action="{{ isset($periode) ? route('backend.admin-univ-usulan.periode-usulan.update', $periode->id) : route('backend.admin-univ-usulan.periode-usulan.store') }}" method="POST" class="space-y-8">
+            <form action="{{ isset($periode) ? route('backend.kepegawaian-universitas.periode-usulan.update', $periode->id) : route('backend.kepegawaian-universitas.periode-usulan.store') }}" method="POST" class="space-y-8">
                 @csrf
                 @if(isset($periode))
                     @method('PUT')
@@ -372,7 +372,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-                    <a href="{{ route('backend.admin-univ-usulan.pusat-usulan.index') }}" class="px-6 py-3 border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white rounded-xl hover:bg-gray-50 transition-colors duration-200">
+                    <a href="{{ route('backend.kepegawaian-universitas.pusat-usulan.index') }}" class="px-6 py-3 border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white rounded-xl hover:bg-gray-50 transition-colors duration-200">
                         Batal
                     </a>
                     <button type="submit" class="px-8 py-3 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg transition-all duration-200">

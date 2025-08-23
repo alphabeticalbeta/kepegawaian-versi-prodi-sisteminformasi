@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend\AdminUniversitas;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -21,7 +21,7 @@ class UsulanController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('backend.layouts.views.admin-univ-usulan.usulan.validation-index', compact('usulans'));
+        return view('backend.layouts.views.kepegawaian-universitas.usulan.validation-index', compact('usulans'));
     }
 
     /**
@@ -45,7 +45,7 @@ class UsulanController extends Controller
         // Get existing validation data
         $existingValidation = $usulan->getValidasiByRole('admin_universitas') ?? [];
 
-        return view('backend.layouts.views.admin-univ-usulan.usulan.detail', compact('usulan', 'existingValidation'));
+        return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', compact('usulan', 'existingValidation'));
     }
 
     /**

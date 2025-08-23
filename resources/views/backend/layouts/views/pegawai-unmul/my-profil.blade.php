@@ -417,9 +417,9 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Unit Kerja</label>
                                 @if($isEditing)
-                                    <select name="unit_kerja_terakhir_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                    <select name="unit_kerja_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                                         @foreach($unitKerjas as $unit)
-                                            <option value="{{ $unit->id }}" {{ old('unit_kerja_terakhir_id', $pegawai->unit_kerja_terakhir_id) == $unit->id ? 'selected' : '' }}>
+                                            <option value="{{ $unit->id }}" {{ old('unit_kerja_id', $pegawai->unit_kerja_id) == $unit->id ? 'selected' : '' }}>
                                                 {{ $unit->nama }}
                                             </option>
                                         @endforeach
@@ -576,7 +576,7 @@
                                     </div>
 
                                     @if($pegawai->$field)
-                                        <a href="{{ route('backend.admin-univ-usulan.data-pegawai.show-document', ['pegawai' => $pegawai->id, 'field' => $field]) }}"
+                                        <a href="{{ route('backend.kepegawaian-universitas.data-pegawai.show-document', ['pegawai' => $pegawai->id, 'field' => $field]) }}"
                                            target="_blank"
                                            class="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800">
                                             <i data-lucide="eye" class="w-4 h-4"></i>

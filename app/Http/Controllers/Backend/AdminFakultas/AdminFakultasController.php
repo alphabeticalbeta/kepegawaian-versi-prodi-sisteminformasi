@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Backend\AdminFakultas;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -48,7 +48,7 @@ class AdminFakultasController extends Controller
     */
     public function dashboard()
     {
-        /** @var \App\Models\BackendUnivUsulan\Pegawai $admin */
+        /** @var \App\Models\KepegawaianUniversitas\Pegawai $admin */
         $admin = Auth::user();
 
         // Gunakan helper method untuk mendapatkan unit kerja
@@ -68,7 +68,7 @@ class AdminFakultasController extends Controller
      */
     public function dashboardJabatan()
     {
-        /** @var \App\Models\BackendUnivUsulan\Pegawai $admin */
+        /** @var \App\Models\KepegawaianUniversitas\Pegawai $admin */
         $admin = Auth::user();
 
         // Gunakan helper method untuk mendapatkan unit kerja
@@ -154,7 +154,7 @@ class AdminFakultasController extends Controller
      */
     public function dashboardPangkat()
     {
-        /** @var \App\Models\BackendUnivUsulan\Pegawai $admin */
+        /** @var \App\Models\KepegawaianUniversitas\Pegawai $admin */
         $admin = Auth::user();
 
         // Gunakan helper method untuk mendapatkan unit kerja
@@ -244,7 +244,7 @@ class AdminFakultasController extends Controller
     public function show(Usulan $usulan)
     {
         try {
-            /** @var \App\Models\BackendUnivUsulan\Pegawai $admin */
+            /** @var \App\Models\KepegawaianUniversitas\Pegawai $admin */
             $admin = Auth::user();
 
             // OPTIMASI: Cache admin data untuk mengurangi query
@@ -254,7 +254,7 @@ class AdminFakultasController extends Controller
 
             // OPTIMASI: Gunakan eager loading yang optimal
             $usulan->load([
-                'pegawai:id,nama_lengkap,email,nip,gelar_depan,gelar_belakang,pangkat_terakhir_id,jabatan_terakhir_id,unit_kerja_terakhir_id,jenis_pegawai,status_kepegawaian,nuptk,tempat_lahir,tanggal_lahir,jenis_kelamin,nomor_handphone,nomor_kartu_pegawai,tmt_pangkat,tmt_jabatan,tmt_cpns,tmt_pns,pendidikan_terakhir,nama_universitas_sekolah,nama_prodi_jurusan,mata_kuliah_diampu,ranting_ilmu_kepakaran,url_profil_sinta,predikat_kinerja_tahun_pertama,predikat_kinerja_tahun_kedua,nilai_konversi,ijazah_terakhir,transkrip_nilai_terakhir,sk_pangkat_terakhir,sk_jabatan_terakhir,skp_tahun_pertama,skp_tahun_kedua,pak_konversi,sk_cpns,sk_pns,sk_penyetaraan_ijazah,disertasi_thesis_terakhir',
+                'pegawai:id,nama_lengkap,email,nip,gelar_depan,gelar_belakang,pangkat_terakhir_id,jabatan_terakhir_id,unit_kerja_id,jenis_pegawai,status_kepegawaian,nuptk,tempat_lahir,tanggal_lahir,jenis_kelamin,nomor_handphone,nomor_kartu_pegawai,tmt_pangkat,tmt_jabatan,tmt_cpns,tmt_pns,pendidikan_terakhir,nama_universitas_sekolah,nama_prodi_jurusan,mata_kuliah_diampu,ranting_ilmu_kepakaran,url_profil_sinta,predikat_kinerja_tahun_pertama,predikat_kinerja_tahun_kedua,nilai_konversi,ijazah_terakhir,transkrip_nilai_terakhir,sk_pangkat_terakhir,sk_jabatan_terakhir,skp_tahun_pertama,skp_tahun_kedua,pak_konversi,sk_cpns,sk_pns,sk_penyetaraan_ijazah,disertasi_thesis_terakhir',
                 'pegawai.pangkat:id,pangkat',
                 'pegawai.jabatan:id,jabatan',
                 'pegawai.unitKerja:id,nama,sub_unit_kerja_id',
@@ -286,7 +286,7 @@ class AdminFakultasController extends Controller
 
             // OPTIMASI: Cache validation fields
             $validationFields = Cache::remember("validation_fields_{$usulan->id}_admin_fakultas", 300, function () use ($usulan) {
-                return \App\Models\BackendUnivUsulan\Usulan::getValidationFieldsWithDynamicBkd($usulan, 'admin_fakultas');
+                return \App\Models\KepegawaianUniversitas\Usulan::getValidationFieldsWithDynamicBkd($usulan, 'admin_fakultas');
             });
 
             // OPTIMASI: Cache BKD labels
@@ -308,7 +308,7 @@ class AdminFakultasController extends Controller
             });
 
             // Get penilais data for popup
-            $penilais = \App\Models\BackendUnivUsulan\Pegawai::whereHas('roles', function($query) {
+            $penilais = \App\Models\KepegawaianUniversitas\Pegawai::whereHas('roles', function($query) {
                 $query->where('name', 'Penilai Universitas');
             })->orderBy('nama_lengkap')->get();
 
@@ -746,7 +746,7 @@ class AdminFakultasController extends Controller
      */
     public function showPendaftar(PeriodeUsulan $periodeUsulan)
     {
-        /** @var \App\Models\BackendUnivUsulan\Pegawai $admin */
+        /** @var \App\Models\KepegawaianUniversitas\Pegawai $admin */
         $admin = Auth::user();
         $unitKerjaId = $admin->unit_kerja_id;
 
@@ -921,13 +921,13 @@ class AdminFakultasController extends Controller
         try {
             // Coba ambil unit kerja langsung dari admin
             if ($admin->unit_kerja_id) {
-                return \App\Models\BackendUnivUsulan\UnitKerja::find($admin->unit_kerja_id);
+                return \App\Models\KepegawaianUniversitas\UnitKerja::find($admin->unit_kerja_id);
             }
 
             // Fallback: ambil dari hierarki jika admin tidak punya unit_kerja_id
-            if ($admin->unit_kerja_terakhir_id) {
-                $subSubUnit = \App\Models\BackendUnivUsulan\SubSubUnitKerja::with('subUnitKerja.unitKerja')
-                    ->find($admin->unit_kerja_terakhir_id);
+            if ($admin->unit_kerja_id) {
+                $subSubUnit = \App\Models\KepegawaianUniversitas\SubSubUnitKerja::with('subUnitKerja.unitKerja')
+                    ->find($admin->unit_kerja_id);
 
                 if ($subSubUnit && $subSubUnit->subUnitKerja && $subSubUnit->subUnitKerja->unitKerja) {
                     return $subSubUnit->subUnitKerja->unitKerja;
@@ -951,7 +951,7 @@ class AdminFakultasController extends Controller
         }
 
         try {
-            return \App\Models\BackendUnivUsulan\PeriodeUsulan::withCount([
+            return \App\Models\KepegawaianUniversitas\PeriodeUsulan::withCount([
                 'usulans as jumlah_pengusul' => function ($query) use ($unitKerja) {
                     $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview'])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {

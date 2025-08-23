@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
-use App\Models\BackendUnivUsulan\Jabatan;
+use App\Models\KepegawaianUniversitas\Jabatan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class JabatanHierarchyTest extends TestCase

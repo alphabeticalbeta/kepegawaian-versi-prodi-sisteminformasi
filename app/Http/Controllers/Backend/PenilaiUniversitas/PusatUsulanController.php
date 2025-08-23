@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend\PenilaiUniversitas;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use App\Services\PenilaiService;
 use App\Services\PenilaiDocumentService;
 use Illuminate\Http\Request;
@@ -72,7 +72,7 @@ class PusatUsulanController extends Controller
             ]);
 
             // UPDATED: Pass usulan object and role to get dynamic BKD fields
-            $validationFields = \App\Models\BackendUnivUsulan\Usulan::getValidationFieldsWithDynamicBkd($usulan, 'penilai');
+            $validationFields = \App\Models\KepegawaianUniversitas\Usulan::getValidationFieldsWithDynamicBkd($usulan, 'penilai');
 
             // ADDED: Get BKD labels for display
             $bkdLabels = $usulan->getBkdDisplayLabels();
@@ -90,7 +90,7 @@ class PusatUsulanController extends Controller
             $canEdit = in_array($usulan->status_usulan, [
                 'Diusulkan ke Universitas',
                 'Sedang Direview',
-                \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
                 'Menunggu Hasil Penilaian Tim Penilai'
             ]) && !$penilaiIndividualStatus['is_completed'];
 
@@ -120,7 +120,7 @@ class PusatUsulanController extends Controller
     /**
      * Show pendaftar for specific periode.
      */
-    public function showPendaftar(\App\Models\BackendUnivUsulan\PeriodeUsulan $periode)
+    public function showPendaftar(\App\Models\KepegawaianUniversitas\PeriodeUsulan $periode)
     {
         $currentPenilai = Auth::user();
 
@@ -150,7 +150,7 @@ class PusatUsulanController extends Controller
             // ENHANCED: Check if usulan is in correct status for Penilai Universitas
             $allowedStatuses = [
                 'Sedang Direview',
-                \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
                 'Menunggu Hasil Penilaian Tim Penilai'
             ];
 
@@ -421,7 +421,7 @@ class PusatUsulanController extends Controller
             // Check 2: Status Validation for Penilai
             $allowedStatuses = [
                 'Sedang Direview',
-                \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
                 'Menunggu Hasil Penilaian Tim Penilai'
             ];
             

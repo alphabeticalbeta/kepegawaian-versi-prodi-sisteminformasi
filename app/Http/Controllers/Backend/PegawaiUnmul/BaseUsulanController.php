@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Backend\PegawaiUnmul;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\UsulanDokumen;
-use App\Models\BackendUnivUsulan\UsulanLog;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\UsulanDokumen;
+use App\Models\KepegawaianUniversitas\UsulanLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -34,7 +34,7 @@ abstract class BaseUsulanController extends Controller
             'nip', 'nama_lengkap', 'email', 'jenis_pegawai', 'status_kepegawaian',
             'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'nomor_handphone',
             'nomor_kartu_pegawai', 'pangkat_terakhir_id', 'tmt_pangkat',
-            'jabatan_terakhir_id', 'tmt_jabatan', 'unit_kerja_terakhir_id',
+            'jabatan_terakhir_id', 'tmt_jabatan', 'unit_kerja_id',
             'pendidikan_terakhir', 'tmt_cpns', 'tmt_pns',
             'predikat_kinerja_tahun_pertama', 'predikat_kinerja_tahun_kedua',
             'sk_pangkat_terakhir', 'sk_jabatan_terakhir', 'ijazah_terakhir',
@@ -119,7 +119,7 @@ abstract class BaseUsulanController extends Controller
             'jabatan_id' => $pegawai->jabatan_terakhir_id,
             'tmt_jabatan' => $pegawai->tmt_jabatan?->toDateString(),
             'unit_kerja_saat_usul' => $pegawai->unitKerja?->nama,
-            'unit_kerja_id' => $pegawai->unit_kerja_terakhir_id,
+            'unit_kerja_id' => $pegawai->unit_kerja_id,
             'tmt_cpns' => $pegawai->tmt_cpns?->toDateString(),
             'tmt_pns' => $pegawai->tmt_pns?->toDateString(),
 

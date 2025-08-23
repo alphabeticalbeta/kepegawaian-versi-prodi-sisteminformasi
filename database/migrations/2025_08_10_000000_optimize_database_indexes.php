@@ -46,7 +46,7 @@ return new class extends Migration
             
             // Index untuk unit kerja
             if (!$this->indexExists('pegawais', 'idx_pegawais_unit_kerja')) {
-                $table->index(['unit_kerja_terakhir_id', 'unit_kerja_id'], 'idx_pegawais_unit_kerja');
+                $table->index(['unit_kerja_id', 'unit_kerja_id'], 'idx_pegawais_unit_kerja');
             }
         });
 

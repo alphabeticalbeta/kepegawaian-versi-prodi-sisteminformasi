@@ -17,7 +17,7 @@ class RoleSeeder extends Seeder
 
         // Daftar peran yang akan dibuat di dalam sistem
         $roles = [
-            'Admin Universitas Usulan',
+            'Kepegawaian Universitas',
             'Admin Universitas',
             'Admin Fakultas',
             'Admin Keuangan',
@@ -67,7 +67,7 @@ class RoleSeeder extends Seeder
         }
 
         // Assign permissions ke roles
-        $adminUnivUsulan = Role::where('name', 'Admin Universitas Usulan')->first();
+        $adminUnivUsulan = Role::where('name', 'Kepegawaian Universitas')->first();
         if ($adminUnivUsulan) {
             $adminUnivUsulan->givePermissionTo([
                 'view_all_pegawai_documents',

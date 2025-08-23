@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Backend\PegawaiUnmul;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,7 +15,7 @@ class UsulanPegawaiController extends Controller
      */
     public function index()
     {
-        /** @var \App\Models\BackendUnivUsulan\Pegawai $pegawai */
+        /** @var \App\Models\KepegawaianUniversitas\Pegawai $pegawai */
         $pegawai = Auth::user();
 
         $usulans = $pegawai->usulans()

@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Backend\PegawaiUnmul;
 
 use App\Http\Controllers\Controller;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\DocumentAccessLog;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\DocumentAccessLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File as FileFacade;
 use Illuminate\Validation\Rules\File;
-use App\Models\BackendUnivUsulan\Pangkat;
-use App\Models\BackendUnivUsulan\Jabatan;
-use App\Models\BackendUnivUsulan\SubSubUnitKerja;
+use App\Models\KepegawaianUniversitas\Pangkat;
+use App\Models\KepegawaianUniversitas\Jabatan;
+use App\Models\KepegawaianUniversitas\SubSubUnitKerja;
 
 class ProfileController extends Controller
 {
@@ -33,9 +33,9 @@ class ProfileController extends Controller
         $isEditing = $request->has('edit') && $request->get('edit') == '1';
 
         // 4. Ambil data untuk dropdown HANYA JIKA sedang mode edit
-        $pangkats = $isEditing ? \App\Models\BackendUnivUsulan\Pangkat::orderByHierarchy('asc')->get() : [];
-        $jabatans = $isEditing ? \App\Models\BackendUnivUsulan\Jabatan::orderBy('jabatan')->get() : [];
-        $unitKerjas = $isEditing ? \App\Models\BackendUnivUsulan\SubSubUnitKerja::with('subUnitKerja.unitKerja')->orderBy('nama')->get() : [];
+        $pangkats = $isEditing ? \App\Models\KepegawaianUniversitas\Pangkat::orderByHierarchy('asc')->get() : [];
+        $jabatans = $isEditing ? \App\Models\KepegawaianUniversitas\Jabatan::orderBy('jabatan')->get() : [];
+        $unitKerjas = $isEditing ? \App\Models\KepegawaianUniversitas\SubSubUnitKerja::with('subUnitKerja.unitKerja')->orderBy('nama')->get() : [];
 
         // 5. Kirim SEMUA variabel ke view di akhir metode
         return view('backend.layouts.views.pegawai-unmul.profile.show', compact(
@@ -88,7 +88,7 @@ class ProfileController extends Controller
             'tmt_pangkat' => 'required|date',
             'jabatan_terakhir_id' => 'required|exists:jabatans,id',
             'tmt_jabatan' => 'required|date',
-            'unit_kerja_terakhir_id' => 'required|exists:sub_sub_unit_kerjas,id',
+            'unit_kerja_id' => 'required|exists:sub_sub_unit_kerjas,id',
             'tmt_cpns' => 'required|date',
             'tmt_pns' => 'required|date',
 

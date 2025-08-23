@@ -4,8 +4,8 @@ namespace App\Http\Requests\Backend\PegawaiUnmul;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
-use App\Models\BackendUnivUsulan\Usulan;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 
 
 class StoreJabatanUsulanRequest extends FormRequest
@@ -196,7 +196,7 @@ class StoreJabatanUsulanRequest extends FormRequest
             return 'unknown';
         }
 
-        $jabatanTujuan = \App\Models\BackendUnivUsulan\Jabatan::where('jenis_pegawai', $pegawai->jenis_pegawai)
+        $jabatanTujuan = \App\Models\KepegawaianUniversitas\Jabatan::where('jenis_pegawai', $pegawai->jenis_pegawai)
                       ->where('jenis_jabatan', $jabatanLama->jenis_jabatan)
                       ->where('id', '>', $jabatanLama->id)
                       ->orderBy('id', 'asc')

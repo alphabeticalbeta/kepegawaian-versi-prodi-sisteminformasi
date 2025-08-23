@@ -11,8 +11,8 @@ resources/views/backend/layouts/
 │   │   └── app.blade.php               # Layout admin fakultas
 │   ├── admin-universitas/
 │   │   └── app.blade.php               # Layout admin universitas
-│   ├── admin-univ-usulan/
-│   │   └── app.blade.php               # Layout admin univ usulan
+│   ├── kepegawaian-universitas/
+│   │   └── app.blade.php               # Layout kepegawaian universitas
 │   ├── pegawai-unmul/
 │   │   └── app.blade.php               # Layout pegawai
 │   ├── penilai-universitas/
@@ -28,8 +28,8 @@ resources/views/backend/layouts/
 │   │       └── pengusul.blade.php
 │   ├── admin-universitas/
 │   │   └── dashboard.blade.php         # Dashboard admin universitas
-│   ├── admin-univ-usulan/
-│   │   ├── dashboard.blade.php         # Dashboard admin univ usulan
+│   ├── kepegawaian-universitas/
+│   │   ├── dashboard.blade.php         # Dashboard kepegawaian universitas
 │   │   ├── jabatan/                    # Halaman jabatan
 │   │   │   ├── form-jabatan.blade.php
 │   │   │   └── master-data-jabatan.blade.php
@@ -104,8 +104,8 @@ Setiap layout memuat JavaScript module yang sesuai dengan role:
 - **JS Module**: `resources/js/admin-universitas/index.js`
 - **Fitur**: Dashboard, monitoring
 
-### **Admin Univ Usulan**
-- **Layout**: `roles/admin-univ-usulan/app.blade.php`
+### **Kepegawaian Universitas**
+- **Layout**: `roles/kepegawaian-universitas/app.blade.php`
 - **JS Module**: `resources/js/admin-universitas/index.js`
 - **Fitur**: Pengelolaan usulan, return/revision, send to assessor/senate
 
@@ -278,7 +278,7 @@ Setiap layout memuat JavaScript module yang sesuai dengan role:
 |------|-------------|-----------------|-----------|
 | **Admin Fakultas** | `roles/admin-fakultas/app.blade.php` | `views/admin-fakultas/` | `admin-fakultas/index.js` |
 | **Admin Universitas** | `roles/admin-universitas/app.blade.php` | `views/admin-universitas/` | `admin-universitas/index.js` |
-| **Admin Univ Usulan** | `roles/admin-univ-usulan/app.blade.php` | `views/admin-univ-usulan/` | `admin-universitas/index.js` |
+| **Kepegawaian Universitas** | `roles/kepegawaian-universitas/app.blade.php` | `views/kepegawaian-universitas/` | `admin-universitas/index.js` |
 | **Pegawai** | `roles/pegawai-unmul/app.blade.php` | `views/pegawai-unmul/` | `pegawai/index.js` |
 | **Penilai** | `roles/penilai-universitas/app.blade.php` | `views/penilai-universitas/` | `penilai/index.js` |
 | **Periode Usulan** | `roles/periode-usulan/app.blade.php` | `views/periode-usulan/` | `admin-universitas/index.js` |

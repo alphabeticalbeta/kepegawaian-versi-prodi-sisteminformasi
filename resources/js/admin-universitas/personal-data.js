@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const unitKerjaSelect = document.getElementById('unit_kerja_id');
     const subUnitKerjaSelect = document.getElementById('sub_unit_kerja_id');
     const subSubUnitKerjaSelect = document.getElementById('sub_sub_unit_kerja_id');
-    const unitKerjaTerakhirInput = document.getElementById('unit_kerja_terakhir_id');
+    const unitKerjaTerakhirInput = document.getElementById('unit_kerja_id');
     const hierarchyDisplay = document.getElementById('unit_kerja_hierarchy_display');
 
     console.log('Elements found:', {

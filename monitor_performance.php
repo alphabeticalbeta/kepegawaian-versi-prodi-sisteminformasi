@@ -25,7 +25,7 @@ class PerformanceMonitor
 
         try {
             // Simulate the exact query from AdminFakultasController
-            $usulan = \App\Models\BackendUnivUsulan\Usulan::find($usulanId);
+            $usulan = \App\Models\KepegawaianUniversitas\Usulan::find($usulanId);
             
             if (!$usulan) {
                 echo "❌ Usulan dengan ID {$usulanId} tidak ditemukan\n";
@@ -34,7 +34,7 @@ class PerformanceMonitor
 
             // Load relationships with optimized eager loading
             $usulan->load([
-                'pegawai:id,nama_lengkap,email,pangkat_terakhir_id,jabatan_terakhir_id,unit_kerja_terakhir_id',
+                'pegawai:id,nama_lengkap,email,pangkat_terakhir_id,jabatan_terakhir_id,unit_kerja_id',
                 'pegawai.pangkat:id,pangkat',
                 'pegawai.jabatan:id,jabatan',
                 'pegawai.unitKerja:id,nama,sub_unit_kerja_id',
@@ -154,7 +154,7 @@ class PerformanceMonitor
         echo "🔥 WARMING CACHE FOR USULAN ID: {$usulanId}...\n";
         
         try {
-            $usulan = \App\Models\BackendUnivUsulan\Usulan::find($usulanId);
+            $usulan = \App\Models\KepegawaianUniversitas\Usulan::find($usulanId);
             
             if (!$usulan) {
                 echo "❌ Usulan tidak ditemukan\n";

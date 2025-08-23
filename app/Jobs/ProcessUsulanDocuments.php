@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\UsulanLog;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\UsulanLog;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

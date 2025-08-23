@@ -41,10 +41,10 @@ return new class extends Migration
             });
         }
         
-        // Index for unit_kerja_terakhir_id in pegawais
+        // Index for unit_kerja_id in pegawais
         if (!$this->indexExists('pegawais', 'idx_pegawais_unit_kerja_terakhir')) {
             Schema::table('pegawais', function (Blueprint $table) {
-                $table->index('unit_kerja_terakhir_id', 'idx_pegawais_unit_kerja_terakhir');
+                $table->index('unit_kerja_id', 'idx_pegawais_unit_kerja_terakhir');
             });
         }
         

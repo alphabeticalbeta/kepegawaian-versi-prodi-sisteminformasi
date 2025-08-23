@@ -70,13 +70,13 @@ return [
         // Kita beritahu provider 'users' untuk menggunakan model 'Pegawai' Anda.
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\BackendUnivUsulan\Pegawai::class,
+            'model' => App\Models\KepegawaianUniversitas\Pegawai::class,
         ],
 
         // ▼▼▼ TAMBAHKAN BLOK BARU INI DI BAWAHNYA ▼▼▼
         'pegawais' => [
             'driver' => 'eloquent',
-            'model' => App\Models\BackendUnivUsulan\Pegawai::class,
+            'model' => App\Models\KepegawaianUniversitas\Pegawai::class,
         ],
     ],
 

@@ -2,8 +2,8 @@
 
 namespace App\Helpers;
 
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 

@@ -17,9 +17,9 @@
     @elseif($roles->contains('Tim Senat'))
         @include('backend.components.sidebar-tim-senat')
 
-    {{-- Admin Universitas Usulan Sidebar --}}
-    @elseif($roles->contains('Admin Universitas Usulan'))
-        @include('backend.components.sidebar-admin-universitas-usulan')
+    {{-- Kepegawaian Universitas Sidebar --}}
+    @elseif($roles->contains('Kepegawaian Universitas'))
+        @include('backend.components.sidebar-kepegawaian-universitas')
 
     {{-- Admin Universitas Sidebar --}}
     @elseif($roles->contains('Admin Universitas'))

@@ -18,8 +18,8 @@
             $currentPath = request()->path();
             
             // Priority order: check specific routes first
-            if (str_contains($currentPath, 'admin-univ-usulan')) {
-                $currentRole = 'Admin Universitas Usulan';
+            if (str_contains($currentPath, 'kepegawaian-universitas')) {
+                $currentRole = 'Kepegawaian Universitas';
             } elseif (str_contains($currentPath, 'penilai-universitas')) {
                 $currentRole = 'Penilai Universitas';
             } elseif (str_contains($currentPath, 'admin-universitas')) {
@@ -30,8 +30,8 @@
                 $currentRole = 'Tim Senat';
             } else {
                 // Fallback: check if user has specific role and use it
-                if ($userRoles->contains('name', 'Admin Universitas Usulan')) {
-                    $currentRole = 'Admin Universitas Usulan';
+                if ($userRoles->contains('name', 'Kepegawaian Universitas')) {
+                    $currentRole = 'Kepegawaian Universitas';
                 } elseif ($userRoles->contains('name', 'Penilai Universitas')) {
                     $currentRole = 'Penilai Universitas';
                 } elseif ($userRoles->contains('name', 'Admin Universitas')) {
@@ -150,8 +150,8 @@
             'actionButtons' => ['perbaikan_ke_pegawai', 'perbaikan_ke_fakultas', 'teruskan_ke_penilai', 'teruskan_ke_senat', 'review_penilai'],
             'canForward' => true,
             'canReturn' => true,
-            'routePrefix' => 'backend.admin-univ-usulan.usulan',
-            'documentRoutePrefix' => 'backend.admin-univ-usulan.usulan'
+            'routePrefix' => 'backend.kepegawaian-universitas.usulan',
+            'documentRoutePrefix' => 'backend.kepegawaian-universitas.usulan'
         ],
         'Penilai Universitas' => [
             'title' => 'Penilaian Usulan Universitas',
@@ -1177,8 +1177,8 @@
 
 
 
-        {{-- Field yang Tidak Sesuai (Khusus Admin Universitas Usulan) --}}
-        @if($currentRole === 'Admin Universitas Usulan')
+        {{-- Field yang Tidak Sesuai (Khusus Kepegawaian Universitas) --}}
+        @if($currentRole === 'Kepegawaian Universitas')
             @php
                 $allPenilaiInvalidFields = [];
                 $allPenilaiGeneralNotes = [];
@@ -1260,9 +1260,9 @@
                 }
             @endphp
 
-            {{-- Debug untuk Admin Universitas Usulan --}}
+            {{-- Debug untuk Kepegawaian Universitas --}}
             <div class="bg-purple-100 border border-purple-400 text-purple-700 px-4 py-3 rounded mb-4">
-                <strong>Debug Admin Universitas Usulan:</strong><br>
+                <strong>Debug Kepegawaian Universitas:</strong><br>
                 Penilai Validation: {{ json_encode($penilaiValidation) }}<br>
                 All Penilai Invalid Fields: {{ json_encode($allPenilaiInvalidFields) }}<br>
                 All Penilai General Notes: {{ json_encode($allPenilaiGeneralNotes) }}
@@ -2350,7 +2350,7 @@
                     if ($currentRole === 'Admin Fakultas') {
                         $backRoute = route('admin-fakultas.dashboard');
                     } elseif ($currentRole === 'Admin Universitas') {
-                        $backRoute = route('backend.admin-univ-usulan.usulan.index');
+                        $backRoute = route('backend.kepegawaian-universitas.usulan.index');
                 } elseif ($currentRole === 'Penilai Universitas') {
                     $backRoute = route('penilai-universitas.pusat-usulan.index');
                     } elseif ($currentRole === 'Tim Senat') {

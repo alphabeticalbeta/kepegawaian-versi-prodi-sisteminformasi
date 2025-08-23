@@ -17,7 +17,7 @@ resources/js/
 │   └── admin-fakultas.js           # Admin Fakultas functionality
 ├── admin-universitas/              # Admin Universitas scripts
 │   ├── index.js                    # Main entry point
-│   ├── admin-univ-usulan.js        # Admin Univ Usulan functionality
+│   ├── kepegawaian-universitas.js        # Admin Univ Usulan functionality
 │   └── periode-usulan.js           # Periode Usulan functionality
 ├── pegawai/                        # Pegawai scripts
 │   ├── index.js                    # Main entry point
@@ -127,7 +127,7 @@ confirmDialog('Apakah Anda yakin?', () => {
 
 Script-script lama yang ada di `resources/views/backend/components/scripts/` telah dipindahkan dan diorganisir ulang:
 
-- `script-admin-univ-usulan.blade.php` → `admin-universitas/admin-univ-usulan.js`
+- `script-kepegawaian-universitas.blade.php` → `admin-universitas/kepegawaian-universitas.js`
 - `script-pegawai-profil.blade.php` → `pegawai/pegawai-profil.js`
 - `script-pegawai-usulan.blade.php` → `pegawai/pegawai-usulan.js`
 - `script-periode.blade.php` → `admin-universitas/periode-usulan.js`

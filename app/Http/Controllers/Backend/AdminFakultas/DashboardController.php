@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Backend\AdminFakultas;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\BackendUnivUsulan\Usulan;
-use App\Models\BackendUnivUsulan\Pegawai;
-use App\Models\BackendUnivUsulan\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
+use App\Models\KepegawaianUniversitas\Pegawai;
+use App\Models\KepegawaianUniversitas\PeriodeUsulan;
 
 class DashboardController extends Controller
 {
@@ -103,7 +103,7 @@ class DashboardController extends Controller
     /**
      * Get periode usulans with statistics for faculty.
      *
-     * @param \App\Models\BackendUnivUsulan\Pegawai $user
+     * @param \App\Models\KepegawaianUniversitas\Pegawai $user
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     private function getPeriodeUsulansWithStats($user)
@@ -144,7 +144,7 @@ class DashboardController extends Controller
      * Get dashboard statistics
      *
      * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $periodeUsulans
-     * @param \App\Models\BackendUnivUsulan\UnitKerja|null $unitKerja
+     * @param \App\Models\KepegawaianUniversitas\UnitKerja|null $unitKerja
      * @return array
      */
     private function getDashboardStatistics($periodeUsulans, $unitKerja)

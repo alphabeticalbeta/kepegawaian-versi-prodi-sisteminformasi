@@ -27,13 +27,13 @@ Route::get('/test-document/{pegawai}/{field}', function($pegawai, $field) {
 Route::post('/test-usulan-submission', function() {
     try {
         // Get first pegawai for testing
-        $pegawai = \App\Models\BackendUnivUsulan\Pegawai::first();
+        $pegawai = \App\Models\KepegawaianUniversitas\Pegawai::first();
         if (!$pegawai) {
             return response()->json(['error' => 'No pegawai found'], 400);
         }
 
         // Get active periode
-        $periode = \App\Models\BackendUnivUsulan\PeriodeUsulan::where('jenis_usulan', 'Usulan Jabatan')
+        $periode = \App\Models\KepegawaianUniversitas\PeriodeUsulan::where('jenis_usulan', 'Usulan Jabatan')
             ->where('status', 'Buka')
             ->first();
 
@@ -42,7 +42,7 @@ Route::post('/test-usulan-submission', function() {
         }
 
         // Create usulan with minimal data
-        $usulan = new \App\Models\BackendUnivUsulan\Usulan();
+        $usulan = new \App\Models\KepegawaianUniversitas\Usulan();
         $usulan->pegawai_id = $pegawai->id;
         $usulan->periode_usulan_id = $periode->id;
         $usulan->jenis_usulan = 'Usulan Jabatan';
@@ -51,7 +51,7 @@ Route::post('/test-usulan-submission', function() {
         $usulan->save();
 
         // Create usulan log
-        $usulanLog = new \App\Models\BackendUnivUsulan\UsulanLog();
+        $usulanLog = new \App\Models\KepegawaianUniversitas\UsulanLog();
         $usulanLog->usulan_id = $usulan->id;
         $usulanLog->dilakukan_oleh_id = $pegawai->id;
         $usulanLog->status_sebelumnya = null;
@@ -76,7 +76,7 @@ Route::post('/test-usulan-submission', function() {
 // Temporary document route without authentication for testing
 Route::get('/temp-document/{pegawai}/{field}', function($pegawai, $field) {
     try {
-        $pegawaiModel = \App\Models\BackendUnivUsulan\Pegawai::find($pegawai);
+        $pegawaiModel = \App\Models\KepegawaianUniversitas\Pegawai::find($pegawai);
         if (!$pegawaiModel) {
             return response()->json(['error' => 'Pegawai not found'], 404);
         }
@@ -127,15 +127,15 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
         });
 
     // ======================================================================
-    // ADMIN UNIVERSITAS USULAN ROUTES
+    // KEPEGAWAIAN UNIVERSITAS ROUTES
     // ======================================================================
-    Route::prefix('admin-univ-usulan')
-        ->name('backend.admin-univ-usulan.')
-        ->middleware(['role:Admin Universitas Usulan'])
+    Route::prefix('kepegawaian-universitas')
+        ->name('backend.kepegawaian-universitas.')
+        ->middleware(['role:Kepegawaian Universitas'])
         ->group(function () {
 
             // Dashboard
-            Route::get('/dashboard', [App\Http\Controllers\Backend\AdminUnivUsulan\DashboardController::class, 'index'])
+            Route::get('/dashboard', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardController::class, 'index'])
                 ->name('dashboard');
 
             // =====================================================
@@ -144,125 +144,125 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
 
             // Data Pegawai (STANDARDIZED)
             Route::prefix('data-pegawai')->name('data-pegawai.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'create'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'store'])
                     ->name('store');
-                Route::get('/{pegawai}', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'show'])
+                Route::get('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'show'])
                     ->name('show');
-                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'edit'])
+                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{pegawai}', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'update'])
+                Route::put('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'update'])
                     ->name('update');
-                Route::delete('/{pegawai}', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'destroy'])
+                Route::delete('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'destroy'])
                     ->name('destroy');
 
                 // Document routes (STANDARDIZED)
-                Route::get('/{pegawai}/dokumen/{field}', [App\Http\Controllers\Backend\AdminUnivUsulan\DataPegawaiController::class, 'showDocument'])
+                Route::get('/{pegawai}/dokumen/{field}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'showDocument'])
                     ->name('show-document');
             });
 
             // Unit Kerja (Hierarchical) (STANDARDIZED)
             Route::prefix('unitkerja')->name('unitkerja.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'create'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'store'])
                     ->name('store');
-                Route::get('/{type}/{id}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'edit'])
+                Route::get('/{type}/{id}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{type}/{id}', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'update'])
+                Route::put('/{type}/{id}', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'update'])
                     ->name('update');
-                Route::delete('/{type}/{id}', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'destroy'])
+                Route::delete('/{type}/{id}', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'destroy'])
                     ->name('destroy');
 
                 // API routes untuk dropdown (STANDARDIZED)
-                Route::get('/api/sub-unit-kerja/{unitKerjaId}', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'getSubUnitKerja'])
+                Route::get('/api/sub-unit-kerja/{unitKerjaId}', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'getSubUnitKerja'])
                     ->name('api.sub-unit-kerja');
-                Route::get('/api/sub-sub-unit-kerja/{subUnitKerjaId}', [App\Http\Controllers\Backend\AdminUnivUsulan\UnitKerjaController::class, 'getSubSubUnitKerja'])
+                Route::get('/api/sub-sub-unit-kerja/{subUnitKerjaId}', [App\Http\Controllers\Backend\KepegawaianUniversitas\UnitKerjaController::class, 'getSubSubUnitKerja'])
                     ->name('api.sub-sub-unit-kerja');
             });
 
             // Sub Unit Kerja (STANDARDIZED)
             Route::prefix('sub-unitkerja')->name('sub-unitkerja.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\SubUnitKerjaController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\AdminUnivUsulan\SubUnitKerjaController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'create'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\AdminUnivUsulan\SubUnitKerjaController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'store'])
                     ->name('store');
-                Route::get('/{subUnitKerja}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\SubUnitKerjaController::class, 'edit'])
+                Route::get('/{subUnitKerja}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{subUnitKerja}', [App\Http\Controllers\Backend\AdminUnivUsulan\SubUnitKerjaController::class, 'update'])
+                Route::put('/{subUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'update'])
                     ->name('update');
-                Route::delete('/{subUnitKerja}', [App\Http\Controllers\Backend\AdminUnivUsulan\SubUnitKerjaController::class, 'destroy'])
+                Route::delete('/{subUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'destroy'])
                     ->name('destroy');
             });
 
             // Sub Sub Unit Kerja (STANDARDIZED)
             Route::prefix('sub-sub-unitkerja')->name('sub-sub-unitkerja.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\SubSubUnitKerjaController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\AdminUnivUsulan\SubSubUnitKerjaController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'create'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\AdminUnivUsulan\SubSubUnitKerjaController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'store'])
                     ->name('store');
-                Route::get('/{subSubUnitKerja}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\SubSubUnitKerjaController::class, 'edit'])
+                Route::get('/{subSubUnitKerja}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{subSubUnitKerja}', [App\Http\Controllers\Backend\AdminUnivUsulan\SubSubUnitKerjaController::class, 'update'])
+                Route::put('/{subSubUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'update'])
                     ->name('update');
-                Route::delete('/{subSubUnitKerja}', [App\Http\Controllers\Backend\AdminUnivUsulan\SubSubUnitKerjaController::class, 'destroy'])
+                Route::delete('/{subSubUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'destroy'])
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/api/sub-unit-kerjas', [App\Http\Controllers\Backend\AdminUnivUsulan\SubSubUnitKerjaController::class, 'getSubUnitKerjas'])
+                Route::get('/api/sub-unit-kerjas', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'getSubUnitKerjas'])
                     ->name('api.sub-unit-kerjas');
             });
 
             // Jabatan (STANDARDIZED)
             Route::prefix('jabatan')->name('jabatan.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'create'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'store'])
                     ->name('store');
-                Route::get('/{jabatan}', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'show'])
+                Route::get('/{jabatan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'show'])
                     ->name('show');
-                Route::get('/{jabatan}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'edit'])
+                Route::get('/{jabatan}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{jabatan}', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'update'])
+                Route::put('/{jabatan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'update'])
                     ->name('update');
-                Route::delete('/{jabatan}', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'destroy'])
+                Route::delete('/{jabatan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'destroy'])
                     ->name('destroy');
 
                 // Export route (STANDARDIZED)
-                Route::get('/export', [App\Http\Controllers\Backend\AdminUnivUsulan\JabatanController::class, 'export'])
+                Route::get('/export', [App\Http\Controllers\Backend\KepegawaianUniversitas\JabatanController::class, 'export'])
                     ->name('export');
             });
 
             // Pangkat (STANDARDIZED)
             Route::prefix('pangkat')->name('pangkat.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'create'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'store'])
                     ->name('store');
-                Route::get('/{pangkat}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'edit'])
+                Route::get('/{pangkat}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{pangkat}', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'update'])
+                Route::put('/{pangkat}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'update'])
                     ->name('update');
-                Route::delete('/{pangkat}', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'destroy'])
+                Route::delete('/{pangkat}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'destroy'])
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/api/hierarchy', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'getHierarchyStructure'])
+                Route::get('/api/hierarchy', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'getHierarchyStructure'])
                     ->name('api.hierarchy');
-                Route::get('/api/promotion-targets/{pangkat}', [App\Http\Controllers\Backend\AdminUnivUsulan\PangkatController::class, 'getPromotionTargets'])
+                Route::get('/api/promotion-targets/{pangkat}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PangkatController::class, 'getPromotionTargets'])
                     ->name('api.promotion-targets');
             });
 
@@ -270,15 +270,15 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // PUSAT USULAN ROUTES (STANDARDIZED)
             // =====================================================
             Route::prefix('pusat-usulan')->name('pusat-usulan.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\PusatUsulanController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'index'])
                     ->name('index');
-                Route::get('/{usulan}', [App\Http\Controllers\Backend\AdminUnivUsulan\PusatUsulanController::class, 'show'])
+                Route::get('/{usulan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'show'])
                     ->name('show');
-                Route::post('/{usulan}/process', [App\Http\Controllers\Backend\AdminUnivUsulan\PusatUsulanController::class, 'process'])
+                Route::post('/{usulan}/process', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'process'])
                     ->name('process');
 
                 // Document routes (STANDARDIZED)
-                Route::get('/{usulan}/dokumen/{field}', [App\Http\Controllers\Backend\AdminUnivUsulan\PusatUsulanController::class, 'showUsulanDocument'])
+                Route::get('/{usulan}/dokumen/{field}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'showUsulanDocument'])
                     ->name('show-document');
             });
 
@@ -286,9 +286,9 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // DASHBOARD PERIODE USULAN ROUTES (STANDARDIZED)
             // =====================================================
             Route::prefix('dashboard-periode')->name('dashboard-periode.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\DashboardPeriodeController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'index'])
                     ->name('index');
-                Route::get('/{periode}', [App\Http\Controllers\Backend\AdminUnivUsulan\DashboardPeriodeController::class, 'show'])
+                Route::get('/{periode}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'show'])
                     ->name('show');
             });
 
@@ -296,23 +296,23 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // PERIODE USULAN ROUTES (STANDARDIZED)
             // =====================================================
             Route::prefix('periode-usulan')->name('periode-usulan.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\PeriodeUsulanController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\AdminUnivUsulan\PeriodeUsulanController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'create'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\AdminUnivUsulan\PeriodeUsulanController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'store'])
                     ->name('store');
-                Route::get('/{periodeUsulan}', [App\Http\Controllers\Backend\AdminUnivUsulan\PeriodeUsulanController::class, 'show'])
+                Route::get('/{periodeUsulan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'show'])
                     ->name('show');
-                Route::get('/{periodeUsulan}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\PeriodeUsulanController::class, 'edit'])
+                Route::get('/{periodeUsulan}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{periodeUsulan}', [App\Http\Controllers\Backend\AdminUnivUsulan\PeriodeUsulanController::class, 'update'])
+                Route::put('/{periodeUsulan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'update'])
                     ->name('update');
-                Route::delete('/{periodeUsulan}', [App\Http\Controllers\Backend\AdminUnivUsulan\PeriodeUsulanController::class, 'destroy'])
+                Route::delete('/{periodeUsulan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'destroy'])
                     ->name('destroy');
 
                 // Pendaftar route (STANDARDIZED)
-                Route::get('/{periodeUsulan}/pendaftar', [App\Http\Controllers\Backend\AdminUnivUsulan\PusatUsulanController::class, 'showPendaftar'])
+                Route::get('/{periodeUsulan}/pendaftar', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'showPendaftar'])
                     ->name('pendaftar');
             });
 
@@ -320,11 +320,11 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // ROLE PEGAWAI ROUTES (STANDARDIZED)
             // =====================================================
             Route::prefix('role-pegawai')->name('role-pegawai.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\RolePegawaiController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\RolePegawaiController::class, 'index'])
                     ->name('index');
-                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\RolePegawaiController::class, 'edit'])
+                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\RolePegawaiController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{pegawai}', [App\Http\Controllers\Backend\AdminUnivUsulan\RolePegawaiController::class, 'update'])
+                Route::put('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\RolePegawaiController::class, 'update'])
                     ->name('update');
             });
 
@@ -332,11 +332,11 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // MANAJEMEN AKUN PEGAWAI ROUTES (STANDARDIZED)
             // =====================================================
             Route::prefix('pegawai')->name('pegawai.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\PegawaiController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\PegawaiController::class, 'index'])
                     ->name('index');
-                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\AdminUnivUsulan\PegawaiController::class, 'edit'])
+                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\PegawaiController::class, 'edit'])
                     ->name('edit');
-                Route::put('/{pegawai}', [App\Http\Controllers\Backend\AdminUnivUsulan\PegawaiController::class, 'update'])
+                Route::put('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PegawaiController::class, 'update'])
                     ->name('update');
             });
 
@@ -344,19 +344,19 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // USULAN VALIDATION ROUTES (STANDARDIZED)
             // =====================================================
             Route::prefix('usulan')->name('usulan.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\AdminUnivUsulan\UsulanValidationController::class, 'index'])
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'index'])
                     ->name('index');
-                Route::get('/{usulan}', [App\Http\Controllers\Backend\AdminUnivUsulan\UsulanValidationController::class, 'show'])
+                Route::get('/{usulan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'show'])
                     ->name('show');
-                Route::post('/{usulan}/save-validation', [App\Http\Controllers\Backend\AdminUnivUsulan\UsulanValidationController::class, 'saveValidation'])
+                Route::post('/{usulan}/save-validation', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'saveValidation'])
                     ->name('save-validation');
-                Route::get('/{usulan}/document/{field}', [App\Http\Controllers\Backend\AdminUnivUsulan\UsulanValidationController::class, 'showDocument'])
+                Route::get('/{usulan}/document/{field}', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'showDocument'])
                     ->name('show-document');
-                Route::get('/{usulan}/pegawai-document/{field}', [App\Http\Controllers\Backend\AdminUnivUsulan\UsulanValidationController::class, 'showPegawaiDocument'])
+                Route::get('/{usulan}/pegawai-document/{field}', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'showPegawaiDocument'])
                     ->name('show-pegawai-document');
 
                 // Toggle periode status
-                Route::post('/toggle-periode', [App\Http\Controllers\Backend\AdminUnivUsulan\UsulanValidationController::class, 'togglePeriode'])
+                Route::post('/toggle-periode', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'togglePeriode'])
                     ->name('toggle-periode');
             });
         });
@@ -821,9 +821,9 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     return response()->json([
                         'usulan_id' => $usulan,
                         'field' => $field,
-                        'usulan_exists' => \App\Models\BackendUnivUsulan\Usulan::find($usulan) ? true : false,
-                        'document_path' => \App\Models\BackendUnivUsulan\Usulan::find($usulan)?->getDocumentPath($field),
-                        'file_exists' => \Storage::disk('local')->exists(\App\Models\BackendUnivUsulan\Usulan::find($usulan)?->getDocumentPath($field) ?? '')
+                        'usulan_exists' => \App\Models\KepegawaianUniversitas\Usulan::find($usulan) ? true : false,
+                        'document_path' => \App\Models\KepegawaianUniversitas\Usulan::find($usulan)?->getDocumentPath($field),
+                        'file_exists' => \Storage::disk('local')->exists(\App\Models\KepegawaianUniversitas\Usulan::find($usulan)?->getDocumentPath($field) ?? '')
                     ]);
                 })->name('test-dokumen');
             }
@@ -871,7 +871,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
 
 // Usulan Jabatan binding (dengan ownership check untuk pegawai)
 Route::bind('usulanJabatan', function ($value) {
-    $usulan = \App\Models\BackendUnivUsulan\Usulan::where('id', $value)->first();
+    $usulan = \App\Models\KepegawaianUniversitas\Usulan::where('id', $value)->first();
 
     if (!$usulan) {
         abort(404);
@@ -887,7 +887,7 @@ Route::bind('usulanJabatan', function ($value) {
 
 // Generic usulan binding untuk compatibility
 Route::bind('usulan', function ($value) {
-    $usulan = \App\Models\BackendUnivUsulan\Usulan::where('id', $value)->first();
+    $usulan = \App\Models\KepegawaianUniversitas\Usulan::where('id', $value)->first();
 
     if (!$usulan) {
         abort(404);
