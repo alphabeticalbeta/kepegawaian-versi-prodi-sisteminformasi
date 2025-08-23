@@ -126,6 +126,15 @@
             // Tim Senat can edit if status is "Direkomendasikan"
             $canEdit = $usulanStatus === 'Direkomendasikan';
             break;
+        case 'Kepegawaian Universitas':
+            // Kepegawaian Universitas can edit if status involves penilai assessment
+            $canEdit = in_array($usulanStatus, [
+                'Sedang Direview',
+                'Menunggu Hasil Penilaian Tim Penilai',
+                'Perbaikan Dari Tim Penilai',
+                'Usulan Direkomendasi Tim Penilai'
+            ]);
+            break;
         default:
             $canEdit = false;
     }
@@ -185,6 +194,17 @@
             'canReturn' => false,
             'routePrefix' => 'pegawai.usulan',
             'documentRoutePrefix' => 'pegawai.usulan'
+        ],
+        'Kepegawaian Universitas' => [
+            'title' => 'Review Usulan Kepegawaian',
+            'description' => 'Review dan validasi usulan dari Tim Penilai',
+            'validationFields' => ['data_pribadi', 'data_kepegawaian', 'data_pendidikan', 'data_kinerja', 'dokumen_profil', 'bkd', 'karya_ilmiah', 'dokumen_usulan', 'syarat_guru_besar', 'dokumen_admin_fakultas'],
+            'nextStatus' => 'Sedang Direview',
+            'actionButtons' => ['review_hasil_penilai'],
+            'canForward' => false,
+            'canReturn' => false,
+            'routePrefix' => 'backend.kepegawaian-universitas.usulan',
+            'documentRoutePrefix' => 'backend.kepegawaian-universitas.usulan'
         ]
     ];
     
@@ -444,11 +464,25 @@
         </div>
 
         {{-- Tim Penilai Assessment Progress Section --}}
-        @if($currentRole === 'Admin Universitas' && in_array($usulan->status_usulan, ['Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai', 'Usulan Direkomendasi Tim Penilai']))
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
-                <div class="flex items-center mb-4">
-                    <i data-lucide="users" class="w-5 h-5 text-blue-600 mr-2"></i>
-                    <h3 class="text-lg font-semibold text-gray-900">📊 Progress Penilaian Tim Penilai</h3>
+        @if($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai', 'Usulan Direkomendasi Tim Penilai']))
+            <div class="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-8">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                                <i data-lucide="users" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Tim Penilai Assessment</h3>
+                                <p class="text-blue-100 text-sm">Kelola dan monitor progress penilaian</p>
+                            </div>
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="bg-white/20 rounded-full px-4 py-2">
+                                <span class="text-white text-sm font-medium">Management Panel</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 @php
@@ -706,197 +740,9 @@
                         </div>
                     @endif
 
-                    {{-- ENHANCED: Penilai List with Better Visual Design --}}
-                    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-sm font-medium text-gray-900 flex items-center">
-                                <i data-lucide="users" class="w-4 h-4 mr-2 text-blue-600"></i>
-                                Daftar Penilai
-                            </h4>
-                            <div class="text-xs text-gray-500">
-                                {{ $totalPenilai }} penilai ditugaskan
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-3">
-                            @foreach($penilais as $penilai)
-                                @php
-                                    // ENHANCED ERROR HANDLING: Safe access to penilai data
-                                    $penilaiNama = $penilai->nama_lengkap ?? 'Nama tidak tersedia';
-                                    $penilaiEmail = $penilai->email ?? 'Email tidak tersedia';
-                                    $penilaiInitial = !empty($penilaiNama) ? substr($penilaiNama, 0, 1) : '?';
-                                    
-                                    // Safe access to pivot data
-                                    $pivot = $penilai->pivot ?? null;
-                                    $hasilPenilaian = $pivot ? ($pivot->hasil_penilaian ?? null) : null;
-                                    $tanggalPenilaian = $pivot ? ($pivot->tanggal_penilaian ?? null) : null;
-                                    $catatanPenilaian = $pivot ? ($pivot->catatan_penilaian ?? null) : null;
-                                    
-                                    // ENHANCED: Status configuration with better visual design
-                                    $statusConfig = match($hasilPenilaian) {
-                                        'rekomendasi' => [
-                                            'color' => 'bg-green-50 border-green-200',
-                                            'iconColor' => 'bg-green-100 text-green-600',
-                                            'textColor' => 'text-green-800',
-                                            'badgeColor' => 'bg-green-100 text-green-800',
-                                            'icon' => 'check-circle',
-                                            'text' => 'Rekomendasi',
-                                            'emoji' => '✅'
-                                        ],
-                                        'perbaikan' => [
-                                            'color' => 'bg-yellow-50 border-yellow-200',
-                                            'iconColor' => 'bg-yellow-100 text-yellow-600',
-                                            'textColor' => 'text-yellow-800',
-                                            'badgeColor' => 'bg-yellow-100 text-yellow-800',
-                                            'icon' => 'alert-triangle',
-                                            'text' => 'Perbaikan',
-                                            'emoji' => '⚠️'
-                                        ],
-                                        'tidak_rekomendasi' => [
-                                            'color' => 'bg-red-50 border-red-200',
-                                            'iconColor' => 'bg-red-100 text-red-600',
-                                            'textColor' => 'text-red-800',
-                                            'badgeColor' => 'bg-red-100 text-red-800',
-                                            'icon' => 'x-circle',
-                                            'text' => 'Tidak Direkomendasikan',
-                                            'emoji' => '❌'
-                                        ],
-                                        default => [
-                                            'color' => 'bg-gray-50 border-gray-200',
-                                            'iconColor' => 'bg-gray-100 text-gray-600',
-                                            'textColor' => 'text-gray-800',
-                                            'badgeColor' => 'bg-gray-100 text-gray-600',
-                                            'icon' => 'clock',
-                                            'text' => 'Belum Menilai',
-                                            'emoji' => '⏳'
-                                        ]
-                                    };
-                                    
-                                    $isAssessed = !empty($hasilPenilaian);
-                                @endphp
-                                
-                                <div class="border {{ $statusConfig['color'] }} rounded-lg p-3 transition-all duration-200 hover:shadow-sm">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center flex-1">
-                                            <div class="w-10 h-10 {{ $statusConfig['iconColor'] }} rounded-full flex items-center justify-center mr-3">
-                                                @if($isAssessed)
-                                                    <i data-lucide="{{ $statusConfig['icon'] }}" class="w-5 h-5"></i>
-                                                @else
-                                                    <span class="text-sm font-medium">{{ $penilaiInitial }}</span>
-                                                @endif
-                                            </div>
-                                            <div class="flex-1">
-                                                <div class="flex items-center">
-                                                    <p class="text-sm font-medium text-gray-900">{{ $penilaiNama }}</p>
-                                                    @if($isAssessed)
-                                                        <span class="ml-2 text-lg">{{ $statusConfig['emoji'] }}</span>
-                                                    @endif
-                                                </div>
-                                                <p class="text-xs text-gray-500">{{ $penilaiEmail }}</p>
-                                                @if($tanggalPenilaian)
-                                                    <p class="text-xs text-gray-400 mt-1">
-                                                        <i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>
-                                                        @try
-                                                            {{ \Carbon\Carbon::parse($tanggalPenilaian)->format('d/m/Y H:i') }}
-                                                        @catch(Exception $e)
-                                                            {{ 'Tanggal tidak valid' }}
-                                                        @endtry
-                                                    </p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col items-end space-y-2">
-                                            <div class="flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $statusConfig['badgeColor'] }} border">
-                                                <i data-lucide="{{ $statusConfig['icon'] }}" class="w-3 h-3 mr-1"></i>
-                                                {{ $statusConfig['text'] }}
-                                            </div>
-                                            @if($isAssessed && $catatanPenilaian)
-                                                <div class="text-xs text-gray-500 max-w-xs text-right">
-                                                    <i data-lucide="message-square" class="w-3 h-3 inline mr-1"></i>
-                                                    {{ Str::limit($catatanPenilaian, 50) }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        
-                        {{-- ENHANCED: Summary Statistics --}}
-                        @if($totalPenilai > 0)
-                            @php
-                                $rekomendasiCount = $penilais->filter(function($penilai) {
-                                    return $penilai->pivot && $penilai->pivot->hasil_penilaian === 'rekomendasi';
-                                })->count();
-                                $perbaikanCount = $penilais->filter(function($penilai) {
-                                    return $penilai->pivot && $penilai->pivot->hasil_penilaian === 'perbaikan';
-                                })->count();
-                                $tidakRekomendasiCount = $penilais->filter(function($penilai) {
-                                    return $penilai->pivot && $penilai->pivot->hasil_penilaian === 'tidak_rekomendasi';
-                                })->count();
-                                $belumMenilaiCount = $totalPenilai - $completedPenilai;
-                            @endphp
-                            
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <h5 class="text-xs font-medium text-gray-700 mb-2">Ringkasan Penilaian:</h5>
-                                <div class="grid grid-cols-4 gap-2 text-center">
-                                    @if($rekomendasiCount > 0)
-                                        <div class="bg-green-50 rounded p-2">
-                                            <div class="text-sm font-bold text-green-600">{{ $rekomendasiCount }}</div>
-                                            <div class="text-xs text-green-700">Rekomendasi</div>
-                                        </div>
-                                    @endif
-                                    @if($perbaikanCount > 0)
-                                        <div class="bg-yellow-50 rounded p-2">
-                                            <div class="text-sm font-bold text-yellow-600">{{ $perbaikanCount }}</div>
-                                            <div class="text-xs text-yellow-700">Perbaikan</div>
-                                        </div>
-                                    @endif
-                                    @if($tidakRekomendasiCount > 0)
-                                        <div class="bg-red-50 rounded p-2">
-                                            <div class="text-sm font-bold text-red-600">{{ $tidakRekomendasiCount }}</div>
-                                            <div class="text-xs text-red-700">Tidak Direkomendasikan</div>
-                                        </div>
-                                    @endif
-                                    @if($belumMenilaiCount > 0)
-                                        <div class="bg-gray-50 rounded p-2">
-                                            <div class="text-sm font-bold text-gray-600">{{ $belumMenilaiCount }}</div>
-                                            <div class="text-xs text-gray-700">Belum Menilai</div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
-                    </div>
 
-                    {{-- Assessment Summary --}}
-                    @if($assessmentSummary && ($assessmentSummary['is_final'] ?? false))
-                        @php
-                            // ENHANCED ERROR HANDLING: Safe access to assessment summary
-                            $summaryTanggal = $assessmentSummary['tanggal_penilaian'] ?? null;
-                            $summaryTotal = $assessmentSummary['total_penilai'] ?? 0;
-                            $summaryStatus = $assessmentSummary['final_status'] ?? $usulan->status_usulan ?? 'Status tidak tersedia';
-                        @endphp
-                        
-                        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h4 class="text-sm font-medium text-blue-900 mb-2">Ringkasan Penilaian Final:</h4>
-                            <div class="text-sm text-blue-800">
-                                <p><strong>Total Penilai:</strong> {{ $summaryTotal }}</p>
-                                <p><strong>Status Final:</strong> {{ $summaryStatus }}</p>
-                                @if($summaryTanggal)
-                                    <p><strong>Tanggal Penilaian:</strong> 
-                                        @try
-                                            {{ \Carbon\Carbon::parse($summaryTanggal)->format('d/m/Y H:i') }}
-                                        @catch(Exception $e)
-                                            {{ 'Tanggal tidak valid' }}
-                                        @endtry
-                                    </p>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-                @endif
-            </div>
+                                                @endif
+                                            </div>
         @endif
 
         {{-- Info History Perbaikan Section --}}
@@ -1006,6 +852,357 @@
             </div>
         @endif
 
+        {{-- Hasil Validasi Semua Tim Penilai (Khusus Kepegawaian Universitas) --}}
+        @if($currentRole === 'Kepegawaian Universitas')
+            @php
+                $allPenilaiInvalidFields = [];
+                $allPenilaiGeneralNotes = [];
+                
+                // Ambil data penilai individual dari relasi penilais
+                $penilais = $usulan->penilais ?? collect();
+                
+                // Ambil data validasi dari semua penilai universitas (untuk fallback)
+                $penilaiValidation = $usulan->getValidasiByRole('tim_penilai') ?? [];
+                
+                // Jika tidak ada data dari getValidasiByRole, coba ambil dari validasi_data
+                if (empty($penilaiValidation)) {
+                    $validasiData = $usulan->validasi_data ?? [];
+                    $penilaiValidation = $validasiData['tim_penilai'] ?? [];
+                }
+                
+                // Proses data penilai individual
+                if ($penilais->count() > 0) {
+                    foreach ($penilais as $index => $penilai) {
+                        // Anonymize penilai name for non-Kepegawaian Universitas roles
+                        if ($currentRole !== 'Kepegawaian Universitas') {
+                            $penilaiName = 'Penilai ' . ($index + 1);
+                        } else {
+                            $penilaiName = $penilai->nama_lengkap ?? 'Penilai ' . $penilai->id;
+                        }
+                        $penilaiInvalidFields = [];
+                        $penilaiGeneralNotes = [];
+                        
+                        // Cek apakah penilai sudah memberikan hasil penilaian (multiple conditions)
+                        $hasAssessment = !empty($penilai->pivot->hasil_penilaian) || 
+                                        !empty($penilai->pivot->status_penilaian) || 
+                                        !empty($penilai->pivot->catatan_penilaian) ||
+                                        $penilai->pivot->status_penilaian !== 'Belum Dinilai';
+                        
+                        if ($hasAssessment) {
+                            // Ambil data validasi individual penilai dari validasi_data
+                            $validasiData = $usulan->validasi_data ?? [];
+                            $individualPenilaiData = $validasiData['individual_penilai'] ?? [];
+                            
+                            // Cari data untuk penilai ini
+                            $penilaiData = collect($individualPenilaiData)->firstWhere('penilai_id', $penilai->id);
+                            
+                            if ($penilaiData && is_array($penilaiData)) {
+                                // Proses field yang tidak sesuai untuk penilai ini
+                                foreach ($penilaiData as $groupKey => $groupData) {
+                                    if (is_array($groupData)) {
+                                        foreach ($groupData as $fieldKey => $fieldData) {
+                                            if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                                // Mapping field names untuk tampilan yang lebih user-friendly
+                                                $fieldLabelMap = [
+                                                    'file_berita_senat' => 'File Berita Senat',
+                                                    'file_surat_usulan' => 'File Surat Usulan',
+                                                    'nomor_berita_senat' => 'Nomor Berita Senat',
+                                                    'nomor_surat_usulan' => 'Nomor Surat Usulan',
+                                                    'turnitin' => 'Dokumen Turnitin',
+                                                    'upload_artikel' => 'Upload Artikel',
+                                                    'pakta_integritas' => 'Pakta Integritas',
+                                                    'bukti_korespondensi' => 'Bukti Korespondensi',
+                                                    'sk_pns' => 'SK PNS',
+                                                    'sk_cpns' => 'SK CPNS',
+                                                    'ijazah_terakhir' => 'Ijazah Terakhir',
+                                                    'skp_tahun_pertama' => 'SKP Tahun Pertama',
+                                                    'skp_tahun_kedua' => 'SKP Tahun Kedua',
+                                                    'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                                                    'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                                                    'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir',
+                                                    'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
+                                                    'pak_konversi' => 'PAK Konversi',
+                                                    'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                                                    'syarat_guru_besar' => 'Syarat Guru Besar',
+                                                    'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                                                ];
+                                                
+                                                $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ($fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey)));
+                                                
+                                                $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Collect keterangan umum untuk penilai ini
+                                if (isset($penilaiData['keterangan_umum']) && !empty($penilaiData['keterangan_umum'])) {
+                                    $penilaiGeneralNotes[] = $penilaiData['keterangan_umum'];
+                                }
+                            }
+                            
+                            // Fallback: Jika tidak ada data individual, gunakan data dari validasi umum
+                            if (empty($penilaiInvalidFields) && !empty($penilaiValidation['validation'])) {
+                                foreach ($penilaiValidation['validation'] as $groupKey => $groupData) {
+                                    if (is_array($groupData)) {
+                                        foreach ($groupData as $fieldKey => $fieldData) {
+                                            if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                                $fieldLabelMap = [
+                                                    'file_berita_senat' => 'File Berita Senat',
+                                                    'file_surat_usulan' => 'File Surat Usulan',
+                                                    'nomor_berita_senat' => 'Nomor Berita Senat',
+                                                    'nomor_surat_usulan' => 'Nomor Surat Usulan',
+                                                    'turnitin' => 'Dokumen Turnitin',
+                                                    'upload_artikel' => 'Upload Artikel',
+                                                    'pakta_integritas' => 'Pakta Integritas',
+                                                    'bukti_korespondensi' => 'Bukti Korespondensi',
+                                                    'sk_pns' => 'SK PNS',
+                                                    'sk_cpns' => 'SK CPNS',
+                                                    'ijazah_terakhir' => 'Ijazah Terakhir',
+                                                    'skp_tahun_pertama' => 'SKP Tahun Pertama',
+                                                    'skp_tahun_kedua' => 'SKP Tahun Kedua',
+                                                    'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                                                    'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                                                    'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir',
+                                                    'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
+                                                    'pak_konversi' => 'PAK Konversi',
+                                                    'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                                                    'syarat_guru_besar' => 'Syarat Guru Besar',
+                                                    'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                                                ];
+                                                
+                                                $fieldLabel = $fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                                $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Gunakan data dari pivot jika ada catatan
+                            if (!empty($penilai->pivot->catatan_penilaian)) {
+                                $penilaiGeneralNotes[] = $penilai->pivot->catatan_penilaian;
+                            }
+                        } else {
+                            // Penilai belum memberikan assessment
+                            $penilaiGeneralNotes[] = 'Belum memberikan penilaian';
+                        }
+                        
+                        // Tambahkan ke array utama (tampilkan semua penilai, termasuk yang belum menilai)
+                        $allPenilaiInvalidFields[$penilaiName] = $penilaiInvalidFields;
+                        $allPenilaiGeneralNotes[$penilaiName] = $penilaiGeneralNotes;
+                    }
+                } else {
+                    // Fallback: Jika tidak ada data individual penilai, gunakan data umum
+                    if (!empty($penilaiValidation)) {
+                        // Jika tidak ada data individual, cek data umum dari validation
+                        if (isset($penilaiValidation['validation'])) {
+                            $generalInvalidFields = [];
+                            $generalGeneralNotes = [];
+                            
+                            foreach ($penilaiValidation['validation'] as $groupKey => $groupData) {
+                                if (is_array($groupData)) {
+                                    foreach ($groupData as $fieldKey => $fieldData) {
+                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                            $groupLabel = isset($fieldGroups[$groupKey]['label']) ? $fieldGroups[$groupKey]['label'] : ucwords(str_replace('_', ' ', $groupKey));
+                                            $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ucwords(str_replace('_', ' ', $fieldKey));
+                                            
+                                            $generalInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Collect keterangan umum dari berbagai sumber
+                            if (isset($penilaiValidation['keterangan_umum']) && !empty($penilaiValidation['keterangan_umum'])) {
+                                $generalGeneralNotes[] = $penilaiValidation['keterangan_umum'];
+                            }
+                            
+                            // Cek keterangan dari perbaikan_usulan
+                            if (isset($penilaiValidation['perbaikan_usulan']['catatan']) && !empty($penilaiValidation['perbaikan_usulan']['catatan'])) {
+                                $generalGeneralNotes[] = $penilaiValidation['perbaikan_usulan']['catatan'];
+                            }
+                            
+                            if (!empty($generalInvalidFields) || !empty($generalGeneralNotes)) {
+                                $allPenilaiInvalidFields['Tim Penilai'] = $generalInvalidFields;
+                                $allPenilaiGeneralNotes['Tim Penilai'] = $generalGeneralNotes;
+                            }
+                        }
+                    }
+                    
+                    // Tambahan: Cek jika ada data dari struktur yang berbeda (seperti di debug)
+                    if (empty($allPenilaiInvalidFields) && empty($allPenilaiGeneralNotes)) {
+                        // Coba ambil dari struktur data yang berbeda
+                        if (isset($penilaiValidation['validation'])) {
+                            $generalInvalidFields = [];
+                            $generalGeneralNotes = [];
+                            
+                            // Proses data validation sesuai struktur debug
+                            foreach ($penilaiValidation['validation'] as $groupKey => $groupData) {
+                                if (is_array($groupData)) {
+                                    foreach ($groupData as $fieldKey => $fieldData) {
+                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                            // Mapping field names untuk tampilan yang lebih user-friendly
+                                            $fieldLabelMap = [
+                                                'file_berita_senat' => 'File Berita Senat',
+                                                'file_surat_usulan' => 'File Surat Usulan',
+                                                'nomor_berita_senat' => 'Nomor Berita Senat',
+                                                'nomor_surat_usulan' => 'Nomor Surat Usulan',
+                                                'turnitin' => 'Dokumen Turnitin',
+                                                'upload_artikel' => 'Upload Artikel',
+                                                'pakta_integritas' => 'Pakta Integritas',
+                                                'bukti_korespondensi' => 'Bukti Korespondensi',
+                                                'sk_pns' => 'SK PNS',
+                                                'sk_cpns' => 'SK CPNS',
+                                                'ijazah_terakhir' => 'Ijazah Terakhir',
+                                                'skp_tahun_pertama' => 'SKP Tahun Pertama',
+                                                'skp_tahun_kedua' => 'SKP Tahun Kedua',
+                                                'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                                                'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                                                'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir',
+                                                'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
+                                                'pak_konversi' => 'PAK Konversi',
+                                                'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                                                'syarat_guru_besar' => 'Syarat Guru Besar',
+                                                'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                                            ];
+                                            
+                                            $fieldLabel = $fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                            $generalInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Cek keterangan dari perbaikan_usulan
+                            if (isset($penilaiValidation['perbaikan_usulan']['catatan']) && !empty($penilaiValidation['perbaikan_usulan']['catatan'])) {
+                                $generalGeneralNotes[] = $penilaiValidation['perbaikan_usulan']['catatan'];
+                            }
+                            
+                            if (!empty($generalInvalidFields) || !empty($generalGeneralNotes)) {
+                                $allPenilaiInvalidFields['Tim Penilai'] = $generalInvalidFields;
+                                $allPenilaiGeneralNotes['Tim Penilai'] = $generalGeneralNotes;
+                            }
+                        }
+                    }
+                }
+            @endphp
+
+            @if($penilais->count() > 0)
+                <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                            Hasil Validasi Semua Tim Penilai
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        @foreach($penilais as $index => $penilai)
+                            @php
+                                // Anonymize penilai name for non-Kepegawaian Universitas roles
+                                if ($currentRole !== 'Kepegawaian Universitas') {
+                                    $penilaiName = 'Penilai ' . ($index + 1);
+                                } else {
+                                    $penilaiName = $penilai->nama_lengkap ?? 'Penilai ' . $penilai->id;
+                                }
+                                $invalidFields = $allPenilaiInvalidFields[$penilaiName] ?? [];
+                                $generalNotes = $allPenilaiGeneralNotes[$penilaiName] ?? [];
+                            @endphp
+                            
+                            <div class="mb-6 last:mb-0">
+                                <div class="flex items-center justify-between mb-3 border-b border-gray-200 pb-2">
+                                    <h3 class="font-semibold text-lg text-gray-800">
+                                        <i data-lucide="user-check" class="w-5 h-5 inline mr-2 text-blue-600"></i>
+                                        {{ $penilaiName }}
+                                    </h3>
+                                    @if($penilai->pivot->tanggal_penilaian)
+                                        <span class="text-xs text-gray-500">
+                                            <i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($penilai->pivot->tanggal_penilaian)->format('d/m/Y H:i') }}
+                                        </span>
+                                    @elseif($penilai->pivot->updated_at)
+                                        <span class="text-xs text-gray-500">
+                                            <i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($penilai->pivot->updated_at)->format('d/m/Y H:i') }}
+                                        </span>
+                                    @endif
+                                </div>
+                                
+                                @if(!empty($invalidFields))
+                                    <div class="mb-4">
+                                        <h4 class="font-medium text-red-800 mb-2 flex items-center">
+                                            <i data-lucide="alert-triangle" class="w-4 h-4 mr-2"></i>
+                                            Field yang Tidak Sesuai:
+                                        </h4>
+                                        <div class="space-y-2">
+                                            @foreach($invalidFields as $field)
+                                                <div class="text-sm text-red-800 bg-red-50 px-3 py-2 rounded border-l-4 border-red-400 flex items-start">
+                                                    <i data-lucide="x-circle" class="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0"></i>
+                                                    <span>{{ $field }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                @if(!empty($generalNotes))
+                                    <div class="border-t border-red-200 pt-4">
+                                        <h4 class="font-medium text-red-800 mb-2 flex items-center">
+                                            <i data-lucide="message-square" class="w-4 h-4 mr-2"></i>
+                                            Keterangan Umum:
+                                        </h4>
+                                        <div class="space-y-2">
+                                            @foreach($generalNotes as $note)
+                                                <div class="text-sm text-red-700 bg-red-50 px-3 py-2 rounded border-l-4 border-red-400 flex items-start">
+                                                    <i data-lucide="info" class="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0"></i>
+                                                    <span>{{ $note }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                @php
+                                    $hasAssessment = !empty($penilai->pivot->hasil_penilaian) || 
+                                                    !empty($penilai->pivot->status_penilaian) || 
+                                                    !empty($penilai->pivot->catatan_penilaian) ||
+                                                    ($penilai->pivot->status_penilaian ?? '') !== 'Belum Dinilai';
+                                @endphp
+                                
+                                @if($hasAssessment)
+                                    <div class="border-t border-red-200 pt-4">
+                                        <h4 class="font-medium text-orange-800 mb-2 flex items-center">
+                                            <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                                            Hasil Penilaian:
+                                        </h4>
+                                        <div class="text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded border-l-4 border-orange-400">
+                                            @if(!empty($penilai->pivot->hasil_penilaian))
+                                                {{ ucwords(str_replace('_', ' ', $penilai->pivot->hasil_penilaian)) }}
+                                            @elseif(!empty($penilai->pivot->status_penilaian))
+                                                {{ $penilai->pivot->status_penilaian }}
+                                            @else
+                                                Sudah dinilai
+                                            @endif
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="border-t border-gray-200 pt-4">
+                                        <h4 class="font-medium text-gray-800 mb-2 flex items-center">
+                                            <i data-lucide="clock" class="w-4 h-4 mr-2"></i>
+                                            Status Penilaian:
+                                        </h4>
+                                        <div class="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border-l-4 border-gray-400">
+                                            Belum memberikan penilaian
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endif
+
         {{-- Informasi Usulan --}}
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
@@ -1079,12 +1276,13 @@
             @csrf
         @endif
 
-        {{-- Field yang Tidak Sesuai (Khusus Penilai Universitas) --}}
+        {{-- Hasil Validasi Tim Penilai (Hanya untuk Penilai Universitas - Data Sendiri) --}}
         @if($currentRole === 'Penilai Universitas')
             @php
                 $invalidFields = [];
                 $generalNotes = [];
                 $currentPenilaiId = auth()->user()->id;
+                $hasCurrentPenilaiData = false;
                 
                 // Ambil data validasi dari penilai universitas yang sedang login
                 $penilaiValidation = $usulan->getValidasiByRole('tim_penilai') ?? [];
@@ -1098,18 +1296,15 @@
                         foreach ($penilaiValidation['individual_penilai'] as $penilaiData) {
                             if (isset($penilaiData['penilai_id']) && $penilaiData['penilai_id'] == $currentPenilaiId) {
                                 $currentPenilaiData = $penilaiData;
+                                $hasCurrentPenilaiData = true;
                                 break;
                             }
                         }
                     }
                     
-                    // Jika tidak ada data individual, cek data umum
-                    if (!$currentPenilaiData && isset($penilaiValidation['validation'])) {
-                        $currentPenilaiData = $penilaiValidation['validation'];
-                    }
-                    
-                    // Proses field yang tidak sesuai
-                    if ($currentPenilaiData && is_array($currentPenilaiData)) {
+                    // PERBAIKAN: Hanya proses data jika benar-benar ada data untuk penilai yang sedang login
+                    // Jangan fallback ke data umum atau data penilai lain
+                    if ($hasCurrentPenilaiData && $currentPenilaiData && is_array($currentPenilaiData)) {
                         foreach ($currentPenilaiData as $groupKey => $groupData) {
                             if (is_array($groupData)) {
                                 foreach ($groupData as $fieldKey => $fieldData) {
@@ -1123,19 +1318,9 @@
                             }
                         }
                         
-                        // Collect keterangan umum dari berbagai lokasi yang mungkin
+                        // Collect keterangan umum hanya dari data penilai yang sedang login
                         if (isset($currentPenilaiData['keterangan_umum']) && !empty($currentPenilaiData['keterangan_umum'])) {
                             $generalNotes[] = $currentPenilaiData['keterangan_umum'];
-                        }
-                        
-                        // Cek keterangan umum dari level atas (penilaiValidation)
-                        if (isset($penilaiValidation['keterangan_umum']) && !empty($penilaiValidation['keterangan_umum'])) {
-                            $generalNotes[] = $penilaiValidation['keterangan_umum'];
-                        }
-                        
-                        // Cek keterangan dari perbaikan_usulan
-                        if (isset($penilaiValidation['perbaikan_usulan']['catatan']) && !empty($penilaiValidation['perbaikan_usulan']['catatan'])) {
-                            $generalNotes[] = $penilaiValidation['perbaikan_usulan']['catatan'];
                         }
                     }
                 }
@@ -1148,24 +1333,41 @@
                     <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
                         <h2 class="text-xl font-bold text-white flex items-center">
                             <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
-                            Hasil Validasi Tim Penilai
+                            Hasil Validasi Saya
                         </h2>
                     </div>
                     <div class="p-6">
                         @if(!empty($invalidFields))
-                            <div class="space-y-2 mb-4">
+                            <div class="mb-4">
+                                <h4 class="font-medium text-red-800 mb-2 flex items-center">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 mr-2"></i>
+                                    Field yang Tidak Sesuai:
+                                </h4>
+                                <div class="space-y-2">
                                 @foreach($invalidFields as $field)
-                                    <div class="text-sm text-red-800">{{ $field }}</div>
+                                        <div class="text-sm text-red-800 bg-red-50 px-3 py-2 rounded border-l-4 border-red-400 flex items-start">
+                                            <i data-lucide="x-circle" class="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0"></i>
+                                            <span>{{ $field }}</span>
+                                        </div>
                                 @endforeach
+                                </div>
                             </div>
                         @endif
                         
                         @if(!empty($generalNotes))
                             <div class="border-t border-red-200 pt-4">
-                                <div class="font-medium text-red-800 mb-2">Keterangan Umum:</div>
+                                <h4 class="font-medium text-red-800 mb-2 flex items-center">
+                                    <i data-lucide="message-square" class="w-4 h-4 mr-2"></i>
+                                    Keterangan Umum:
+                                </h4>
+                                <div class="space-y-2">
                                 @foreach($generalNotes as $note)
-                                    <div class="text-sm text-red-700">{{ $note }}</div>
+                                        <div class="text-sm text-red-700 bg-red-50 px-3 py-2 rounded border-l-4 border-red-400 flex items-start">
+                                            <i data-lucide="info" class="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0"></i>
+                                            <span>{{ $note }}</span>
+                                        </div>
                                 @endforeach
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -1177,134 +1379,7 @@
 
 
 
-        {{-- Field yang Tidak Sesuai (Khusus Kepegawaian Universitas) --}}
-        @if($currentRole === 'Kepegawaian Universitas')
-            @php
-                $allPenilaiInvalidFields = [];
-                $allPenilaiGeneralNotes = [];
-                
-                // Ambil data validasi dari semua penilai universitas
-                $penilaiValidation = $usulan->getValidasiByRole('tim_penilai') ?? [];
-                
-                if (!empty($penilaiValidation)) {
-                    // Cek apakah ada data individual penilai
-                    if (isset($penilaiValidation['individual_penilai']) && is_array($penilaiValidation['individual_penilai'])) {
-                        foreach ($penilaiValidation['individual_penilai'] as $penilaiData) {
-                            $penilaiId = $penilaiData['penilai_id'] ?? null;
-                            $penilaiName = $penilaiData['penilai_name'] ?? 'Penilai ' . $penilaiId;
-                            $penilaiInvalidFields = [];
-                            $penilaiGeneralNotes = [];
-                            
-                            // Proses field yang tidak sesuai untuk penilai ini
-                            if (is_array($penilaiData)) {
-                                foreach ($penilaiData as $groupKey => $groupData) {
-                                    if (is_array($groupData)) {
-                                        foreach ($groupData as $fieldKey => $fieldData) {
-                                            if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                                $groupLabel = isset($fieldGroups[$groupKey]['label']) ? $fieldGroups[$groupKey]['label'] : ucwords(str_replace('_', ' ', $groupKey));
-                                                $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ucwords(str_replace('_', ' ', $fieldKey));
-                                                
-                                                $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                // Collect keterangan umum untuk penilai ini
-                                if (isset($penilaiData['keterangan_umum']) && !empty($penilaiData['keterangan_umum'])) {
-                                    $penilaiGeneralNotes[] = $penilaiData['keterangan_umum'];
-                                }
-                            }
-                            
-                            // Jika ada data tidak sesuai atau keterangan umum, tambahkan ke array utama
-                            if (!empty($penilaiInvalidFields) || !empty($penilaiGeneralNotes)) {
-                                $allPenilaiInvalidFields[$penilaiName] = $penilaiInvalidFields;
-                                $allPenilaiGeneralNotes[$penilaiName] = $penilaiGeneralNotes;
-                            }
-                        }
-                    } else {
-                        // Jika tidak ada data individual, cek data umum
-                        if (isset($penilaiValidation['validation'])) {
-                            $generalInvalidFields = [];
-                            $generalGeneralNotes = [];
-                            
-                            foreach ($penilaiValidation['validation'] as $groupKey => $groupData) {
-                                if (is_array($groupData)) {
-                                    foreach ($groupData as $fieldKey => $fieldData) {
-                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                            $groupLabel = isset($fieldGroups[$groupKey]['label']) ? $fieldGroups[$groupKey]['label'] : ucwords(str_replace('_', ' ', $groupKey));
-                                            $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ucwords(str_replace('_', ' ', $fieldKey));
-                                            
-                                            $generalInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Collect keterangan umum
-                            if (isset($penilaiValidation['keterangan_umum']) && !empty($penilaiValidation['keterangan_umum'])) {
-                                $generalGeneralNotes[] = $penilaiValidation['keterangan_umum'];
-                            }
-                            
-                            // Cek keterangan dari perbaikan_usulan
-                            if (isset($penilaiValidation['perbaikan_usulan']['catatan']) && !empty($penilaiValidation['perbaikan_usulan']['catatan'])) {
-                                $generalGeneralNotes[] = $penilaiValidation['perbaikan_usulan']['catatan'];
-                            }
-                            
-                            if (!empty($generalInvalidFields) || !empty($generalGeneralNotes)) {
-                                $allPenilaiInvalidFields['Tim Penilai'] = $generalInvalidFields;
-                                $allPenilaiGeneralNotes['Tim Penilai'] = $generalGeneralNotes;
-                            }
-                        }
-                    }
-                }
-            @endphp
 
-            {{-- Debug untuk Kepegawaian Universitas --}}
-            <div class="bg-purple-100 border border-purple-400 text-purple-700 px-4 py-3 rounded mb-4">
-                <strong>Debug Kepegawaian Universitas:</strong><br>
-                Penilai Validation: {{ json_encode($penilaiValidation) }}<br>
-                All Penilai Invalid Fields: {{ json_encode($allPenilaiInvalidFields) }}<br>
-                All Penilai General Notes: {{ json_encode($allPenilaiGeneralNotes) }}
-            </div>
-
-            @if(!empty($allPenilaiInvalidFields) || !empty($allPenilaiGeneralNotes))
-                <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden mb-6">
-                    <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
-                        <h2 class="text-xl font-bold text-white flex items-center">
-                            <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
-                            Hasil Validasi Semua Tim Penilai
-                        </h2>
-                    </div>
-                    <div class="p-6">
-                        @foreach($allPenilaiInvalidFields as $penilaiName => $invalidFields)
-                            <div class="mb-6 last:mb-0">
-                                <h3 class="font-semibold text-lg text-gray-800 mb-3 border-b border-gray-200 pb-2">
-                                    {{ $penilaiName }}
-                                </h3>
-                                
-                                @if(!empty($invalidFields))
-                                    <div class="space-y-2 mb-4">
-                                        @foreach($invalidFields as $field)
-                                            <div class="text-sm text-red-800">{{ $field }}</div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                                
-                                @if(isset($allPenilaiGeneralNotes[$penilaiName]) && !empty($allPenilaiGeneralNotes[$penilaiName]))
-                                    <div class="border-t border-red-200 pt-4">
-                                        <div class="font-medium text-red-800 mb-2">Keterangan Umum:</div>
-                                        @foreach($allPenilaiGeneralNotes[$penilaiName] as $note)
-                                            <div class="text-sm text-red-700">{{ $note }}</div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-        @endif
 
         {{-- Validation Table --}}
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
@@ -1314,6 +1389,18 @@
                     Tabel Validasi
                 </h2>
             </div>
+            
+            @if($currentRole === 'Kepegawaian Universitas' && !empty($penilaiValidation))
+                <div class="bg-orange-50 border-b border-orange-200 px-6 py-3">
+                    <div class="flex items-center">
+                        <i data-lucide="info" class="w-4 h-4 text-orange-600 mr-2"></i>
+                        <span class="text-sm text-orange-800">
+                            <strong>Info:</strong> Tabel ini menampilkan validasi dari Kepegawaian Universitas dan data validasi dari Tim Penilai (jika ada).
+                            Field yang tidak sesuai dari penilai akan ditandai dengan badge oranye.
+                        </span>
+                    </div>
+                </div>
+            @endif
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -1323,24 +1410,50 @@
                             </th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Validasi
+                                @if($currentRole === 'Kepegawaian Universitas' && !empty($penilaiValidation))
+                                    <div class="text-xs text-orange-600 mt-1">
+                                        <i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1"></i>
+                                        + Penilai
+                                    </div>
+                                @endif
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Keterangan
+                                @if($currentRole === 'Kepegawaian Universitas' && !empty($penilaiValidation))
+                                    <div class="text-xs text-orange-600 mt-1">
+                                        <i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1"></i>
+                                        + Penilai
+                                    </div>
+                                @endif
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($config['validationFields'] as $groupKey)
                             @if(isset($fieldGroups[$groupKey]))
-                                @if($groupKey === 'dokumen_admin_fakultas' && $currentRole !== 'Admin Universitas' && $currentRole !== 'Admin Fakultas' && $currentRole !== 'Penilai Universitas')
+                                {{-- Skip dokumen_admin_fakultas untuk role yang tidak diizinkan --}}
+                                @if($groupKey === 'dokumen_admin_fakultas' && $currentRole !== 'Admin Universitas' && $currentRole !== 'Admin Fakultas' && $currentRole !== 'Penilai Universitas' && $currentRole !== 'Kepegawaian Universitas')
                                     @continue
                                 @endif
+                                
+                                {{-- Skip dokumen_admin_fakultas untuk Admin Fakultas jika status tidak sesuai --}}
                                 @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Admin Fakultas' && !in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview', 'Direkomendasikan', 'Disetujui', 'Ditolak', 'Perbaikan Usulan', 'Diajukan']))
                                     @continue
                                 @endif
+                                
+                                {{-- Skip syarat_guru_besar jika jabatan tujuan bukan Guru Besar --}}
+                                @if($groupKey === 'syarat_guru_besar')
+                                    @php
+                                        $jabatanTujuan = $usulan->jabatanTujuan->jabatan ?? '';
+                                        $isGuruBesar = stripos($jabatanTujuan, 'guru besar') !== false || stripos($jabatanTujuan, 'professor') !== false;
+                                    @endphp
+                                    @if(!$isGuruBesar)
+                                        @continue
+                                    @endif
+                                @endif
                                 @php $group = $fieldGroups[$groupKey]; @endphp
 
-                                @if($groupKey === 'dokumen_admin_fakultas' && $group['isEditableForm'])
+                                @if($groupKey === 'dokumen_admin_fakultas' && isset($group['isEditableForm']) && $group['isEditableForm'])
                                     {{-- Tampilan khusus untuk form input dokumen admin fakultas --}}
                                     <tr class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
                                         <td colspan="3" class="px-6 py-4">
@@ -1458,6 +1571,22 @@
                                     @php
                                         $fieldValidation = $existingValidation['validation'][$groupKey][$fieldKey] ?? ['status' => 'sesuai', 'keterangan' => ''];
                                         $isInvalid = $fieldValidation['status'] === 'tidak_sesuai';
+                                        
+                                        // Cek apakah field ini ada dalam data validasi penilai yang tidak sesuai
+                                        $penilaiInvalidStatus = null;
+                                        $penilaiInvalidKeterangan = null;
+                                        
+                                        // PERBAIKAN: Hanya tampilkan data validasi penilai untuk Kepegawaian Universitas
+                                        // Role Penilai Universitas tidak boleh melihat data validasi penilai lain
+                                        if ($currentRole === 'Kepegawaian Universitas' && !empty($penilaiValidation)) {
+                                            if (isset($penilaiValidation['validation'][$groupKey][$fieldKey])) {
+                                                $penilaiFieldData = $penilaiValidation['validation'][$groupKey][$fieldKey];
+                                                if (isset($penilaiFieldData['status']) && $penilaiFieldData['status'] === 'tidak_sesuai') {
+                                                    $penilaiInvalidStatus = 'tidak_sesuai';
+                                                    $penilaiInvalidKeterangan = $penilaiFieldData['keterangan'] ?? 'Tidak ada keterangan';
+                                                }
+                                            }
+                                        }
                                     @endphp
                                     <tr class="hover:bg-gray-50 {{ $isInvalid ? 'bg-red-50' : '' }}">
                                         <td class="px-6 py-4">
@@ -1672,9 +1801,22 @@
                                                     <option value="tidak_sesuai" {{ $fieldValidation['status'] === 'tidak_sesuai' ? 'selected' : '' }}>Tidak Sesuai</option>
                                                 </select>
                                             @else
+                                                <div class="space-y-1">
+                                                    {{-- Status validasi kepegawaian universitas --}}
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $fieldValidation['status'] === 'sesuai' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                                     {{ ucfirst(str_replace('_', ' ', $fieldValidation['status'])) }}
                                                 </span>
+                                                    
+                                                    {{-- Status validasi penilai (jika ada) --}}
+                                                    @if($penilaiInvalidStatus)
+                                                        <div class="mt-1">
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                                <i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>
+                                                                Penilai: Tidak Sesuai
+                                                            </span>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4">
@@ -1685,8 +1827,24 @@
                                                           placeholder="Keterangan Wajib Diisi Jika Tidak Sesuai"
                                                           {{ $fieldValidation['status'] === 'tidak_sesuai' ? '' : 'disabled' }}>{{ $fieldValidation['keterangan'] ?? '' }}</textarea>
                                             @else
+                                                <div class="space-y-2">
+                                                    {{-- Keterangan validasi kepegawaian universitas --}}
                                                 <div class="text-sm text-gray-900">
                                                     {{ $fieldValidation['keterangan'] ?? '-' }}
+                                                    </div>
+                                                    
+                                                    {{-- Keterangan validasi penilai (jika ada) --}}
+                                                    @if($penilaiInvalidKeterangan)
+                                                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                                                            <div class="flex items-start">
+                                                                <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                                                                <div class="text-sm">
+                                                                    <div class="font-medium text-orange-800 mb-1">Keterangan Penilai:</div>
+                                                                    <div class="text-orange-700">{{ $penilaiInvalidKeterangan }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             @endif
                                         </td>
@@ -1916,6 +2074,111 @@
             </div>
         @endif
 
+        {{-- Perbaikan dari Kepegawaian Universitas untuk Role Admin Fakultas Section --}}
+        @if($currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Perbaikan Usulan' && !empty($usulan->catatan_verifikator) && isset($usulan->validasi_data['admin_universitas']['validation']))
+            @php
+                // Define field categories relevant for Admin Fakultas
+                $adminFakultasFieldCategories = [
+                    'dokumen_admin_fakultas',
+                    'dokumen_pendukung_fakultas',
+                    'dokumen_pendukung' // Include general dokumen pendukung
+                ];
+
+                // Get validation data from Admin Universitas
+                $adminUnivValidation = $usulan->validasi_data['admin_universitas']['validation'] ?? [];
+                $filteredInvalidFields = [];
+
+                // Filter only fields relevant to Admin Fakultas
+                foreach ($adminUnivValidation as $groupKey => $groupData) {
+                    if (in_array($groupKey, $adminFakultasFieldCategories) && is_array($groupData)) {
+                        foreach ($groupData as $fieldKey => $fieldData) {
+                            if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                $fieldLabel = $fieldGroups[$groupKey]['fields'][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                $filteredInvalidFields[] = [
+                                    'group' => $fieldGroups[$groupKey]['label'] ?? ucwords(str_replace('_', ' ', $groupKey)),
+                                    'field' => $fieldLabel,
+                                    'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
+                                ];
+                            }
+                        }
+                    }
+                }
+            @endphp
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                        Perbaikan dari Kepegawaian Universitas
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="w-5 h-5 text-red-600 mt-0.5 mr-3"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-red-800">Catatan Perbaikan</h4>
+                                <p class="text-sm text-red-700 mt-1">
+                                    Kepegawaian Universitas telah mengembalikan usulan ini untuk perbaikan. Silakan periksa dan perbaiki field yang relevan dengan tanggung jawab Admin Fakultas di bawah ini.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Keterangan Umum:</h4>
+                        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ $usulan->catatan_verifikator }}</div>
+                    </div>
+
+                    @if(!empty($filteredInvalidFields))
+                        <div class="mt-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Field yang Perlu Diperbaiki (Relevan untuk Admin Fakultas):</h4>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="space-y-2">
+                                    @foreach($filteredInvalidFields as $field)
+                                        <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                            <i data-lucide="x-circle" class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0"></i>
+                                            <div>
+                                                <div class="text-sm font-medium text-red-800">{{ $field['group'] }} - {{ $field['field'] }}</div>
+                                                <div class="text-sm text-red-700 mt-1">{{ $field['keterangan'] }}</div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="mt-4">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <i data-lucide="check-circle" class="w-5 h-5 text-blue-600 mt-0.5 mr-3"></i>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-blue-800">Tidak Ada Field yang Perlu Diperbaiki</h4>
+                                        <p class="text-sm text-blue-700 mt-1">
+                                            Semua field yang relevan dengan Admin Fakultas sudah sesuai. Perbaikan mungkin terkait dengan area lain yang bukan tanggung jawab Admin Fakultas.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div class="flex items-start">
+                            <i data-lucide="lightbulb" class="w-5 h-5 text-amber-600 mt-0.5 mr-3"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-amber-800">Informasi Penting</h4>
+                                <p class="text-sm text-amber-700 mt-1">
+                                    Hanya field yang relevan dengan tanggung jawab Admin Fakultas yang ditampilkan di atas. 
+                                    Field lain yang tidak ditampilkan mungkin sudah sesuai atau merupakan tanggung jawab role lain.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Action Bar: View-only for certain roles, Edit mode for others --}}
         @if($canEdit)
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mt-6">
@@ -1929,14 +2192,10 @@
                     <input type="hidden" name="action_type" id="action_type" value="save_only">
                     <input type="hidden" name="catatan_umum" id="catatan_umum" value="">
 
-                    @if($currentRole === 'Admin Universitas')
+                    @if($currentRole === 'Kepegawaian Universitas')
                         {{-- Admin Universitas Action Buttons --}}
                         
-                        {{-- Auto Save Button for Admin Universitas --}}
-                        <button type="button" id="btn-autosave-admin-univ" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            Simpan Validasi
-                        </button>
+
                         
                         {{-- ENHANCED: Specific status-based action buttons with improved logic --}}
                         @if($usulan->status_usulan === 'Diusulkan ke Universitas')
@@ -1985,33 +2244,92 @@
                                 $progressText = $totalPenilai > 0 ? "{$completedPenilai}/{$totalPenilai}" : "0/0";
                             @endphp
 
-                            <div class="flex flex-col gap-2 w-full">
-                                <div class="text-sm font-medium text-gray-700 mb-2">
-                                    <i data-lucide="users" class="w-4 h-4 inline mr-1"></i>
-                                    Tim Penilai Assessment Management
+                            <div class="p-6">
+                                <div class="w-full">
+                                    <!-- Progress Overview Card -->
+                                    <div class="w-full">
+                                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <h4 class="text-lg font-semibold text-slate-800">Progress Overview</h4>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                                                    <span class="text-sm text-slate-600">Live Status</span>
+                                                </div>
                                 </div>
 
                                 @if($isIntermediate)
-                                    {{-- Penilai belum semua selesai - limited actions --}}
-                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                                        <div class="flex items-start">
-                                            <i data-lucide="clock" class="w-4 h-4 text-yellow-600 mr-2 mt-0.5"></i>
-                                            <div class="text-sm text-yellow-800">
-                                                <strong>Status:</strong> Masih ada {{ $remainingPenilai }} penilai yang belum menyelesaikan penilaian.
-                                                <br>Progress: {{ $progressText }} penilai selesai.
+                                    {{-- Penilai belum semua selesai - enhanced management actions --}}
+                                    <div class="space-y-4">
+                                        <!-- Progress Bar -->
+                                        <div class="bg-slate-100 rounded-full h-3 overflow-hidden">
+                                            @php
+                                                $progressPercentage = $totalPenilai > 0 ? ($completedPenilai / $totalPenilai) * 100 : 0;
+                                            @endphp
+                                            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500 ease-out" style="width: {{ $progressPercentage }}%"></div>
+                                            </div>
+                                        
+                                        <!-- Status Info -->
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                                    <span class="text-sm font-medium text-slate-700">{{ $completedPenilai }} Selesai</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                                                    <span class="text-sm font-medium text-slate-700">{{ $remainingPenilai }} Pending</span>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-2xl font-bold text-slate-800">{{ $progressText }}</div>
+                                                <div class="text-sm text-slate-600">Total Penilai</div>
+                                        </div>
+                                    </div>
+
+                                        <!-- Action Card -->
+                                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <h5 class="font-semibold text-amber-900 mb-1">Penilaian Sedang Berlangsung</h5>
+                                                    <p class="text-sm text-amber-800 mb-3">
+                                                        Masih ada {{ $remainingPenilai }} penilai yang belum menyelesaikan tugasnya. 
+                                                        Anda dapat menambah penilai baru atau menunggu penilai yang ada.
+                                                    </p>
+                                                    <div class="flex flex-wrap gap-2">
+                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                            <i data-lucide="plus" class="w-3 h-3 mr-1"></i>
+                                                            Tambah Penilai
+                                                        </span>
+                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                            <i data-lucide="eye" class="w-3 h-3 mr-1"></i>
+                                                            Monitor Progress
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="flex gap-2">
-                                        <button type="button" id="btn-kirim-ke-penilai" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                                            <i data-lucide="send" class="w-4 h-4"></i>
-                                            Kirim Ke Penilai
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-200 px-6 py-4">
+                                        <div class="flex gap-3 justify-center">
+                                            <button type="button" id="btn-tambah-penilai" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
+                                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                                <span class="font-medium">Tambah Penilai</span>
                                         </button>
-                                        <button type="button" id="btn-kembali" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
-                                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                                            Kembali
+                                            <button type="button" id="btn-simpan-validasi-top" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
+                                                <i data-lucide="save" class="w-4 h-4"></i>
+                                                <span class="font-medium">Simpan Validasi</span>
                                         </button>
+                                        </div>
+                                    </div>
+                                    
+
                                     </div>
                                 @elseif($isComplete)
                                     {{-- Semua penilai sudah selesai - full actions based on final status --}}
@@ -2092,49 +2410,88 @@
                                     </div>
                                 @endif
                                 @elseif($totalPenilai === 0)
-                                    {{-- Belum ada penilai - limited actions --}}
-                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
-                                        <div class="flex items-start">
-                                            <i data-lucide="info" class="w-4 h-4 text-gray-600 mr-2 mt-0.5"></i>
-                                            <div class="text-sm text-gray-800">
-                                                <strong>Status:</strong> Belum ada penilai yang ditugaskan.
-                                                <br>Silakan hubungi Admin Universitas untuk menugaskan penilai.
+                                    {{-- Belum ada penilai - enhanced assignment actions --}}
+                                    <div class="space-y-4">
+                                        <!-- Empty State -->
+                                        <div class="text-center py-8">
+                                            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <i data-lucide="users" class="w-8 h-8 text-orange-600"></i>
+                                            </div>
+                                            <h4 class="text-lg font-semibold text-slate-800 mb-2">Belum Ada Tim Penilai</h4>
+                                            <p class="text-slate-600 mb-6">Usulan belum memiliki tim penilai yang ditugaskan. Silakan tugaskan penilai untuk memulai proses penilaian.</p>
+                                        </div>
+                                        
+                                        <!-- Action Card -->
+                                        <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
+                                            <div class="flex items-start gap-4">
+                                                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <i data-lucide="user-plus" class="w-6 h-6 text-orange-600"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <h5 class="font-semibold text-orange-900 mb-2">Tugaskan Penilai Pertama</h5>
+                                                    <p class="text-sm text-orange-800 mb-4">
+                                                        Untuk memulai proses penilaian, Anda perlu menugaskan minimal satu penilai universitas. 
+                                                        Penilai akan mengevaluasi usulan berdasarkan kriteria yang telah ditetapkan.
+                                                    </p>
+                                                    <div class="flex flex-wrap gap-2">
+                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                                                            <i data-lucide="info" class="w-4 h-4 mr-1"></i>
+                                                            Required Action
+                                                        </span>
+                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                            <i data-lucide="clock" class="w-4 h-4 mr-1"></i>
+                                                            Pending Assignment
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="flex gap-2">
-                                        <button type="button" id="btn-kirim-ke-penilai" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                                            <i data-lucide="send" class="w-4 h-4"></i>
-                                            Kirim Ke Penilai
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-200 px-6 py-4">
+                                        <div class="flex gap-3 justify-center">
+                                            <button type="button" id="btn-tugaskan-penilai" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
+                                                <i data-lucide="user-check" class="w-4 h-4"></i>
+                                                <span class="font-medium">Tugaskan Penilai</span>
                                         </button>
-                                        <button type="button" id="btn-kembali" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
-                                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                                            Kembali
+                                            <button type="button" id="btn-simpan-validasi-bottom" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
+                                                <i data-lucide="save" class="w-4 h-4"></i>
+                                                <span class="font-medium">Simpan Validasi</span>
                                         </button>
+                                        </div>
                                     </div>
                                 @else
                                     {{-- Default status information for other conditions --}}
-                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-4 shadow-sm">
                                         <div class="flex items-start">
-                                            <i data-lucide="info" class="w-4 h-4 text-blue-600 mr-2 mt-0.5"></i>
-                                            <div class="text-sm text-blue-800">
-                                                <strong>Status:</strong> Progress: {{ $progressText }} penilai selesai.
+                                            <div class="flex-shrink-0">
+                                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                    <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
+                                                </div>
+                                            </div>
+                                            <div class="ml-3 flex-1">
+                                                <h4 class="text-sm font-medium text-blue-900 flex items-center">
+                                                    <span class="mr-2">ℹ️</span>
+                                                    Status Penilaian
+                                                </h4>
+                                                <div class="mt-2 text-sm text-blue-800">
+                                                    <strong>Progress:</strong> {{ $progressText }} penilai selesai.
                                                 @if($completedPenilai > 0)
-                                                    <br>Status saat ini: <strong>{{ $usulan->status_usulan }}</strong>
+                                                        <br><strong>Status saat ini:</strong> {{ $usulan->status_usulan }}
                                                 @endif
+                                                    <br><span class="text-blue-600">📊 Monitoring progress penilaian usulan.</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="flex gap-2">
-                                        <button type="button" id="btn-kirim-ke-penilai" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                                            <i data-lucide="send" class="w-4 h-4"></i>
-                                            Kirim Ke Penilai
-                                        </button>
-                                        <button type="button" id="btn-kembali" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
-                                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                                            Kembali
+                                    <div class="flex justify-center">
+                                        <button type="button" id="btn-tambah-penilai" class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                            <i data-lucide="user-plus" class="w-5 h-5"></i>
+                                            <span class="font-medium">Tambah Penilai Universitas</span>
                                         </button>
                                     </div>
                                 @endif
@@ -2349,7 +2706,7 @@
                     $backRoute = '';
                     if ($currentRole === 'Admin Fakultas') {
                         $backRoute = route('admin-fakultas.dashboard');
-                    } elseif ($currentRole === 'Admin Universitas') {
+                    } elseif ($currentRole === 'Kepegawaian Universitas') {
                         $backRoute = route('backend.kepegawaian-universitas.usulan.index');
                 } elseif ($currentRole === 'Penilai Universitas') {
                     $backRoute = route('penilai-universitas.pusat-usulan.index');
@@ -2359,10 +2716,6 @@
                         $backRoute = route('admin-fakultas.dashboard'); // fallback
                     }
                 @endphp
-                <a href="{{ $backRoute }}" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    Kembali
-                </a>
         </div>
         @endif
     </div>
@@ -2576,6 +2929,34 @@ if (document.getElementById('btn-perbaikan-fakultas')) {
 if (document.getElementById('btn-teruskan-penilai')) {
     document.getElementById('btn-teruskan-penilai').addEventListener('click', function() {
         showTeruskanKePenilaiModal();
+    });
+}
+
+// Handler untuk button Tambah Penilai Universitas
+if (document.getElementById('btn-tambah-penilai')) {
+    document.getElementById('btn-tambah-penilai').addEventListener('click', function() {
+        showTambahPenilaiModal();
+    });
+}
+
+// Handler untuk button Tugaskan Penilai Universitas
+if (document.getElementById('btn-tugaskan-penilai')) {
+    document.getElementById('btn-tugaskan-penilai').addEventListener('click', function() {
+        showTambahPenilaiModal();
+    });
+}
+
+// Handler untuk button Simpan Validasi (top)
+if (document.getElementById('btn-simpan-validasi-top')) {
+    document.getElementById('btn-simpan-validasi-top').addEventListener('click', function() {
+        submitAction('autosave', '');
+    });
+}
+
+// Handler untuk button Simpan Validasi (bottom)
+if (document.getElementById('btn-simpan-validasi-bottom')) {
+    document.getElementById('btn-simpan-validasi-bottom').addEventListener('click', function() {
+        submitAction('autosave', '');
     });
 }
 
@@ -2794,6 +3175,130 @@ function showPerbaikanKeFakultasModal() {
     });
 }
 
+function showTambahPenilaiModal() {
+    // Get penilais data from the page
+    const penilais = @json($penilais ?? []);
+
+    if (penilais.length === 0) {
+        Swal.fire({
+            title: 'Tidak Ada Penilai Tersedia',
+            text: 'Tidak ada penilai yang tersedia saat ini. Silakan hubungi administrator untuk menambah data penilai.',
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#2563eb'
+        });
+        return;
+    }
+
+    // Create HTML for penilai selection with enhanced design
+    let penilaiHtml = '<div class="mb-6">';
+    penilaiHtml += '<div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-4">';
+    penilaiHtml += '<div class="flex items-center">';
+    penilaiHtml += '<i data-lucide="info" class="w-5 h-5 text-green-600 mr-2"></i>';
+    penilaiHtml += '<span class="text-sm text-green-800"><strong>Info:</strong> Pilih penilai yang akan ditambahkan untuk usulan ini. Anda dapat memilih lebih dari satu penilai.</span>';
+    penilaiHtml += '</div></div>';
+    
+    penilaiHtml += '<label class="block text-sm font-medium text-gray-700 mb-3 flex items-center">';
+    penilaiHtml += '<i data-lucide="users" class="w-4 h-4 mr-2 text-blue-600"></i>';
+    penilaiHtml += 'Pilih Penilai Universitas (minimal 1):';
+    penilaiHtml += '</label>';
+    penilaiHtml += '<div class="space-y-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">';
+
+    penilais.forEach((penilai, index) => {
+        // Anonymize penilai name for non-Kepegawaian Universitas roles
+        let displayName = penilai.nama_lengkap;
+        if (currentRole !== 'Kepegawaian Universitas') {
+            displayName = `Penilai ${index + 1}`;
+        }
+        
+        penilaiHtml += `
+            <label class="flex items-start space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg border border-transparent hover:border-blue-200 transition-all duration-200">
+                <input type="checkbox" name="selected_penilais[]" value="${penilai.id}" class="penilai-checkbox mt-1 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-2">
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
+                            ${displayName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">${displayName}</div>
+                            ${penilai.bidang_keahlian ? `<div class="text-xs text-gray-500 mt-1"><i data-lucide="award" class="w-3 h-3 inline mr-1"></i>${penilai.bidang_keahlian}</div>` : ''}
+                            ${penilai.email ? `<div class="text-xs text-gray-400"><i data-lucide="mail" class="w-3 h-3 inline mr-1"></i>${penilai.email}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </label>
+        `;
+    });
+
+    penilaiHtml += '</div></div>';
+    penilaiHtml += '<div class="mb-4">';
+    penilaiHtml += '<label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">';
+    penilaiHtml += '<i data-lucide="message-square" class="w-4 h-4 mr-2 text-gray-600"></i>';
+    penilaiHtml += 'Catatan untuk Tim Penilai (opsional):';
+    penilaiHtml += '</label>';
+    penilaiHtml += '<textarea id="catatan-penilai" placeholder="Contoh: Mohon review usulan ini dengan teliti sesuai panduan penilaian..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none" rows="3"></textarea>';
+    penilaiHtml += '</div>';
+
+    Swal.fire({
+        title: '👥 Tambah Penilai Universitas',
+        html: penilaiHtml,
+        showCancelButton: true,
+        confirmButtonText: '✅ Tambah Penilai',
+        cancelButtonText: '❌ Batal',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6b7280',
+        width: '600px',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            confirmButton: 'px-6 py-3 rounded-lg font-medium',
+            cancelButton: 'px-6 py-3 rounded-lg font-medium'
+        },
+        preConfirm: () => {
+            // Check if at least one penilai is selected
+            const selectedPenilais = document.querySelectorAll('input[name="selected_penilais[]"]:checked');
+            if (selectedPenilais.length === 0) {
+                Swal.showValidationMessage('⚠️ Pilih minimal 1 penilai terlebih dahulu!');
+                return false;
+            }
+
+            // Validate that selected penilais are valid
+            const penilaiIds = Array.from(selectedPenilais).map(cb => cb.value);
+            if (penilaiIds.length === 0 || penilaiIds.some(id => !id)) {
+                Swal.showValidationMessage('⚠️ Data penilai tidak valid!');
+                return false;
+            }
+
+            const catatan = document.getElementById('catatan-penilai').value;
+
+            return {
+                selected_penilais: penilaiIds,
+                catatan: catatan
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Add selected penilais to form data
+            const form = document.getElementById('action-form');
+
+            // Remove existing selected_penilais inputs
+            form.querySelectorAll('input[name="selected_penilais[]"]').forEach(input => input.remove());
+
+            // Add new selected_penilais inputs
+            result.value.selected_penilais.forEach(penilaiId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selected_penilais[]';
+                input.value = penilaiId;
+                form.appendChild(input);
+            });
+
+            submitAction('add_penilai', result.value.catatan || '');
+        }
+    });
+}
+
 function showTeruskanKePenilaiModal() {
     // Get penilais data from the page
     const penilais = @json($penilais ?? []);
@@ -2814,12 +3319,18 @@ function showTeruskanKePenilaiModal() {
     penilaiHtml += '<label class="block text-sm font-medium text-gray-700 mb-2">Pilih Penilai (minimal 1):</label>';
     penilaiHtml += '<div class="space-y-2 max-h-40 overflow-y-auto">';
 
-    penilais.forEach(penilai => {
+    penilais.forEach((penilai, index) => {
+        // Anonymize penilai name for non-Kepegawaian Universitas roles
+        let displayName = penilai.nama_lengkap;
+        if (currentRole !== 'Kepegawaian Universitas') {
+            displayName = `Penilai ${index + 1}`;
+        }
+        
         penilaiHtml += `
             <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                 <input type="checkbox" name="selected_penilais[]" value="${penilai.id}" class="penilai-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                 <span class="text-sm text-gray-700">
-                    <strong>${penilai.nama_lengkap}</strong>
+                    <strong>${displayName}</strong>
                     ${penilai.bidang_keahlian ? `<br><span class="text-xs text-gray-500">${penilai.bidang_keahlian}</span>` : ''}
                 </span>
             </label>
@@ -3318,17 +3829,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Autosave Button for Admin Universitas
-    const btnAutosaveAdminUniv = document.getElementById('btn-autosave-admin-univ');
-    if (btnAutosaveAdminUniv) {
-        btnAutosaveAdminUniv.addEventListener('click', function() {
-            const currentRole = '{{ $currentRole ?? "" }}';
-            
-            if (currentRole === 'Admin Universitas') {
-                // Perform autosave without catatan umum
-                submitAction('autosave', '');
-            }
-        });
-    }
+
 
     // Autosave Button for Admin Fakultas
     const btnAutosaveAdminFakultas = document.getElementById('btn-autosave-admin-fakultas');

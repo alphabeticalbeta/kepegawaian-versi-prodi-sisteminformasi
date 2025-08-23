@@ -313,7 +313,19 @@
                         ]
                     ];
 
-                    // Collect all invalid fields from all roles
+                    // Define field categories relevant for Pegawai (role-based filtering)
+                    $pegawaiFieldCategories = [
+                        'data_pribadi',
+                        'data_kepegawaian', 
+                        'data_pendidikan',
+                        'data_kinerja',
+                        'dokumen_profil',
+                        'karya_ilmiah',
+                        'dokumen_usulan',
+                        'syarat_guru_besar'
+                    ];
+
+                    // Collect filtered invalid fields from all roles (only relevant to Pegawai)
                     $allInvalidFields = [];
                     foreach ($validationData as $roleKey => $roleValidation) {
                         if (isset($roleConfigs[$roleKey])) {
@@ -321,7 +333,8 @@
                             $invalidFields = [];
                             
                             foreach ($roleValidation as $groupKey => $groupData) {
-                                if (isset($fieldGroupLabels[$groupKey])) {
+                                // Only process field groups that are relevant to Pegawai
+                                if (in_array($groupKey, $pegawaiFieldCategories) && isset($fieldGroupLabels[$groupKey])) {
                                     $groupLabel = $fieldGroupLabels[$groupKey];
                                     
                                     foreach ($groupData as $fieldKey => $fieldData) {
@@ -344,26 +357,26 @@
                                 ];
                             }
                         }
-                }
-            @endphp
+                    }
+                @endphp
 
                 @if(!empty($allInvalidFields))
                     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
                         <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
                             <h2 class="text-xl font-bold text-white flex items-center">
                                 <i data-lucide="alert-circle" class="w-6 h-6 mr-3"></i>
-                                Detail Field yang Perlu Diperbaiki
+                                Detail Field yang Perlu Diperbaiki (Relevan untuk Pegawai)
                             </h2>
                         </div>
                         <div class="p-6">
                             <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                                 <div class="flex items-start">
-                                    <i data-lucide="info" class="w-5 h-5 text-red-600 mt-0.5 mr-3"></i>
+                                    <i data-lucide="info" class="w-5 h-5 text-red-600 mr-2 mt-0.5"></i>
                                     <div>
                                         <h4 class="text-sm font-medium text-red-800">Informasi Perbaikan</h4>
                                         <p class="text-sm text-red-700 mt-1">
-                                            Berikut adalah daftar lengkap field yang memerlukan perbaikan berdasarkan feedback dari tim verifikasi. 
-                                            Silakan perbaiki semua field yang disebutkan sebelum mengajukan kembali usulan Anda.
+                                            Berikut adalah daftar field yang memerlukan perbaikan berdasarkan feedback dari tim verifikasi. 
+                                            Hanya field yang relevan dengan tanggung jawab Pegawai yang ditampilkan di bawah ini.
                                         </p>
                                     </div>
                                 </div>
@@ -398,19 +411,43 @@
                             @endforeach
 
                             <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div class="flex items-start">
+                                <div class="flex items-start">
                                     <i data-lucide="lightbulb" class="w-5 h-5 text-blue-600 mt-0.5 mr-3"></i>
                                     <div>
                                         <h4 class="text-sm font-medium text-blue-800">Tips Perbaikan</h4>
                                         <p class="text-sm text-blue-700 mt-1">
                                             Pastikan untuk memperbaiki semua field yang disebutkan di atas sebelum mengajukan kembali usulan Anda. 
-                                            Jika ada yang tidak jelas, hubungi admin terkait untuk klarifikasi lebih lanjut.
+                                            Hanya field yang relevan dengan tanggung jawab Pegawai yang ditampilkan. Field lain yang tidak ditampilkan mungkin sudah sesuai atau merupakan tanggung jawab role lain.
                                         </p>
-                    </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                @else
+                    {{-- Show message when no relevant fields need fixing --}}
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+                        <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-5">
+                            <h2 class="text-xl font-bold text-white flex items-center">
+                                <i data-lucide="check-circle" class="w-6 h-6 mr-3"></i>
+                                Tidak Ada Field yang Perlu Diperbaiki
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <i data-lucide="info" class="w-5 h-5 text-green-600 mr-2 mt-0.5"></i>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-green-800">Status Perbaikan</h4>
+                                        <p class="text-sm text-green-700 mt-1">
+                                            Semua field yang relevan dengan tanggung jawab Pegawai sudah sesuai. 
+                                            Perbaikan mungkin terkait dengan area lain yang bukan tanggung jawab Pegawai.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endif
             @endif
 

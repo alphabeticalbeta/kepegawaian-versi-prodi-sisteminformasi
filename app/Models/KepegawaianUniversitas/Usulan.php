@@ -224,7 +224,7 @@ class Usulan extends Model
     public function penilais(): BelongsToMany
     {
         return $this->belongsToMany(Penilai::class, 'usulan_penilai', 'usulan_id', 'penilai_id')
-                    ->withPivot('status_penilaian', 'catatan_penilaian')
+                    ->withPivot('status_penilaian', 'catatan_penilaian', 'hasil_penilaian', 'tanggal_penilaian')
                     ->withTimestamps();
     }
 
@@ -1323,7 +1323,19 @@ public function getSenateDecisionCounts(): array
     {
         $penilais = $this->penilais ?? collect();
         $totalPenilai = $penilais->count();
-        $completedPenilai = $penilais->whereNotIn('pivot.status_penilaian', ['Belum Dinilai'])->count();
+        
+        // Count completed penilai based on status_penilaian (not just hasil_penilaian)
+        $completedPenilai = $penilais->filter(function($penilai) {
+            $status = $penilai->pivot->status_penilaian ?? 'Belum Dinilai';
+            $catatan = $penilai->pivot->catatan_penilaian ?? '';
+            $hasil = $penilai->pivot->hasil_penilaian ?? '';
+            
+            // Consider completed if:
+            // 1. status_penilaian is not 'Belum Dinilai'
+            // 2. OR has catatan_penilaian
+            // 3. OR has hasil_penilaian
+            return $status !== 'Belum Dinilai' || !empty($catatan) || !empty($hasil);
+        })->count();
         
         return [
             'total_penilai' => $totalPenilai,

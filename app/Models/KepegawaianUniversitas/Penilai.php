@@ -37,7 +37,7 @@ class Penilai extends Model
     public function usulans()
     {
         return $this->belongsToMany(Usulan::class, 'usulan_penilai', 'penilai_id', 'usulan_id')
-                    ->withPivot('status_penilaian', 'catatan_penilaian')
+                    ->withPivot('status_penilaian', 'catatan_penilaian', 'hasil_penilaian', 'tanggal_penilaian')
                     ->withTimestamps();
     }
 

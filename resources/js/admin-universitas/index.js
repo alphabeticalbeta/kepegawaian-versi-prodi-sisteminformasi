@@ -6,7 +6,7 @@
 import '../shared/utils.js';
 
 // Import admin universitas specific modules
-import './kepegawaian-universitas.js';
+import './admin-univ-usulan.js';
 import './periode-usulan.js';
 
 // Initialize admin universitas functionality

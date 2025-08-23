@@ -65,12 +65,17 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($activePeriods as $periode)
                             @php
-                                // PERBAIKAN: Hanya hitung usulan yang menunggu penilaian (status 'Sedang Direview') 
-                                // dan ditugaskan ke penilai saat ini
+                                // PERBAIKAN: Hitung semua usulan yang ditugaskan ke penilai saat ini
+                                // tidak hanya yang berstatus 'Sedang Direview'
                                 $currentPenilaiId = Auth::id();
                                 $usulansForAssessment = $periode->usulans->filter(function($usulan) use ($currentPenilaiId) {
-                                    return $usulan->status_usulan === 'Sedang Direview' && 
-                                           $usulan->penilais->contains('id', $currentPenilaiId);
+                                    return $usulan->penilais->contains('id', $currentPenilaiId) && 
+                                           in_array($usulan->status_usulan, [
+                                               'Sedang Direview',
+                                               'Menunggu Hasil Penilaian Tim Penilai',
+                                               'Perbaikan Dari Tim Penilai',
+                                               'Usulan Direkomendasi Tim Penilai'
+                                           ]);
                                 });
                                 $jumlahPenilaian = $usulansForAssessment->count();
                             @endphp
@@ -105,7 +110,7 @@
                                                 {{ $jumlahPenilaian }}
                                             </span>
                                             <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                {{ $jumlahPenilaian }} usulan menunggu penilaian
+                                                {{ $jumlahPenilaian }} usulan ditugaskan untuk penilaian
                                             </div>
                                         </div>
                                     @else

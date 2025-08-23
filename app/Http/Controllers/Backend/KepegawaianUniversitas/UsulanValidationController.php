@@ -89,7 +89,8 @@ class UsulanValidationController extends Controller
             'pegawai.jabatan',
             'jabatanLama',
             'jabatanTujuan',
-            'periodeUsulan'
+            'periodeUsulan',
+            'penilais'
         ]);
 
         // ENHANCED: Consistency Check and Auto-Correction

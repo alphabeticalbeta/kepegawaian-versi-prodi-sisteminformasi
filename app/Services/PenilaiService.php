@@ -94,12 +94,22 @@ class PenilaiService
 
             return [
                 'total_assigned' => $usulans->count(),
-                'pending_review' => $usulans->where('status_usulan', 'Sedang Direview')->count(),
-                'completed_review' => $usulans->where('status_usulan', 'Direkomendasikan')->count(),
+                'pending_review' => $usulans->whereIn('status_usulan', [
+                    'Sedang Direview',
+                    'Menunggu Hasil Penilaian Tim Penilai',
+                    'Perbaikan Dari Tim Penilai'
+                ])->count(),
+                'completed_review' => $usulans->whereIn('status_usulan', [
+                    'Usulan Direkomendasi Tim Penilai',
+                    'Direkomendasikan'
+                ])->count(),
                 'by_status' => [
                     'Diajukan' => $usulans->where('status_usulan', 'Diajukan')->count(),
                     'Diusulkan ke Universitas' => $usulans->where('status_usulan', 'Diusulkan ke Universitas')->count(),
                     'Sedang Direview' => $usulans->where('status_usulan', 'Sedang Direview')->count(),
+                    'Menunggu Hasil Penilaian Tim Penilai' => $usulans->where('status_usulan', 'Menunggu Hasil Penilaian Tim Penilai')->count(),
+                    'Perbaikan Dari Tim Penilai' => $usulans->where('status_usulan', 'Perbaikan Dari Tim Penilai')->count(),
+                    'Usulan Direkomendasi Tim Penilai' => $usulans->where('status_usulan', 'Usulan Direkomendasi Tim Penilai')->count(),
                     'Direkomendasikan' => $usulans->where('status_usulan', 'Direkomendasikan')->count(),
                     'Disetujui' => $usulans->where('status_usulan', 'Disetujui')->count(),
                     'Ditolak' => $usulans->where('status_usulan', 'Ditolak')->count(),
@@ -299,6 +309,7 @@ class PenilaiService
     {
         Cache::forget("penilai_assigned_usulans_{$penilaiId}_*");
         Cache::forget("penilai_statistics_{$penilaiId}");
+        Cache::forget("penilai_dashboard_{$penilaiId}");
     }
 
     /**
@@ -334,27 +345,45 @@ class PenilaiService
 
         return Cache::remember($cacheKey, 300, function () use ($penilaiId) {
             // Get active periods that have usulans assigned to this penilai
-            // PERBAIKAN: Tidak mempedulikan status usulan, hanya mengecek apakah penilai ditugaskan
+            // PERBAIKAN: Ambil periode yang memiliki usulan dengan status yang relevan untuk penilai
             $activePeriods = \App\Models\KepegawaianUniversitas\PeriodeUsulan::where('status', 'Buka')
                 ->whereHas('usulans', function($query) use ($penilaiId) {
                     $query->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
                         $penilaiQuery->where('penilai_id', $penilaiId);
-                    });
+                    })
+                    ->whereIn('status_usulan', [
+                        'Sedang Direview',
+                        'Menunggu Hasil Penilaian Tim Penilai',
+                        'Perbaikan Dari Tim Penilai',
+                        'Usulan Direkomendasi Tim Penilai'
+                    ]);
                 })
                 ->with(['usulans' => function($query) use ($penilaiId) {
                     $query->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
                         $penilaiQuery->where('penilai_id', $penilaiId);
                     })
+                    ->whereIn('status_usulan', [
+                        'Sedang Direview',
+                        'Menunggu Hasil Penilaian Tim Penilai',
+                        'Perbaikan Dari Tim Penilai',
+                        'Usulan Direkomendasi Tim Penilai'
+                    ])
                     ->with(['pegawai:id,nama_lengkap,nip', 'penilais:id,nama_lengkap'])
                     ->latest()
                     ->limit(5);
                 }])
                 ->get();
 
-            // Get recent usulans assigned to this penilai (tidak peduli status)
+            // Get recent usulans assigned to this penilai dengan status yang relevan
             $recentUsulans = Usulan::whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
                     $penilaiQuery->where('penilai_id', $penilaiId);
                 })
+                ->whereIn('status_usulan', [
+                    'Sedang Direview',
+                    'Menunggu Hasil Penilaian Tim Penilai',
+                    'Perbaikan Dari Tim Penilai',
+                    'Usulan Direkomendasi Tim Penilai'
+                ])
                 ->with(['pegawai:id,nama_lengkap,nip', 'periodeUsulan'])
                 ->latest()
                 ->limit(10)
