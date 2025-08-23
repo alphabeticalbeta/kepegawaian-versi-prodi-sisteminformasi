@@ -5,7 +5,7 @@
 @section('content')
     @include('backend.layouts.views.shared.usulan-detail', [
         'usulan' => $usulan,
-        'role' => 'Admin Universitas',
+        'role' => 'Admin Universitas Usulan',
         'existingValidation' => $existingValidation,
         'canEdit' => $canEdit,
         'penilaiProgressData' => $penilaiProgressData ?? null,

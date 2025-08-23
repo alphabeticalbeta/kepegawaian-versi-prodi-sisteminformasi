@@ -9,13 +9,40 @@
     if ($currentUser) {
         // Safe access to user roles
         $userRoles = $currentUser->roles ?? collect();
-        $firstRole = $userRoles->first();
-        $currentRole = $firstRole ? ($firstRole->name ?? 'Admin Fakultas') : 'Admin Fakultas';
-    }
-    
-    // If role is explicitly passed, use it (with validation)
-    if (isset($role) && !empty($role)) {
-        $currentRole = $role;
+        
+        // Check if role is explicitly passed
+        if (isset($role) && !empty($role)) {
+            $currentRole = $role;
+        } else {
+            // Try to detect role based on current route
+            $currentPath = request()->path();
+            
+            // Priority order: check specific routes first
+            if (str_contains($currentPath, 'admin-univ-usulan')) {
+                $currentRole = 'Admin Universitas Usulan';
+            } elseif (str_contains($currentPath, 'penilai-universitas')) {
+                $currentRole = 'Penilai Universitas';
+            } elseif (str_contains($currentPath, 'admin-universitas')) {
+                $currentRole = 'Admin Universitas';
+            } elseif (str_contains($currentPath, 'admin-fakultas')) {
+                $currentRole = 'Admin Fakultas';
+            } elseif (str_contains($currentPath, 'tim-senat')) {
+                $currentRole = 'Tim Senat';
+            } else {
+                // Fallback: check if user has specific role and use it
+                if ($userRoles->contains('name', 'Admin Universitas Usulan')) {
+                    $currentRole = 'Admin Universitas Usulan';
+                } elseif ($userRoles->contains('name', 'Penilai Universitas')) {
+                    $currentRole = 'Penilai Universitas';
+                } elseif ($userRoles->contains('name', 'Admin Universitas')) {
+                    $currentRole = 'Admin Universitas';
+                } else {
+                    // Last fallback to first role
+                    $firstRole = $userRoles->first();
+                    $currentRole = $firstRole ? ($firstRole->name ?? 'Admin Fakultas') : 'Admin Fakultas';
+                }
+            }
+        }
     }
     
     // ENHANCED ERROR HANDLING: Get role-specific validation data with safe defaults
@@ -1052,7 +1079,232 @@
             @csrf
         @endif
 
+        {{-- Field yang Tidak Sesuai (Khusus Penilai Universitas) --}}
+        @if($currentRole === 'Penilai Universitas')
+            @php
+                $invalidFields = [];
+                $generalNotes = [];
+                $currentPenilaiId = auth()->user()->id;
+                
+                // Ambil data validasi dari penilai universitas yang sedang login
+                $penilaiValidation = $usulan->getValidasiByRole('tim_penilai') ?? [];
+                
+                if (!empty($penilaiValidation)) {
+                    // Cari data validasi dari penilai yang sedang login
+                    $currentPenilaiData = null;
+                    
+                    // Cek apakah ada data individual penilai
+                    if (isset($penilaiValidation['individual_penilai']) && is_array($penilaiValidation['individual_penilai'])) {
+                        foreach ($penilaiValidation['individual_penilai'] as $penilaiData) {
+                            if (isset($penilaiData['penilai_id']) && $penilaiData['penilai_id'] == $currentPenilaiId) {
+                                $currentPenilaiData = $penilaiData;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Jika tidak ada data individual, cek data umum
+                    if (!$currentPenilaiData && isset($penilaiValidation['validation'])) {
+                        $currentPenilaiData = $penilaiValidation['validation'];
+                    }
+                    
+                    // Proses field yang tidak sesuai
+                    if ($currentPenilaiData && is_array($currentPenilaiData)) {
+                        foreach ($currentPenilaiData as $groupKey => $groupData) {
+                            if (is_array($groupData)) {
+                                foreach ($groupData as $fieldKey => $fieldData) {
+                                    if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                        $groupLabel = isset($fieldGroups[$groupKey]['label']) ? $fieldGroups[$groupKey]['label'] : ucwords(str_replace('_', ' ', $groupKey));
+                                        $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ucwords(str_replace('_', ' ', $fieldKey));
+                                        
+                                        $invalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Collect keterangan umum dari berbagai lokasi yang mungkin
+                        if (isset($currentPenilaiData['keterangan_umum']) && !empty($currentPenilaiData['keterangan_umum'])) {
+                            $generalNotes[] = $currentPenilaiData['keterangan_umum'];
+                        }
+                        
+                        // Cek keterangan umum dari level atas (penilaiValidation)
+                        if (isset($penilaiValidation['keterangan_umum']) && !empty($penilaiValidation['keterangan_umum'])) {
+                            $generalNotes[] = $penilaiValidation['keterangan_umum'];
+                        }
+                        
+                        // Cek keterangan dari perbaikan_usulan
+                        if (isset($penilaiValidation['perbaikan_usulan']['catatan']) && !empty($penilaiValidation['perbaikan_usulan']['catatan'])) {
+                            $generalNotes[] = $penilaiValidation['perbaikan_usulan']['catatan'];
+                        }
+                    }
+                }
+            @endphp
 
+
+
+            @if(!empty($invalidFields) || !empty($generalNotes))
+                <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                            Hasil Validasi Tim Penilai
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        @if(!empty($invalidFields))
+                            <div class="space-y-2 mb-4">
+                                @foreach($invalidFields as $field)
+                                    <div class="text-sm text-red-800">{{ $field }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+                        
+                        @if(!empty($generalNotes))
+                            <div class="border-t border-red-200 pt-4">
+                                <div class="font-medium text-red-800 mb-2">Keterangan Umum:</div>
+                                @foreach($generalNotes as $note)
+                                    <div class="text-sm text-red-700">{{ $note }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        @endif
+
+
+
+
+
+        {{-- Field yang Tidak Sesuai (Khusus Admin Universitas Usulan) --}}
+        @if($currentRole === 'Admin Universitas Usulan')
+            @php
+                $allPenilaiInvalidFields = [];
+                $allPenilaiGeneralNotes = [];
+                
+                // Ambil data validasi dari semua penilai universitas
+                $penilaiValidation = $usulan->getValidasiByRole('tim_penilai') ?? [];
+                
+                if (!empty($penilaiValidation)) {
+                    // Cek apakah ada data individual penilai
+                    if (isset($penilaiValidation['individual_penilai']) && is_array($penilaiValidation['individual_penilai'])) {
+                        foreach ($penilaiValidation['individual_penilai'] as $penilaiData) {
+                            $penilaiId = $penilaiData['penilai_id'] ?? null;
+                            $penilaiName = $penilaiData['penilai_name'] ?? 'Penilai ' . $penilaiId;
+                            $penilaiInvalidFields = [];
+                            $penilaiGeneralNotes = [];
+                            
+                            // Proses field yang tidak sesuai untuk penilai ini
+                            if (is_array($penilaiData)) {
+                                foreach ($penilaiData as $groupKey => $groupData) {
+                                    if (is_array($groupData)) {
+                                        foreach ($groupData as $fieldKey => $fieldData) {
+                                            if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                                $groupLabel = isset($fieldGroups[$groupKey]['label']) ? $fieldGroups[$groupKey]['label'] : ucwords(str_replace('_', ' ', $groupKey));
+                                                $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ucwords(str_replace('_', ' ', $fieldKey));
+                                                
+                                                $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Collect keterangan umum untuk penilai ini
+                                if (isset($penilaiData['keterangan_umum']) && !empty($penilaiData['keterangan_umum'])) {
+                                    $penilaiGeneralNotes[] = $penilaiData['keterangan_umum'];
+                                }
+                            }
+                            
+                            // Jika ada data tidak sesuai atau keterangan umum, tambahkan ke array utama
+                            if (!empty($penilaiInvalidFields) || !empty($penilaiGeneralNotes)) {
+                                $allPenilaiInvalidFields[$penilaiName] = $penilaiInvalidFields;
+                                $allPenilaiGeneralNotes[$penilaiName] = $penilaiGeneralNotes;
+                            }
+                        }
+                    } else {
+                        // Jika tidak ada data individual, cek data umum
+                        if (isset($penilaiValidation['validation'])) {
+                            $generalInvalidFields = [];
+                            $generalGeneralNotes = [];
+                            
+                            foreach ($penilaiValidation['validation'] as $groupKey => $groupData) {
+                                if (is_array($groupData)) {
+                                    foreach ($groupData as $fieldKey => $fieldData) {
+                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                            $groupLabel = isset($fieldGroups[$groupKey]['label']) ? $fieldGroups[$groupKey]['label'] : ucwords(str_replace('_', ' ', $groupKey));
+                                            $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ucwords(str_replace('_', ' ', $fieldKey));
+                                            
+                                            $generalInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Collect keterangan umum
+                            if (isset($penilaiValidation['keterangan_umum']) && !empty($penilaiValidation['keterangan_umum'])) {
+                                $generalGeneralNotes[] = $penilaiValidation['keterangan_umum'];
+                            }
+                            
+                            // Cek keterangan dari perbaikan_usulan
+                            if (isset($penilaiValidation['perbaikan_usulan']['catatan']) && !empty($penilaiValidation['perbaikan_usulan']['catatan'])) {
+                                $generalGeneralNotes[] = $penilaiValidation['perbaikan_usulan']['catatan'];
+                            }
+                            
+                            if (!empty($generalInvalidFields) || !empty($generalGeneralNotes)) {
+                                $allPenilaiInvalidFields['Tim Penilai'] = $generalInvalidFields;
+                                $allPenilaiGeneralNotes['Tim Penilai'] = $generalGeneralNotes;
+                            }
+                        }
+                    }
+                }
+            @endphp
+
+            {{-- Debug untuk Admin Universitas Usulan --}}
+            <div class="bg-purple-100 border border-purple-400 text-purple-700 px-4 py-3 rounded mb-4">
+                <strong>Debug Admin Universitas Usulan:</strong><br>
+                Penilai Validation: {{ json_encode($penilaiValidation) }}<br>
+                All Penilai Invalid Fields: {{ json_encode($allPenilaiInvalidFields) }}<br>
+                All Penilai General Notes: {{ json_encode($allPenilaiGeneralNotes) }}
+            </div>
+
+            @if(!empty($allPenilaiInvalidFields) || !empty($allPenilaiGeneralNotes))
+                <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                            Hasil Validasi Semua Tim Penilai
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        @foreach($allPenilaiInvalidFields as $penilaiName => $invalidFields)
+                            <div class="mb-6 last:mb-0">
+                                <h3 class="font-semibold text-lg text-gray-800 mb-3 border-b border-gray-200 pb-2">
+                                    {{ $penilaiName }}
+                                </h3>
+                                
+                                @if(!empty($invalidFields))
+                                    <div class="space-y-2 mb-4">
+                                        @foreach($invalidFields as $field)
+                                            <div class="text-sm text-red-800">{{ $field }}</div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                
+                                @if(isset($allPenilaiGeneralNotes[$penilaiName]) && !empty($allPenilaiGeneralNotes[$penilaiName]))
+                                    <div class="border-t border-red-200 pt-4">
+                                        <div class="font-medium text-red-800 mb-2">Keterangan Umum:</div>
+                                        @foreach($allPenilaiGeneralNotes[$penilaiName] as $note)
+                                            <div class="text-sm text-red-700">{{ $note }}</div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endif
 
         {{-- Validation Table --}}
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
@@ -1941,7 +2193,7 @@
                                 <button type="button" id="btn-kembali-penilai" class="flex-shrink-0 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm">
                                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                     Kembali
-                                </button>
+                                    </button>
                                 </div>
                         @else
                             {{-- Read-only mode for Penilai Universitas (after validation completed) --}}
@@ -2033,7 +2285,7 @@
                             'icon' => 'x-circle',
                             'color' => 'text-red-600',
                             'message' => 'Usulan tidak direkomendasikan untuk periode berjalan. Tidak dapat diajukan kembali pada periode ini.'
-                        ],
+                            ],
                             'Menunggu Review Admin Univ' => [
                                 'icon' => 'eye',
                                 'color' => 'text-purple-600',

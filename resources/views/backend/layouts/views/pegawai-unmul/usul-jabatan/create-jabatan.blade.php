@@ -406,11 +406,11 @@
                                             Pastikan untuk memperbaiki semua field yang disebutkan di atas sebelum mengajukan kembali usulan Anda. 
                                             Jika ada yang tidak jelas, hubungi admin terkait untuk klarifikasi lebih lanjut.
                                         </p>
-                                    </div>
-                                </div>
                     </div>
                         </div>
                     </div>
+                </div>
+            </div>
                 @endif
             @endif
 

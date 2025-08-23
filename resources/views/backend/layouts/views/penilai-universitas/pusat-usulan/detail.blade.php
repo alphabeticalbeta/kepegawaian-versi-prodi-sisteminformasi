@@ -11,6 +11,7 @@
         'bkdLabels' => $bkdLabels ?? [],
         'canEdit' => $canEdit ?? false,
         'consistencyCheck' => $consistencyCheck ?? null,
-        'validationSummary' => $validationSummary ?? null
+        'validationSummary' => $validationSummary ?? null,
+        'penilaiIndividualStatus' => $penilaiIndividualStatus ?? null
     ])
 @endsection
