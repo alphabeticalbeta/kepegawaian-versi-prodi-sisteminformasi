@@ -65,7 +65,13 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($activePeriods as $periode)
                             @php
-                                $usulansForAssessment = $periode->usulans->where('status_usulan', 'Sedang Direview');
+                                // PERBAIKAN: Hanya hitung usulan yang menunggu penilaian (status 'Sedang Direview') 
+                                // dan ditugaskan ke penilai saat ini
+                                $currentPenilaiId = Auth::id();
+                                $usulansForAssessment = $periode->usulans->filter(function($usulan) use ($currentPenilaiId) {
+                                    return $usulan->status_usulan === 'Sedang Direview' && 
+                                           $usulan->penilais->contains('id', $currentPenilaiId);
+                                });
                                 $jumlahPenilaian = $usulansForAssessment->count();
                             @endphp
                             <tr>

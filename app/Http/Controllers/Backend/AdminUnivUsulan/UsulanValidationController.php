@@ -31,7 +31,7 @@ class UsulanValidationController extends Controller
         // Get usulans that are ready for university validation
         $usulans = Usulan::whereIn('status_usulan', [
                 'Diusulkan ke Universitas',
-                'Menunggu Review Admin Univ', // Status yang sebenarnya ada
+                \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI, // Status yang sebenarnya ada
                 'Perbaikan Usulan', // Include returned usulans
                 'Sedang Direview'   // Include those being reviewed (can be returned)
             ])
@@ -112,7 +112,7 @@ class UsulanValidationController extends Controller
             'Diusulkan ke Universitas',
             'Perbaikan Usulan', 
             'Sedang Direview',
-            'Menunggu Review Admin Univ',
+            \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
             'Menunggu Hasil Penilaian Tim Penilai',    // ← STATUS INTERMEDIATE BARU
             'Perbaikan Dari Tim Penilai',              // ← STATUS BARU
             'Usulan Direkomendasi Tim Penilai'         // ← STATUS BARU
@@ -129,7 +129,7 @@ class UsulanValidationController extends Controller
         // Determine if Admin Universitas can edit (based on status)
         $canEdit = in_array($usulan->status_usulan, [
             'Diusulkan ke Universitas', 
-            'Menunggu Review Admin Univ',
+            \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
             'Menunggu Hasil Penilaian Tim Penilai',    // ← SUPPORT STATUS INTERMEDIATE
             'Perbaikan Dari Tim Penilai',              // ← SUPPORT STATUS BARU
             'Usulan Direkomendasi Tim Penilai'         // ← SUPPORT STATUS BARU
@@ -179,7 +179,7 @@ class UsulanValidationController extends Controller
 
         // For penilai review actions, allow usulans waiting for admin review
         if (in_array($actionType, ['approve_perbaikan', 'approve_rekomendasi', 'reject_perbaikan', 'reject_rekomendasi'])) {
-            $allowedStatuses[] = 'Menunggu Review Admin Univ';
+            $allowedStatuses[] = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
         }
 
         // For new action buttons, allow intermediate and final statuses

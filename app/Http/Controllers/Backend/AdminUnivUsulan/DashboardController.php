@@ -54,7 +54,7 @@ class DashboardController extends Controller
                 'usulans_by_status' => [
                     'Diajukan' => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Diajukan')->count(),
                     'Diusulkan ke Universitas' => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Diusulkan ke Universitas')->count(),
-                    'Menunggu Review Admin Univ' => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Menunggu Review Admin Univ')->count(),
+                    \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI)->count(),
                     'Sedang Direview' => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Sedang Direview')->count(),
                     'Direkomendasikan' => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Direkomendasikan')->count(),
                     'Disetujui' => \App\Models\BackendUnivUsulan\Usulan::where('status_usulan', 'Disetujui')->count(),

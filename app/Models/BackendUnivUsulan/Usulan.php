@@ -1200,6 +1200,7 @@ public function getSenateDecisionCounts(): array
     const STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI = 'Usulan Direkomendasi Tim Penilai';
     const STATUS_TIDAK_DIREKOMENDASI = 'Tidak Direkomendasikan';
     const STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI = 'Menunggu Hasil Penilaian Tim Penilai';
+    const STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI = 'Usulan dikirim ke Tim Penilai';
 
     /**
      * Determine final status based on Tim Penilai assessment results
@@ -1214,22 +1215,21 @@ public function getSenateDecisionCounts(): array
         }
         
         // Check if all penilai have completed their assessment
-        $completedPenilai = $penilais->whereNotNull('pivot.hasil_penilaian')->count();
+        $completedPenilai = $penilais->whereNotIn('pivot.status_penilaian', ['Belum Dinilai'])->count();
         
         // If not all penilai have completed, return intermediate status
         if ($completedPenilai < $totalPenilai) {
             return self::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
         }
         
-        // If any penilai gives 'perbaikan', result is perbaikan
-        $hasPerbaikan = $penilais->where('pivot.hasil_penilaian', 'perbaikan')->count() > 0;
+        // If any penilai gives 'Perlu Perbaikan', result is perbaikan
+        $hasPerbaikan = $penilais->where('pivot.status_penilaian', 'Perlu Perbaikan')->count() > 0;
         if ($hasPerbaikan) {
             return self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
         }
         
-        // Count recommendations
-        $rekomendasiCount = $penilais->where('pivot.hasil_penilaian', 'rekomendasi')->count();
-        $tidakRekomendasiCount = $penilais->where('pivot.hasil_penilaian', 'tidak_rekomendasi')->count();
+        // Count recommendations (Sesuai = rekomendasi)
+        $rekomendasiCount = $penilais->where('pivot.status_penilaian', 'Sesuai')->count();
         
         // Logic based on number of penilai
         switch ($totalPenilai) {
@@ -1244,7 +1244,7 @@ public function getSenateDecisionCounts(): array
                 
             default:
                 // For more than 3 penilai, use majority vote
-                return ($rekomendasiCount > $tidakRekomendasiCount) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
+                return ($rekomendasiCount > ($totalPenilai - $rekomendasiCount)) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
         }
     }
 
@@ -1273,7 +1273,7 @@ public function getSenateDecisionCounts(): array
             return false; // No penilai assigned
         }
 
-        $completedPenilai = $penilais->whereNotNull('pivot.hasil_penilaian')->count();
+        $completedPenilai = $penilais->whereNotIn('pivot.status_penilaian', ['Belum Dinilai'])->count();
         $newStatus = $this->determinePenilaiFinalStatus();
 
         // Only update if status has changed
@@ -1323,7 +1323,7 @@ public function getSenateDecisionCounts(): array
     {
         $penilais = $this->penilais ?? collect();
         $totalPenilai = $penilais->count();
-        $completedPenilai = $penilais->whereNotNull('pivot.hasil_penilaian')->count();
+        $completedPenilai = $penilais->whereNotIn('pivot.status_penilaian', ['Belum Dinilai'])->count();
         
         return [
             'total_penilai' => $totalPenilai,
@@ -1334,6 +1334,28 @@ public function getSenateDecisionCounts(): array
             'is_intermediate' => ($totalPenilai > 0) && ($completedPenilai < $totalPenilai),
             'current_status' => $this->status_usulan
         ];
+    }
+
+    /**
+     * Get individual penilai status details
+     */
+    public function getPenilaiStatusDetails()
+    {
+        $penilais = $this->penilais ?? collect();
+        $details = [];
+        
+        foreach ($penilais as $penilai) {
+            $details[] = [
+                'penilai_id' => $penilai->id,
+                'penilai_name' => $penilai->name ?? 'Unknown',
+                'status_penilaian' => $penilai->pivot->status_penilaian ?? 'Belum Dinilai',
+                'catatan_penilaian' => $penilai->pivot->catatan_penilaian ?? '',
+                'updated_at' => $penilai->pivot->updated_at ?? null,
+                'is_completed' => !in_array($penilai->pivot->status_penilaian ?? 'Belum Dinilai', ['Belum Dinilai'])
+            ];
+        }
+        
+        return $details;
     }
 
     /**

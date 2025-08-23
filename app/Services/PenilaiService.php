@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class PenilaiService
 {
@@ -29,15 +30,18 @@ class PenilaiService
 
         return Cache::remember($cacheKey, 300, function () use ($penilaiId, $filters) {
             $query = Usulan::query()
-                ->where('status_usulan', 'Sedang Direview')
                 ->whereHas('penilais', function ($penilaiQuery) use ($penilaiId) {
                     $penilaiQuery->where('penilai_id', $penilaiId);
                 })
                 ->with([
-                    'pegawai:id,nama_lengkap,email,nip',
+                    'pegawai:id,nama_lengkap,email,nip,jenis_pegawai,unit_kerja_terakhir_id',
+                    'pegawai.unitKerja:id,nama,sub_unit_kerja_id',
+                    'pegawai.unitKerja.subUnitKerja:id,nama,unit_kerja_id',
+                    'pegawai.unitKerja.subUnitKerja.unitKerja:id,nama',
                     'jabatanLama:id,jabatan',
                     'jabatanTujuan:id,jabatan',
-                    'periodeUsulan:id,nama_periode'
+                    'periodeUsulan:id,nama_periode',
+                    'penilais' // Add penilais relationship for status update
                 ]);
 
             // Apply filters
@@ -54,7 +58,25 @@ class PenilaiService
                 });
             }
 
-            return $query->latest()->paginate(15);
+            $usulans = $query->latest()->paginate(15);
+
+            // Auto-update status for each usulan based on penilai progress
+            foreach ($usulans as $usulan) {
+                $statusWasUpdated = $usulan->autoUpdateStatusBasedOnPenilaiProgress();
+                if ($statusWasUpdated) {
+                    // Log status update for debugging
+                    Log::info('Auto-updated usulan status in penilai list', [
+                        'usulan_id' => $usulan->id,
+                        'new_status' => $usulan->status_usulan,
+                        'penilai_id' => $penilaiId
+                    ]);
+                    
+                    // Clear related caches
+                    $this->clearPenilaiCache($penilaiId);
+                }
+            }
+
+            return $usulans;
         });
     }
 
@@ -199,7 +221,7 @@ class PenilaiService
         ]);
 
         // Update usulan status - KIRIM KE ADMIN UNIV USULAN DULU
-        $usulan->status_usulan = 'Menunggu Review Admin Univ';
+        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -239,7 +261,7 @@ class PenilaiService
         ]);
 
         // Update usulan status - KIRIM KE ADMIN UNIV USULAN DULU
-        $usulan->status_usulan = 'Menunggu Review Admin Univ';
+        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -280,6 +302,30 @@ class PenilaiService
     }
 
     /**
+     * Get individual penilai status for usulan
+     */
+    public function getPenilaiIndividualStatus(Usulan $usulan, $penilaiId)
+    {
+        $penilai = $usulan->penilais()->where('penilai_id', $penilaiId)->first();
+        
+        if (!$penilai) {
+            return [
+                'status' => 'Tidak Ditugaskan',
+                'catatan' => '',
+                'updated_at' => null,
+                'is_completed' => false
+            ];
+        }
+
+        return [
+            'status' => $penilai->pivot->status_penilaian ?? 'Belum Dinilai',
+            'catatan' => $penilai->pivot->catatan_penilaian ?? '',
+            'updated_at' => $penilai->pivot->updated_at ?? null,
+            'is_completed' => !in_array($penilai->pivot->status_penilaian ?? 'Belum Dinilai', ['Belum Dinilai'])
+        ];
+    }
+
+    /**
      * Get penilai dashboard data
      */
     public function getDashboardData($penilaiId)
@@ -288,27 +334,25 @@ class PenilaiService
 
         return Cache::remember($cacheKey, 300, function () use ($penilaiId) {
             // Get active periods that have usulans assigned to this penilai
+            // PERBAIKAN: Tidak mempedulikan status usulan, hanya mengecek apakah penilai ditugaskan
             $activePeriods = \App\Models\BackendUnivUsulan\PeriodeUsulan::where('status', 'Buka')
                 ->whereHas('usulans', function($query) use ($penilaiId) {
-                    $query->where('status_usulan', 'Sedang Direview')
-                          ->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
-                              $penilaiQuery->where('penilai_id', $penilaiId);
-                          });
+                    $query->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
+                        $penilaiQuery->where('penilai_id', $penilaiId);
+                    });
                 })
                 ->with(['usulans' => function($query) use ($penilaiId) {
-                    $query->where('status_usulan', 'Sedang Direview')
-                          ->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
-                              $penilaiQuery->where('penilai_id', $penilaiId);
-                          })
-                          ->with('pegawai:id,nama_lengkap,nip')
-                          ->latest()
-                          ->limit(5);
+                    $query->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
+                        $penilaiQuery->where('penilai_id', $penilaiId);
+                    })
+                    ->with(['pegawai:id,nama_lengkap,nip', 'penilais:id,nama_lengkap'])
+                    ->latest()
+                    ->limit(5);
                 }])
                 ->get();
 
-            // Get recent usulans
-            $recentUsulans = Usulan::where('status_usulan', 'Sedang Direview')
-                ->whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
+            // Get recent usulans assigned to this penilai (tidak peduli status)
+            $recentUsulans = Usulan::whereHas('penilais', function($penilaiQuery) use ($penilaiId) {
                     $penilaiQuery->where('penilai_id', $penilaiId);
                 })
                 ->with(['pegawai:id,nama_lengkap,nip', 'periodeUsulan'])
@@ -322,5 +366,440 @@ class PenilaiService
                 'stats' => $this->getPenilaiStatistics($penilaiId)
             ];
         });
+    }
+
+    /**
+     * ENHANCED: Process field-by-field validation for Penilai Universitas
+     */
+    public function processFieldByFieldValidation(Request $request, Usulan $usulan, $penilaiId)
+    {
+        try {
+            Log::info('Penilai field-by-field validation started', [
+                'usulan_id' => $usulan->id,
+                'penilai_id' => $penilaiId,
+                'action_type' => $request->input('action_type'),
+                'request_data' => $request->all()
+            ]);
+
+            // Validate access
+            $accessValidation = $this->validatePenilaiAccess($usulan->id, $penilaiId);
+            if (!$accessValidation['has_access']) {
+                return [
+                    'success' => false,
+                    'message' => $accessValidation['message']
+                ];
+            }
+
+            $actionType = $request->input('action_type');
+
+            switch ($actionType) {
+                case 'autosave':
+                    return $this->handleFieldByFieldAutoSave($request, $usulan, $penilaiId);
+
+                case 'save_only':
+                    return $this->handleFieldByFieldSave($request, $usulan, $penilaiId);
+
+                case 'rekomendasikan':
+                    return $this->handleFieldByFieldRekomendasi($request, $usulan, $penilaiId);
+
+                case 'perbaikan_usulan':
+                    return $this->handleFieldByFieldPerbaikan($request, $usulan, $penilaiId);
+
+                default:
+                    return [
+                        'success' => false,
+                        'message' => 'Aksi tidak valid.'
+                    ];
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Penilai field-by-field validation error', [
+                'usulan_id' => $usulan->id,
+                'penilai_id' => $penilaiId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memproses validasi field-by-field.'
+            ];
+        }
+    }
+
+    /**
+     * Handle field-by-field auto-save validation
+     */
+    private function handleFieldByFieldAutoSave(Request $request, Usulan $usulan, $penilaiId)
+    {
+        $validationData = $request->input('validation');
+
+        // Validate field data structure
+        $validationResult = $this->validateFieldData($validationData);
+        if (!$validationResult['is_valid']) {
+            return [
+                'success' => false,
+                'message' => 'Data validasi tidak valid: ' . $validationResult['message']
+            ];
+        }
+
+        // Save validation data
+        $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
+        $usulan->save();
+
+        // Clear cache
+        $this->clearPenilaiCache($penilaiId);
+
+        return [
+            'success' => true,
+            'message' => 'Data validasi tersimpan otomatis.'
+        ];
+    }
+
+    /**
+     * Handle field-by-field save validation
+     */
+    private function handleFieldByFieldSave(Request $request, Usulan $usulan, $penilaiId)
+    {
+        $validationData = $request->input('validation');
+
+        // Validate field data structure
+        $validationResult = $this->validateFieldData($validationData);
+        if (!$validationResult['is_valid']) {
+            return [
+                'success' => false,
+                'message' => 'Data validasi tidak valid: ' . $validationResult['message']
+            ];
+        }
+
+        // Save validation data
+        $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
+        $usulan->save();
+
+        // Clear cache
+        $this->clearPenilaiCache($penilaiId);
+
+        return [
+            'success' => true,
+            'message' => 'Data validasi berhasil disimpan.'
+        ];
+    }
+
+    /**
+     * Handle field-by-field rekomendasi
+     */
+    private function handleFieldByFieldRekomendasi(Request $request, Usulan $usulan, $penilaiId)
+    {
+        $request->validate([
+            'catatan_umum' => 'nullable|string|max:1000'
+        ]);
+
+        $validationData = $request->input('validation');
+
+        // Validate field data structure
+        $validationResult = $this->validateFieldData($validationData);
+        if (!$validationResult['is_valid']) {
+            return [
+                'success' => false,
+                'message' => 'Data validasi tidak valid: ' . $validationResult['message']
+            ];
+        }
+
+        // Update usulan status
+        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+
+        // Save validation data
+        $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
+
+        // Add recommendation data with enhanced structure
+        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi['tim_penilai']['recommendation'] = 'direkomendasikan';
+        $currentValidasi['tim_penilai']['catatan_rekomendasi'] = $request->input('catatan_umum');
+        $currentValidasi['tim_penilai']['tanggal_rekomendasi'] = now()->toDateTimeString();
+        $currentValidasi['tim_penilai']['penilai_id'] = $penilaiId;
+        $currentValidasi['tim_penilai']['status'] = 'menunggu_admin_univ_review';
+
+        $usulan->validasi_data = $currentValidasi;
+        $usulan->save();
+
+        // Clear cache
+        $this->clearPenilaiCache($penilaiId);
+
+        return [
+            'success' => true,
+            'message' => 'Usulan berhasil dikirim ke Admin Universitas untuk review.',
+            'redirect' => route('penilai-universitas.pusat-usulan.index')
+        ];
+    }
+
+    /**
+     * Handle field-by-field perbaikan usulan
+     */
+    private function handleFieldByFieldPerbaikan(Request $request, Usulan $usulan, $penilaiId)
+    {
+        $request->validate([
+            'catatan_umum' => 'required|string|max:1000'
+        ]);
+
+        $validationData = $request->input('validation');
+
+        // Validate field data structure
+        $validationResult = $this->validateFieldData($validationData);
+        if (!$validationResult['is_valid']) {
+            return [
+                'success' => false,
+                'message' => 'Data validasi tidak valid: ' . $validationResult['message']
+            ];
+        }
+
+        // Update usulan status
+        $usulan->status_usulan = \App\Models\BackendUnivUsulan\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+
+        // Save validation data
+        $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
+
+        // Add return data with enhanced structure
+        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi['tim_penilai']['perbaikan_usulan'] = [
+            'catatan' => $request->input('catatan_umum'),
+            'tanggal_return' => now()->toDateTimeString(),
+            'penilai_id' => $penilaiId,
+            'status' => 'menunggu_admin_univ_review'
+        ];
+
+        $usulan->validasi_data = $currentValidasi;
+        $usulan->save();
+
+        // Clear cache
+        $this->clearPenilaiCache($penilaiId);
+
+        return [
+            'success' => true,
+            'message' => 'Usulan berhasil dikirim ke Admin Universitas untuk review.',
+            'redirect' => route('penilai-universitas.pusat-usulan.index')
+        ];
+    }
+
+    /**
+     * Validate field data structure for Penilai Universitas
+     */
+    public function validateFieldData($validationData)
+    {
+        try {
+            // If validation data is JSON string, decode it
+            if (is_string($validationData)) {
+                $validationData = json_decode($validationData, true);
+            }
+
+            if (!is_array($validationData)) {
+                return [
+                    'is_valid' => false,
+                    'message' => 'Data validasi harus berupa array'
+                ];
+            }
+
+            // Define expected field groups for Penilai Universitas
+            $expectedGroups = [
+                'data_pribadi',
+                'data_kepegawaian', 
+                'data_pendidikan',
+                'data_kinerja',
+                'dokumen_profil',
+                'bkd',
+                'karya_ilmiah',
+                'dokumen_usulan',
+                'syarat_guru_besar',
+                'dokumen_admin_fakultas'
+            ];
+
+            // Check if all expected groups are present
+            foreach ($expectedGroups as $group) {
+                if (!isset($validationData[$group])) {
+                    return [
+                        'is_valid' => false,
+                        'message' => "Group '{$group}' tidak ditemukan dalam data validasi"
+                    ];
+                }
+
+                if (!is_array($validationData[$group])) {
+                    return [
+                        'is_valid' => false,
+                        'message' => "Group '{$group}' harus berupa array"
+                    ];
+                }
+
+                // Validate each field in the group
+                foreach ($validationData[$group] as $field => $fieldData) {
+                    if (!is_array($fieldData)) {
+                        return [
+                            'is_valid' => false,
+                            'message' => "Field '{$field}' dalam group '{$group}' harus berupa array"
+                        ];
+                    }
+
+                    // Check required field properties
+                    if (!isset($fieldData['status'])) {
+                        return [
+                            'is_valid' => false,
+                            'message' => "Field '{$field}' dalam group '{$group}' tidak memiliki status"
+                        ];
+                    }
+
+                    // Validate status values
+                    $validStatuses = ['sesuai', 'tidak_sesuai'];
+                    if (!in_array($fieldData['status'], $validStatuses)) {
+                        return [
+                            'is_valid' => false,
+                            'message' => "Status field '{$field}' dalam group '{$group}' tidak valid"
+                        ];
+                    }
+
+                    // If status is 'tidak_sesuai', keterangan is required
+                    if ($fieldData['status'] === 'tidak_sesuai' && empty($fieldData['keterangan'])) {
+                        return [
+                            'is_valid' => false,
+                            'message' => "Keterangan wajib diisi untuk field '{$field}' dalam group '{$group}' yang tidak sesuai"
+                        ];
+                    }
+                }
+            }
+
+            return [
+                'is_valid' => true,
+                'message' => 'Data validasi valid'
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Field data validation error', [
+                'error' => $e->getMessage(),
+                'validation_data' => $validationData
+            ]);
+
+            return [
+                'is_valid' => false,
+                'message' => 'Error saat validasi data: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get validation summary for Penilai Universitas
+     */
+    public function getValidationSummary(Usulan $usulan, $penilaiId)
+    {
+        try {
+            $validasiData = $usulan->validasi_data ?? [];
+            $timPenilaiData = $validasiData['tim_penilai'] ?? [];
+            $validationData = $timPenilaiData['validation'] ?? [];
+
+            $summary = [
+                'total_fields' => 0,
+                'sesuai_count' => 0,
+                'tidak_sesuai_count' => 0,
+                'completion_percentage' => 0,
+                'groups' => []
+            ];
+
+            foreach ($validationData as $groupKey => $groupData) {
+                $groupSummary = [
+                    'group_name' => $this->getGroupDisplayName($groupKey),
+                    'total_fields' => count($groupData),
+                    'sesuai_count' => 0,
+                    'tidak_sesuai_count' => 0,
+                    'completion_percentage' => 0
+                ];
+
+                foreach ($groupData as $fieldKey => $fieldData) {
+                    $summary['total_fields']++;
+                    $groupSummary['total_fields']++;
+
+                    if ($fieldData['status'] === 'sesuai') {
+                        $summary['sesuai_count']++;
+                        $groupSummary['sesuai_count']++;
+                    } elseif ($fieldData['status'] === 'tidak_sesuai') {
+                        $summary['tidak_sesuai_count']++;
+                        $groupSummary['tidak_sesuai_count']++;
+                    }
+                }
+
+                // Calculate group completion percentage
+                if ($groupSummary['total_fields'] > 0) {
+                    $groupSummary['completion_percentage'] = 
+                        (($groupSummary['sesuai_count'] + $groupSummary['tidak_sesuai_count']) / $groupSummary['total_fields']) * 100;
+                }
+
+                $summary['groups'][$groupKey] = $groupSummary;
+            }
+
+            // Calculate overall completion percentage
+            if ($summary['total_fields'] > 0) {
+                $summary['completion_percentage'] = 
+                    (($summary['sesuai_count'] + $summary['tidak_sesuai_count']) / $summary['total_fields']) * 100;
+            }
+
+            return $summary;
+
+        } catch (\Exception $e) {
+            Log::error('Get validation summary error', [
+                'usulan_id' => $usulan->id,
+                'penilai_id' => $penilaiId,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'total_fields' => 0,
+                'sesuai_count' => 0,
+                'tidak_sesuai_count' => 0,
+                'completion_percentage' => 0,
+                'groups' => []
+            ];
+        }
+    }
+
+    /**
+     * Get group display name
+     */
+    private function getGroupDisplayName($groupKey)
+    {
+        $groupNames = [
+            'data_pribadi' => 'Data Pribadi',
+            'data_kepegawaian' => 'Data Kepegawaian',
+            'data_pendidikan' => 'Data Pendidikan',
+            'data_kinerja' => 'Data Kinerja',
+            'dokumen_profil' => 'Dokumen Profil',
+            'bkd' => 'Beban Kinerja Dosen (BKD)',
+            'karya_ilmiah' => 'Karya Ilmiah',
+            'dokumen_usulan' => 'Dokumen Usulan',
+            'syarat_guru_besar' => 'Syarat Guru Besar',
+            'dokumen_admin_fakultas' => 'Dokumen Admin Fakultas'
+        ];
+
+        return $groupNames[$groupKey] ?? ucwords(str_replace('_', ' ', $groupKey));
+    }
+
+    /**
+     * Check if penilai has completed validation
+     */
+    public function hasCompletedValidation(Usulan $usulan, $penilaiId)
+    {
+        try {
+            $validasiData = $usulan->validasi_data ?? [];
+            $timPenilaiData = $validasiData['tim_penilai'] ?? [];
+            
+            // Check if penilai has submitted recommendation or perbaikan
+            $hasRecommendation = !empty($timPenilaiData['recommendation']);
+            $hasPerbaikan = !empty($timPenilaiData['perbaikan_usulan']);
+            
+            return $hasRecommendation || $hasPerbaikan;
+
+        } catch (\Exception $e) {
+            Log::error('Check completion validation error', [
+                'usulan_id' => $usulan->id,
+                'penilai_id' => $penilaiId,
+                'error' => $e->getMessage()
+            ]);
+
+            return false;
+        }
     }
 }

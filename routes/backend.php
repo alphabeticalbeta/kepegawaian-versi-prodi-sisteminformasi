@@ -960,34 +960,7 @@ Route::bind('usulan', function ($value) {
 
 
 
-    // ======================================================================
-    // TIM PENILAI ROUTES
-    // ======================================================================
-    Route::prefix('tim-penilai')
-        ->name('tim-penilai.')
-        ->middleware(['role:Tim Penilai'])
-        ->group(function () {
 
-            // Dashboard
-            Route::get('/dashboard', [App\Http\Controllers\Backend\TimPenilai\DashboardController::class, 'index'])
-                ->name('dashboard');
-
-            // Usulan Routes
-            Route::prefix('usulan')->name('usulan.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'index'])
-                    ->name('index');
-                Route::get('/{usulan}', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'show'])
-                    ->name('show');
-                Route::post('/{usulan}/save-validation', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'saveValidation'])
-                    ->name('save-validation');
-                Route::post('/{usulan}/submit-penilaian', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'submitPenilaian'])
-                    ->name('submit-penilaian');
-                Route::get('/{usulan}/document/{field}', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'showDocument'])
-                    ->name('show-document');
-                Route::get('/{usulan}/pegawai-document/{field}', [App\Http\Controllers\Backend\TimPenilai\UsulanController::class, 'showPegawaiDocument'])
-                    ->name('show-pegawai-document');
-            });
-        });
 
     // ======================================================================
     // TIM SENAT ROUTES

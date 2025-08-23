@@ -124,13 +124,15 @@ class PenilaiUniversitas {
     // DataTables initialization
     initializeDataTables() {
         // Initialize DataTables if available
-        if (typeof $.fn.DataTable !== 'undefined') {
-            $('.datatable').DataTable({
+        if (typeof window.jQuery !== 'undefined' && typeof window.jQuery.fn.DataTable !== 'undefined') {
+            window.jQuery('.datatable').DataTable({
                 responsive: true,
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
                 }
             });
+        } else {
+            console.log('DataTables or jQuery not available, skipping DataTables initialization');
         }
     }
 
