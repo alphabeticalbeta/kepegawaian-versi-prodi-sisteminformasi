@@ -137,6 +137,10 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // Dashboard
             Route::get('/dashboard', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardController::class, 'index'])
                 ->name('dashboard');
+            
+            // API routes untuk histori periode
+            Route::get('/histori-periode/{jenis}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardController::class, 'getHistoriPeriode'])
+                ->name('histori-periode');
 
             // =====================================================
             // MASTER DATA ROUTES (STANDARDIZED)
@@ -290,6 +294,14 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('index');
                 Route::get('/{periode}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'show'])
                     ->name('show');
+                
+                // API routes untuk histori periode
+                Route::get('/histori/{jenis}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getHistoriPeriode'])
+                    ->name('histori');
+                Route::post('/set-periode-aktif', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'setPeriodeAktif'])
+                    ->name('set-periode-aktif');
+                Route::post('/clear-periode-aktif', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'clearPeriodeAktif'])
+                    ->name('clear-periode-aktif');
             });
 
             // =====================================================

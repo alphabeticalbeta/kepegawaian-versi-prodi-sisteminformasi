@@ -166,40 +166,36 @@ class UsulanValidationController extends Controller
      */
     public function saveValidation(Request $request, Usulan $usulan)
     {
-
         $actionType = $request->input('action_type');
 
-        // Check if usulan is in correct status for the action
-        $allowedStatuses = ['Diusulkan ke Universitas'];
-
-        // For return actions, also allow already processed usulans to be returned again
-        if (in_array($actionType, ['return_to_pegawai', 'return_to_fakultas', 'forward_to_penilai', 'return_from_penilai'])) {
-            $allowedStatuses[] = 'Perbaikan Usulan';
-            $allowedStatuses[] = 'Sedang Direview';
+        // KEPEGAWAIAN UNIVERSITAS - FLEKSIBILITAS PENUH
+        // Hanya validasi business logic yang wajar, tidak ada batasan status ketat
+        
+        // Business logic validations for Kepegawaian Universitas
+        if (in_array($actionType, ['kirim_ke_senat'])) {
+            // Cek apakah sudah ada rekomendasi dari penilai sebelum kirim ke senat
+            $hasPenilaiRecommendation = $usulan->penilais()
+                ->whereNotNull('hasil_penilaian')
+                ->where('hasil_penilaian', 'rekomendasi')
+                ->exists();
+                
+            if (!$hasPenilaiRecommendation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usulan belum dapat dikirim ke Tim Senat karena belum ada rekomendasi dari Tim Penilai.'
+                ], 422);
+            }
         }
 
-        // For penilai review actions, allow usulans waiting for admin review
-        if (in_array($actionType, ['approve_perbaikan', 'approve_rekomendasi', 'reject_perbaikan', 'reject_rekomendasi'])) {
-            $allowedStatuses[] = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
-        }
-
-        // For new action buttons, allow intermediate and final statuses
-        if (in_array($actionType, ['perbaikan_ke_pegawai', 'perbaikan_ke_fakultas', 'kirim_perbaikan_ke_penilai', 'kirim_ke_senat', 'tidak_direkomendasikan'])) {
-            $allowedStatuses[] = 'Perbaikan Dari Tim Penilai';
-            $allowedStatuses[] = 'Usulan Direkomendasi Tim Penilai';
-        }
-
-        // For intermediate status actions
-        if (in_array($actionType, ['kirim_ke_penilai', 'kembali'])) {
-            $allowedStatuses[] = 'Menunggu Hasil Penilaian Tim Penilai';
-            $allowedStatuses[] = 'Sedang Direview';
-        }
-
-        if (!in_array($usulan->status_usulan, $allowedStatuses)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Usulan tidak dapat divalidasi karena status tidak sesuai.'
-            ], 422);
+        // Validasi untuk action yang memerlukan catatan
+        if (in_array($actionType, ['perbaikan_ke_pegawai', 'perbaikan_ke_fakultas', 'kirim_perbaikan_ke_penilai', 'tidak_direkomendasikan', 'kirim_ke_senat'])) {
+            $catatan = $request->input('catatan_verifikator');
+            if (empty($catatan) || strlen(trim($catatan)) < 10) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Catatan wajib diisi minimal 10 karakter untuk tindakan ini.'
+                ], 422);
+            }
         }
 
         try {
@@ -271,8 +267,11 @@ class UsulanValidationController extends Controller
     {
         $validationData = json_decode($request->input('validation_data'), true);
 
-        // Save validation data using the model method
-        $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
+        // Only save validation data if it exists and is not null
+        if ($validationData && is_array($validationData)) {
+            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
+        }
+        
         $usulan->save();
 
         // Clear related caches
@@ -292,8 +291,17 @@ class UsulanValidationController extends Controller
     {
         $validationData = $request->input('validation');
 
-        // Save validation data using the model method
-        $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
+        // Only save validation data if it exists and is not null
+        if ($validationData && is_array($validationData)) {
+            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
+        } elseif ($validationData && is_string($validationData)) {
+            // If it's a JSON string, decode it first
+            $decodedData = json_decode($validationData, true);
+            if ($decodedData && is_array($decodedData)) {
+                $usulan->setValidasiByRole('admin_universitas', $decodedData, Auth::id());
+            }
+        }
+        
         $usulan->save();
 
         // Clear related caches
@@ -327,9 +335,12 @@ class UsulanValidationController extends Controller
             if (is_string($validationData)) {
                 $validationData = json_decode($validationData, true);
             }
-            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
-            $usulan->save();
+            // Only save if validation data is valid array
+            if ($validationData && is_array($validationData)) {
+                $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
+            }
         }
+        $usulan->save();
 
         // Clear caches
         $cacheKey = "usulan_validation_{$usulan->id}_admin_universitas";
@@ -378,7 +389,10 @@ class UsulanValidationController extends Controller
             if (is_string($validationData)) {
                 $validationData = json_decode($validationData, true);
             }
-            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
+            // Only save if validation data is valid array
+            if ($validationData && is_array($validationData)) {
+                $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
+            }
         }
 
         // Assign selected penilais to usulan
@@ -606,33 +620,30 @@ class UsulanValidationController extends Controller
      */
     private function handleTidakDirekomendasikan(Request $request, Usulan $usulan)
     {
-        $request->validate([
-            'catatan_umum' => 'required|string|max:1000'
-        ]);
-
+        // KEPEGAWAIAN UNIVERSITAS - FLEKSIBILITAS PENUH
+        // Tidak ada batasan status, bisa dilakukan kapan saja
+        
+        $catatan = $request->input('catatan_verifikator');
+        
         // Update usulan status to "Tidak Direkomendasikan"
         $usulan->status_usulan = 'Tidak Direkomendasikan';
-        $usulan->catatan_verifikator = $request->input('catatan_umum');
-
-        // Save validation data
-        $validationData = $request->input('validation');
-        if ($validationData) {
-            if (is_string($validationData)) {
-                $validationData = json_decode($validationData, true);
-            }
-            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
-        }
+        $usulan->catatan_verifikator = $catatan;
 
         // Add rejection data to validasi_data
-        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi = $usulan->validasi_data ?? [];
+        $currentValidasi['admin_universitas'] = $currentValidasi['admin_universitas'] ?? [];
         $currentValidasi['admin_universitas']['tidak_direkomendasikan'] = [
-            'catatan' => $request->input('catatan_umum'),
+            'catatan' => $catatan,
             'tanggal_rejection' => now()->toDateTimeString(),
             'admin_id' => Auth::id(),
-            'alasan' => 'Usulan tidak direkomendasikan untuk periode berjalan'
+            'alasan' => 'Usulan tidak direkomendasikan untuk periode berjalan',
+            'status_sebelumnya' => $usulan->getOriginal('status_usulan')
         ];
         $usulan->validasi_data = $currentValidasi;
         $usulan->save();
+
+        // Create usulan log
+        $this->createUsulanLog($usulan, 'Tidak Direkomendasikan', 'Usulan ditandai tidak direkomendasikan: ' . $catatan);
 
         // Clear caches
         $cacheKey = "usulan_validation_{$usulan->id}_admin_universitas";
@@ -641,7 +652,7 @@ class UsulanValidationController extends Controller
         Log::info('Usulan tidak direkomendasikan', [
             'usulan_id' => $usulan->id,
             'admin_id' => Auth::id(),
-            'catatan' => $request->input('catatan_umum'),
+            'catatan' => $catatan,
             'status' => 'Tidak Direkomendasikan'
         ]);
 
@@ -817,33 +828,30 @@ class UsulanValidationController extends Controller
      */
     private function perbaikanKePegawai(Request $request, Usulan $usulan)
     {
-        $request->validate([
-            'catatan_umum' => 'required|string|max:1000'
-        ]);
-
+        // KEPEGAWAIAN UNIVERSITAS - FLEKSIBILITAS PENUH
+        // Tidak ada batasan status, bisa dilakukan kapan saja
+        
+        $catatan = $request->input('catatan_verifikator');
+        
         // Update usulan status
         $usulan->status_usulan = 'Perbaikan Usulan';
-        $usulan->catatan_verifikator = $request->input('catatan_umum');
-
-        // Save validation data
-        $validationData = $request->input('validation');
-        if ($validationData) {
-            if (is_string($validationData)) {
-                $validationData = json_decode($validationData, true);
-            }
-            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
-        }
+        $usulan->catatan_verifikator = $catatan;
 
         // Add action data to validasi_data
-        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi = $usulan->validasi_data ?? [];
+        $currentValidasi['admin_universitas'] = $currentValidasi['admin_universitas'] ?? [];
         $currentValidasi['admin_universitas']['perbaikan_ke_pegawai'] = [
-            'catatan' => $request->input('catatan_umum'),
+            'catatan' => $catatan,
             'tanggal_action' => now()->toDateTimeString(),
             'admin_id' => Auth::id(),
-            'action' => 'perbaikan_ke_pegawai'
+            'action' => 'perbaikan_ke_pegawai',
+            'status_sebelumnya' => $usulan->getOriginal('status_usulan')
         ];
         $usulan->validasi_data = $currentValidasi;
         $usulan->save();
+
+        // Create usulan log
+        $this->createUsulanLog($usulan, 'Perbaikan Usulan', 'Usulan dikirim ke Pegawai untuk perbaikan: ' . $catatan);
 
         // Clear caches
         $cacheKey = "usulan_validation_{$usulan->id}_admin_universitas";
@@ -861,33 +869,30 @@ class UsulanValidationController extends Controller
      */
     private function perbaikanKeFakultas(Request $request, Usulan $usulan)
     {
-        $request->validate([
-            'catatan_umum' => 'required|string|max:1000'
-        ]);
-
+        // KEPEGAWAIAN UNIVERSITAS - FLEKSIBILITAS PENUH
+        // Tidak ada batasan status, bisa dilakukan kapan saja
+        
+        $catatan = $request->input('catatan_verifikator');
+        
         // Update usulan status
         $usulan->status_usulan = 'Perbaikan Usulan';
-        $usulan->catatan_verifikator = $request->input('catatan_umum');
-
-        // Save validation data
-        $validationData = $request->input('validation');
-        if ($validationData) {
-            if (is_string($validationData)) {
-                $validationData = json_decode($validationData, true);
-            }
-            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
-        }
+        $usulan->catatan_verifikator = $catatan;
 
         // Add action data to validasi_data
-        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi = $usulan->validasi_data ?? [];
+        $currentValidasi['admin_universitas'] = $currentValidasi['admin_universitas'] ?? [];
         $currentValidasi['admin_universitas']['perbaikan_ke_fakultas'] = [
-            'catatan' => $request->input('catatan_umum'),
+            'catatan' => $catatan,
             'tanggal_action' => now()->toDateTimeString(),
             'admin_id' => Auth::id(),
-            'action' => 'perbaikan_ke_fakultas'
+            'action' => 'perbaikan_ke_fakultas',
+            'status_sebelumnya' => $usulan->getOriginal('status_usulan')
         ];
         $usulan->validasi_data = $currentValidasi;
         $usulan->save();
+
+        // Create usulan log
+        $this->createUsulanLog($usulan, 'Perbaikan Usulan', 'Usulan dikirim ke Admin Fakultas untuk perbaikan: ' . $catatan);
 
         // Clear caches
         $cacheKey = "usulan_validation_{$usulan->id}_admin_universitas";
@@ -905,32 +910,29 @@ class UsulanValidationController extends Controller
      */
     private function kirimPerbaikanKePenilai(Request $request, Usulan $usulan)
     {
-        $request->validate([
-            'catatan_umum' => 'required|string|max:1000'
-        ]);
-
+        // KEPEGAWAIAN UNIVERSITAS - FLEKSIBILITAS PENUH
+        // Tidak ada batasan status, bisa dilakukan kapan saja
+        
+        $catatan = $request->input('catatan_verifikator');
+        
         // Update usulan status back to review
         $usulan->status_usulan = 'Sedang Direview';
 
-        // Save validation data
-        $validationData = $request->input('validation');
-        if ($validationData) {
-            if (is_string($validationData)) {
-                $validationData = json_decode($validationData, true);
-            }
-            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
-        }
-
         // Add action data to validasi_data
-        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi = $usulan->validasi_data ?? [];
+        $currentValidasi['admin_universitas'] = $currentValidasi['admin_universitas'] ?? [];
         $currentValidasi['admin_universitas']['kirim_perbaikan_ke_penilai'] = [
-            'catatan' => $request->input('catatan_umum'),
+            'catatan' => $catatan,
             'tanggal_action' => now()->toDateTimeString(),
             'admin_id' => Auth::id(),
-            'action' => 'kirim_perbaikan_ke_penilai'
+            'action' => 'kirim_perbaikan_ke_penilai',
+            'status_sebelumnya' => $usulan->getOriginal('status_usulan')
         ];
         $usulan->validasi_data = $currentValidasi;
         $usulan->save();
+
+        // Create usulan log
+        $this->createUsulanLog($usulan, 'Sedang Direview', 'Usulan dikirim kembali ke Tim Penilai untuk penilaian ulang: ' . $catatan);
 
         // Clear caches
         $cacheKey = "usulan_validation_{$usulan->id}_admin_universitas";
@@ -948,32 +950,29 @@ class UsulanValidationController extends Controller
      */
     private function kirimKeSenat(Request $request, Usulan $usulan)
     {
-        $request->validate([
-            'catatan_umum' => 'nullable|string|max:1000'
-        ]);
-
+        // KEPEGAWAIAN UNIVERSITAS - FLEKSIBILITAS PENUH
+        // Business logic: Cek apakah sudah ada rekomendasi dari penilai (sudah divalidasi di atas)
+        
+        $catatan = $request->input('catatan_verifikator');
+        
         // Update usulan status
         $usulan->status_usulan = 'Direkomendasikan';
 
-        // Save validation data
-        $validationData = $request->input('validation');
-        if ($validationData) {
-            if (is_string($validationData)) {
-                $validationData = json_decode($validationData, true);
-            }
-            $usulan->setValidasiByRole('admin_universitas', $validationData, Auth::id());
-        }
-
         // Add action data to validasi_data
-        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi = $usulan->validasi_data ?? [];
+        $currentValidasi['admin_universitas'] = $currentValidasi['admin_universitas'] ?? [];
         $currentValidasi['admin_universitas']['kirim_ke_senat'] = [
-            'catatan' => $request->input('catatan_umum'),
+            'catatan' => $catatan,
             'tanggal_action' => now()->toDateTimeString(),
             'admin_id' => Auth::id(),
-            'action' => 'kirim_ke_senat'
+            'action' => 'kirim_ke_senat',
+            'status_sebelumnya' => $usulan->getOriginal('status_usulan')
         ];
         $usulan->validasi_data = $currentValidasi;
         $usulan->save();
+
+        // Create usulan log
+        $this->createUsulanLog($usulan, 'Direkomendasikan', 'Usulan dikirim ke Tim Senat untuk keputusan final: ' . $catatan);
 
         // Clear caches
         $cacheKey = "usulan_validation_{$usulan->id}_admin_universitas";
@@ -1292,5 +1291,26 @@ class UsulanValidationController extends Controller
             'completed_penilai' => $completedPenilai,
             'penilai_details' => $penilaiDetails
         ];
+    }
+
+    /**
+     * Create usulan log entry
+     */
+    private function createUsulanLog(Usulan $usulan, $statusBaru, $catatan)
+    {
+        try {
+            $usulanLog = new \App\Models\KepegawaianUniversitas\UsulanLog();
+            $usulanLog->usulan_id = $usulan->id;
+            $usulanLog->dilakukan_oleh_id = Auth::id();
+            $usulanLog->status_sebelumnya = $usulan->getOriginal('status_usulan');
+            $usulanLog->status_baru = $statusBaru;
+            $usulanLog->catatan = $catatan;
+            $usulanLog->save();
+        } catch (\Exception $e) {
+            Log::error('Failed to create usulan log', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

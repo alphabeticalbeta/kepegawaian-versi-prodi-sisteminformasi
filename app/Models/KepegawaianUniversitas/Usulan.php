@@ -448,6 +448,117 @@ class Usulan extends Model
         return $documents;
     }
 
+    /**
+     * Get all documents organized by category
+     */
+    public function getAllDocuments(): array
+    {
+        return [
+            'dokumen_profil' => $this->getProfilDocuments(),
+            'dokumen_usulan' => $this->getUsulanDocuments(),
+            'dokumen_bkd' => $this->getBkdDocuments(),
+            'dokumen_pendukung' => $this->getPendukungDocuments(),
+        ];
+    }
+
+    /**
+     * Get dokumen profil pegawai
+     */
+    public function getProfilDocuments(): array
+    {
+        $documents = [];
+        $profilFields = [
+            'ijazah_terakhir' => 'Ijazah Terakhir',
+            'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir',
+            'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+            'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+            'skp_tahun_pertama' => 'SKP Tahun Pertama',
+            'skp_tahun_kedua' => 'SKP Tahun Kedua',
+            'pak_konversi' => 'PAK/PAK Konversi',
+            'sk_cpns' => 'SK CPNS',
+            'sk_pns' => 'SK PNS',
+            'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+            'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
+            'foto' => 'Foto'
+        ];
+
+        foreach ($profilFields as $field => $label) {
+            $documents[$field] = [
+                'label' => $label,
+                'exists' => !empty($this->pegawai->$field),
+                'path' => $this->pegawai->$field
+            ];
+        }
+
+        return $documents;
+    }
+
+    /**
+     * Get dokumen usulan
+     */
+    public function getUsulanDocuments(): array
+    {
+        $documents = [];
+        $usulanFields = [
+            'pakta_integritas' => 'Pakta Integritas',
+            'bukti_korespondensi' => 'Bukti Korespondensi',
+            'turnitin' => 'Turnitin',
+            'upload_artikel' => 'Upload Artikel',
+            'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+        ];
+
+        foreach ($usulanFields as $field => $label) {
+            $documents[$field] = [
+                'label' => $label,
+                'exists' => $this->hasDocument($field),
+                'path' => $this->getDocumentPath($field)
+            ];
+        }
+
+        return $documents;
+    }
+
+    /**
+     * Get dokumen BKD
+     */
+    public function getBkdDocuments(): array
+    {
+        $documents = [];
+        $bkdLabels = $this->getBkdDisplayLabels();
+
+        foreach ($bkdLabels as $field => $label) {
+            $documents[$field] = [
+                'label' => $label,
+                'exists' => $this->hasDocument($field),
+                'path' => $this->getDocumentPath($field)
+            ];
+        }
+
+        return $documents;
+    }
+
+    /**
+     * Get dokumen pendukung
+     */
+    public function getPendukungDocuments(): array
+    {
+        $documents = [];
+        $pendukungFields = [
+            'file_surat_usulan' => 'File Surat Usulan',
+            'file_berita_senat' => 'File Berita Senat'
+        ];
+
+        foreach ($pendukungFields as $field => $label) {
+            $documents[$field] = [
+                'label' => $label,
+                'exists' => $this->hasDocument($field),
+                'path' => $this->getDocumentPath($field)
+            ];
+        }
+
+        return $documents;
+    }
+
     // =====================================
     // SCOPES
     // =====================================

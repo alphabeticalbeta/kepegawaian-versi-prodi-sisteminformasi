@@ -31,12 +31,14 @@ class DashboardPeriodeController extends Controller
 
         // Mapping jenis usulan dari sidebar ke nama periode
         $jenisMapping = [
+            'all' => 'Semua Usulan Aktif',
             'nuptk' => 'Usulan NUPTK',
             'laporan-lkd' => 'Usulan Laporan LKD',
             'presensi' => 'Usulan Presensi',
             'penyesuaian-masa-kerja' => 'Usulan Penyesuaian Masa Kerja',
             'ujian-dinas-ijazah' => 'Usulan Ujian Dinas & Ijazah',
-            'jabatan' => 'Usulan Jabatan',
+            'jabatan-dosen-regular' => 'Usulan Jabatan Dosen Reguler',
+            'jabatan-dosen-pengangkatan' => 'Usulan Jabatan Dosen Pengangkatan Pertama',
             'laporan-serdos' => 'Usulan Laporan Serdos',
             'pensiun' => 'Usulan Pensiun',
             'kepangkatan' => 'Usulan Kepangkatan',
@@ -49,21 +51,14 @@ class DashboardPeriodeController extends Controller
 
         $namaUsulan = $jenisMapping[$jenisUsulan] ?? 'Usulan Jabatan';
 
-        // Debug: Log untuk melihat mapping yang digunakan
-        \Log::info('DashboardPeriodeController - Mapping Debug', [
-            'jenisUsulan' => $jenisUsulan,
-            'namaUsulan' => $namaUsulan,
-            'mapping' => $jenisMapping
-        ]);
-
-        // Ambil semua periode untuk jenis usulan ini (termasuk sub-jenis)
+        // Ambil semua periode untuk jenis usulan ini (histori)
         $periodes = PeriodeUsulan::where(function($query) use ($namaUsulan, $jenisUsulan) {
-                // Exact match untuk jenis usulan utama
-                $query->where('jenis_usulan', $namaUsulan);
-
-                // Jika jenis usulan adalah jabatan, juga ambil sub-jenis
-                if ($jenisUsulan === 'jabatan') {
-                    $query->orWhereIn('jenis_usulan', ['usulan-jabatan-dosen', 'usulan-jabatan-tendik']);
+                // Jika jenis usulan adalah 'all', ambil semua periode aktif
+                if ($jenisUsulan === 'all') {
+                    $query->where('status', 'Buka');
+                } else {
+                    // Exact match untuk jenis usulan utama
+                    $query->where('jenis_usulan', $namaUsulan);
                 }
             })
             ->withCount([
@@ -81,20 +76,6 @@ class DashboardPeriodeController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Debug: Log untuk melihat data yang diambil
-        \Log::info('DashboardPeriodeController - Data Debug', [
-            'jenisUsulan' => $jenisUsulan,
-            'namaUsulan' => $namaUsulan,
-            'totalPeriodes' => $periodes->count(),
-            'periodes' => $periodes->toArray()
-        ]);
-
-        // Coba ambil semua periode untuk debugging
-        $allPeriodes = PeriodeUsulan::all(['id', 'nama_periode', 'jenis_usulan', 'status']);
-        \Log::info('DashboardPeriodeController - All Periodes Debug', [
-            'allPeriodes' => $allPeriodes->toArray()
-        ]);
-
         // Overall statistics untuk jenis usulan ini
         $overallStats = [
             'total_periodes' => $periodes->count(),
@@ -111,6 +92,88 @@ class DashboardPeriodeController extends Controller
             'namaUsulan',
             'overallStats'
         ));
+    }
+
+    /**
+     * Mendapatkan histori periode untuk sidebar
+     */
+    public function getHistoriPeriode(Request $request)
+    {
+        $jenisUsulan = $request->get('jenis');
+        
+        // Mapping jenis usulan dari sidebar ke nama periode
+        $jenisMapping = [
+            'nuptk' => 'Usulan NUPTK',
+            'laporan-lkd' => 'Usulan Laporan LKD',
+            'presensi' => 'Usulan Presensi',
+            'penyesuaian-masa-kerja' => 'Usulan Penyesuaian Masa Kerja',
+            'ujian-dinas-ijazah' => 'Usulan Ujian Dinas & Ijazah',
+            'jabatan-dosen-regular' => 'Usulan Jabatan Dosen Reguler',
+            'jabatan-dosen-pengangkatan' => 'Usulan Jabatan Dosen Pengangkatan Pertama',
+            'laporan-serdos' => 'Usulan Laporan Serdos',
+            'pensiun' => 'Usulan Pensiun',
+            'kepangkatan' => 'Usulan Kepangkatan',
+            'pencantuman-gelar' => 'Usulan Pencantuman Gelar',
+            'id-sinta-sister' => 'Usulan ID SINTA ke SISTER',
+            'satyalancana' => 'Usulan Satyalancana',
+            'tugas-belajar' => 'Usulan Tugas Belajar',
+            'pengaktifan-kembali' => 'Usulan Pengaktifan Kembali'
+        ];
+
+        $namaUsulan = $jenisMapping[$jenisUsulan] ?? null;
+
+        if (!$namaUsulan) {
+            return response()->json(['error' => 'Jenis usulan tidak valid'], 400);
+        }
+
+        // Ambil semua periode untuk jenis usulan ini (histori)
+        $periodes = PeriodeUsulan::where('jenis_usulan', $namaUsulan)
+            ->withCount('usulans')
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'nama_periode', 'tahun_periode', 'status', 'tanggal_mulai', 'tanggal_selesai']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $periodes
+        ]);
+    }
+
+    /**
+     * Set periode aktif untuk session
+     */
+    public function setPeriodeAktif(Request $request)
+    {
+        $periodeId = $request->get('periode_id');
+        
+        if ($periodeId) {
+            $periode = PeriodeUsulan::find($periodeId);
+            if ($periode) {
+                session(['periode_aktif_id' => $periodeId]);
+                session(['periode_aktif_nama' => $periode->nama_periode]);
+                session(['periode_aktif_jenis' => $periode->jenis_usulan]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Periode aktif berhasil diatur',
+                    'periode' => $periode
+                ]);
+            }
+        }
+
+        return response()->json(['error' => 'Periode tidak ditemukan'], 404);
+    }
+
+    /**
+     * Clear periode aktif dari session
+     */
+    public function clearPeriodeAktif(Request $request)
+    {
+        session()->forget(['periode_aktif_id', 'periode_aktif_nama', 'periode_aktif_jenis']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Periode aktif berhasil dihapus'
+        ]);
     }
 
     /**

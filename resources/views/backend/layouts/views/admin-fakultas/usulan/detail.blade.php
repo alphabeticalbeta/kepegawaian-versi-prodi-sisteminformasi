@@ -4,7 +4,7 @@
 
 @section('content')
 {{-- Use the shared usulan detail component --}}
-@include('backend.layouts.views.shared.usulan-detail', [
+@include('backend.layouts.views.shared.usul-jabatan.usulan-detail-jabatan', [
     'usulan' => $usulan,
     'role' => 'Admin Fakultas',
     'existingValidation' => $existingValidation ?? null

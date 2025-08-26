@@ -45,7 +45,22 @@ class UsulanController extends Controller
         // Get existing validation data
         $existingValidation = $usulan->getValidasiByRole('admin_universitas') ?? [];
 
-        return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', compact('usulan', 'existingValidation'));
+        // Determine action permissions based on status
+        $canReturn = in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview']);
+        $canForward = in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview']);
+
+        return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', [
+            'usulan' => $usulan,
+            'existingValidation' => $existingValidation,
+            'config' => [
+                'canReturn' => $canReturn,
+                'canForward' => $canForward,
+                'routePrefix' => 'admin-universitas',
+                'canEdit' => in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview']),
+                'canView' => true,
+                'submitFunctions' => ['save', 'return_to_pegawai', 'forward_to_penilai']
+            ]
+        ]);
     }
 
     /**

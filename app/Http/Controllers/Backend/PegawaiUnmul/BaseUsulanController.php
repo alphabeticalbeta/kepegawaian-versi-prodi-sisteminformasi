@@ -84,10 +84,12 @@ abstract class BaseUsulanController extends Controller
      */
     protected function getActivePeriode(string $jenisUsulan): ?PeriodeUsulan
     {
+        // Ambil periode berdasarkan jenis usulan yang tepat
         return PeriodeUsulan::where('jenis_usulan', $jenisUsulan)
             ->where('tanggal_mulai', '<=', now())
             ->where('tanggal_selesai', '>=', now())
             ->where('status', 'Buka')
+            ->orderBy('tanggal_mulai', 'desc')
             ->first();
     }
 

@@ -30,7 +30,186 @@
             }
         }
 
-
+        // Get Tim Penilai data for individual display
+        $penilais = $usulan->penilais ?? collect();
+        $timPenilaiIndividualData = [];
+        
+        // Define field labels for mapping
+        $fieldLabels = [
+            'data_pribadi' => [
+                'jenis_pegawai' => 'Jenis Pegawai',
+                'status_kepegawaian' => 'Status Kepegawaian',
+                'nip' => 'NIP',
+                'nuptk' => 'NUPTK',
+                'gelar_depan' => 'Gelar Depan',
+                'nama_lengkap' => 'Nama Lengkap',
+                'gelar_belakang' => 'Gelar Belakang',
+                'email' => 'Email',
+                'tempat_lahir' => 'Tempat Lahir',
+                'tanggal_lahir' => 'Tanggal Lahir',
+                'jenis_kelamin' => 'Jenis Kelamin',
+                'nomor_handphone' => 'Nomor Handphone'
+            ],
+            'data_kepegawaian' => [
+                'pangkat_saat_usul' => 'Pangkat',
+                'tmt_pangkat' => 'TMT Pangkat',
+                'jabatan_saat_usul' => 'Jabatan',
+                'tmt_jabatan' => 'TMT Jabatan',
+                'tmt_cpns' => 'TMT CPNS',
+                'tmt_pns' => 'TMT PNS',
+                'unit_kerja_saat_usul' => 'Unit Kerja'
+            ],
+            'data_pendidikan' => [
+                'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                'nama_prodi_jurusan' => 'Nama Program Studi/Jurusan',
+                'mata_kuliah_diampu' => 'Mata Kuliah Diampu',
+                'ranting_ilmu_kepakaran' => 'Bidang Kepakaran',
+                'url_profil_sinta' => 'Profil SINTA'
+            ],
+            'data_kinerja' => [
+                'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1)
+            ],
+            'dokumen_profil' => [
+                'ijazah_terakhir' => 'Ijazah Terakhir',
+                'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir',
+                'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
+                'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
+                'pak_konversi' => 'PAK Konversi ' . (date('Y') - 1),
+                'sk_cpns' => 'SK CPNS',
+                'sk_pns' => 'SK PNS',
+                'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir'
+            ],
+            'karya_ilmiah' => [
+                'karya_ilmiah' => 'Karya Ilmiah',
+                'nama_jurnal' => 'Nama Jurnal',
+                'judul_artikel' => 'Judul Artikel',
+                'penerbit_artikel' => 'Penerbit Artikel',
+                'volume_artikel' => 'Volume Artikel',
+                'nomor_artikel' => 'Nomor Artikel',
+                'edisi_artikel' => 'Edisi Artikel',
+                'halaman_artikel' => 'Halaman Artikel',
+                'link_artikel' => 'Link Artikel',
+                'link_sinta' => 'Link SINTA',
+                'link_scopus' => 'Link Scopus',
+                'link_scimago' => 'Link Scimago',
+                'link_wos' => 'Link Web of Science'
+            ],
+            'dokumen_usulan' => [
+                'pakta_integritas' => 'Pakta Integritas',
+                'bukti_korespondensi' => 'Bukti Korespondensi',
+                'turnitin' => 'Turnitin',
+                'upload_artikel' => 'Upload Artikel',
+                'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+            ],
+            'syarat_guru_besar' => [
+                'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+            ]
+        ];
+        
+        if ($penilais->count() > 0) {
+            foreach ($penilais as $index => $penilai) {
+                $penilaiName = 'Penilai ' . ($index + 1);
+                $penilaiInvalidFields = [];
+                $penilaiGeneralNotes = [];
+                
+                // Check if penilai has completed assessment
+                $hasAssessment = !empty($penilai->pivot->hasil_penilaian) || 
+                                !empty($penilai->pivot->status_penilaian) || 
+                                !empty($penilai->pivot->catatan_penilaian) ||
+                                ($penilai->pivot->status_penilaian ?? '') !== 'Belum Dinilai';
+                
+                if ($hasAssessment) {
+                    // Get individual penilai data from validasi_data
+                    $validasiData = $usulan->validasi_data ?? [];
+                    $individualPenilaiData = $validasiData['individual_penilai'] ?? [];
+                    
+                    // Find data for this specific penilai
+                    $penilaiData = collect($individualPenilaiData)->firstWhere('penilai_id', $penilai->id);
+                    
+                    if ($penilaiData && is_array($penilaiData)) {
+                        // Process invalid fields for this penilai
+                        foreach ($penilaiData as $groupKey => $groupData) {
+                            if (is_array($groupData)) {
+                                foreach ($groupData as $fieldKey => $fieldData) {
+                                    if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                        // Enhanced field mapping
+                                        $fieldLabelMap = [
+                                            'file_berita_senat' => 'File Berita Senat',
+                                            'file_surat_usulan' => 'File Surat Usulan',
+                                            'nomor_berita_senat' => 'Nomor Berita Senat',
+                                            'nomor_surat_usulan' => 'Nomor Surat Usulan',
+                                            'turnitin' => 'Dokumen Turnitin',
+                                            'upload_artikel' => 'Upload Artikel',
+                                            'pakta_integritas' => 'Pakta Integritas',
+                                            'bukti_korespondensi' => 'Bukti Korespondensi',
+                                            'sk_pns' => 'SK PNS',
+                                            'sk_cpns' => 'SK CPNS',
+                                            'ijazah_terakhir' => 'Ijazah Terakhir',
+                                            'skp_tahun_pertama' => 'SKP Tahun Pertama',
+                                            'skp_tahun_kedua' => 'SKP Tahun Kedua',
+                                            'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                                            'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                                            'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir',
+                                            'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
+                                            'pak_konversi' => 'PAK Konversi',
+                                            'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                                            'syarat_guru_besar' => 'Syarat Guru Besar',
+                                            'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                                        ];
+                                        
+                                        $fieldLabel = isset($fieldLabels[$groupKey][$fieldKey]) ? $fieldLabels[$groupKey][$fieldKey] : ($fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey)));
+                                        
+                                        $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Collect general notes for this penilai
+                        if (isset($penilaiData['keterangan_umum']) && !empty($penilaiData['keterangan_umum'])) {
+                            $penilaiGeneralNotes[] = $penilaiData['keterangan_umum'];
+                        }
+                    }
+                    
+                    // Fallback: Try to get data from general tim_penilai validation if individual data is empty
+                    if (empty($penilaiInvalidFields)) {
+                        $timPenilaiValidation = $usulan->getValidasiByRole('tim_penilai');
+                        if (!empty($timPenilaiValidation) && isset($timPenilaiValidation['validation'])) {
+                            foreach ($timPenilaiValidation['validation'] as $groupKey => $groupData) {
+                                if (is_array($groupData)) {
+                                    foreach ($groupData as $fieldKey => $fieldData) {
+                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                            $fieldLabel = isset($fieldLabels[$groupKey][$fieldKey]) ? $fieldLabels[$groupKey][$fieldKey] : ($fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey)));
+                                            $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Use pivot data if available
+                    if (!empty($penilai->pivot->catatan_penilaian)) {
+                        $penilaiGeneralNotes[] = $penilai->pivot->catatan_penilaian;
+                    }
+                } else {
+                    $penilaiGeneralNotes[] = 'Belum memberikan penilaian';
+                }
+                
+                $timPenilaiIndividualData[$penilaiName] = [
+                    'invalid_fields' => $penilaiInvalidFields,
+                    'general_notes' => $penilaiGeneralNotes,
+                    'has_assessment' => $hasAssessment,
+                    'assessment_date' => $penilai->pivot->tanggal_penilaian ?? $penilai->pivot->updated_at ?? null
+                ];
+            }
+        }
     }
 
         // Function to check if field has validation issues - ENHANCED
@@ -360,7 +539,25 @@
                     }
                 @endphp
 
-                @if(!empty($allInvalidFields))
+                @php
+                    // Check if there are any invalid fields from any source
+                    $hasAnyInvalidFields = !empty($allInvalidFields);
+                    
+                    // Also check if Tim Penilai has invalid fields
+                    $hasTimPenilaiInvalidFields = false;
+                    if (!empty($timPenilaiIndividualData)) {
+                        foreach ($timPenilaiIndividualData as $penilaiData) {
+                            if (!empty($penilaiData['invalid_fields'])) {
+                                $hasTimPenilaiInvalidFields = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    $shouldShowInvalidFields = $hasAnyInvalidFields || $hasTimPenilaiInvalidFields;
+                @endphp
+
+                @if($shouldShowInvalidFields)
                     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
                         <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
                             <h2 class="text-xl font-bold text-white flex items-center">
@@ -449,6 +646,70 @@
                         </div>
                     </div>
                 @endif
+            @endif
+
+            {{-- Hasil Validasi Tim Penilai --}}
+            @if($isEditMode && $usulan && !empty($timPenilaiIndividualData))
+                <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                            Hasil Validasi Tim Penilai
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        @foreach($timPenilaiIndividualData as $penilaiName => $penilaiData)
+                            <div class="mb-6 last:mb-0">
+                                <div class="flex items-center justify-between mb-3 border-b border-gray-200 pb-2">
+                                    <h3 class="font-semibold text-lg text-gray-800">
+                                        <i data-lucide="user-check" class="w-5 h-5 inline mr-2 text-purple-600"></i>
+                                        {{ $penilaiName }}
+                                    </h3>
+                                    @if($penilaiData['assessment_date'])
+                                        <span class="text-xs text-gray-500">
+                                            <i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($penilaiData['assessment_date'])->format('d/m/Y H:i') }}
+                                        </span>
+                                    @endif
+                                </div>
+                                
+                                @if(!empty($penilaiData['invalid_fields']))
+                                    <div class="mb-4">
+                                        <h4 class="font-medium text-red-800 mb-2 flex items-center">
+                                            <i data-lucide="alert-triangle" class="w-4 h-4 mr-2"></i>
+                                            Field yang Tidak Sesuai:
+                                        </h4>
+                                        <div class="space-y-2">
+                                            @foreach($penilaiData['invalid_fields'] as $field)
+                                                <div class="text-sm text-red-800 bg-red-50 px-3 py-2 rounded border-l-4 border-red-400 flex items-start">
+                                                    <i data-lucide="x-circle" class="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0"></i>
+                                                    <span>{{ $field }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                @if(!empty($penilaiData['general_notes']))
+                                    <div class="border-t border-red-200 pt-4">
+                                        <h4 class="font-medium text-red-800 mb-2 flex items-center">
+                                            <i data-lucide="message-square" class="w-4 h-4 mr-2"></i>
+                                            Keterangan Umum:
+                                        </h4>
+                                        <div class="space-y-2">
+                                            @foreach($penilaiData['general_notes'] as $note)
+                                                <div class="text-sm text-red-700 bg-red-50 px-3 py-2 rounded border-l-4 border-red-400 flex items-start">
+                                                    <i data-lucide="info" class="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0"></i>
+                                                    <span>{{ $note }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             @endif
 
             {{-- Informasi Periode Usulan --}}

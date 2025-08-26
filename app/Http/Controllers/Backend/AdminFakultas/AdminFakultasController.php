@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use App\Services\FileStorageService;
 use App\Services\ValidationService;
+use App\Services\DocumentAccessService;
 
 /**
  * Admin Fakultas Controller
@@ -37,11 +38,13 @@ class AdminFakultasController extends Controller
 {
     private $fileStorage;
     private $validationService;
+    private $documentAccessService;
 
-    public function __construct(FileStorageService $fileStorage, ValidationService $validationService)
+    public function __construct(FileStorageService $fileStorage, ValidationService $validationService, DocumentAccessService $documentAccessService)
     {
         $this->fileStorage = $fileStorage;
         $this->validationService = $validationService;
+        $this->documentAccessService = $documentAccessService;
     }
     /**
     * Menampilkan dashboard dengan daftar usulan untuk fakultas terkait.
@@ -92,9 +95,35 @@ class AdminFakultasController extends Controller
 
         $unitKerjaId = $unitKerja->id;
 
-        // Get periode usulan khusus jabatan - Show all periods for jabatan
+        // Get usulan yang sudah dibuat oleh pegawai di fakultas ini terlebih dahulu
+        $usulans = Usulan::query()
+            ->whereIn('jenis_usulan', ['jabatan', 'Usulan Jabatan', 'usulan-jabatan-dosen', 'usulan-jabatan-tendik', 'jabatan-dosen-regular', 'jabatan-dosen-pengangkatan', 'jabatan-tenaga-kependidikan'])
+            ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($query) use ($unitKerjaId) {
+                $query->where('id', $unitKerjaId);
+            })
+            ->with(['periodeUsulan', 'pegawai'])
+            ->get();
+
+        // Debug usulan yang ditemukan
+        Log::info('Usulan yang ditemukan untuk admin fakultas', [
+            'admin_id' => $admin->id,
+            'unit_kerja_id' => $unitKerjaId,
+            'unit_kerja_nama' => $unitKerja->nama,
+            'total_usulan_found' => $usulans->count(),
+            'usulan_ids' => $usulans->pluck('id')->toArray(),
+            'periode_ids_with_usulan' => $usulans->pluck('periode_usulan_id')->toArray()
+        ]);
+
+        // Get periode IDs yang sudah pernah dibuat usulan oleh pegawai di fakultas ini
+        $periodeIdsWithUsulan = $usulans->pluck('periode_usulan_id')->toArray();
+
+        // Get periode usulan khusus jabatan - Include periode yang aktif dan periode yang sudah tutup tapi pernah dibuat usulan
         $periodeUsulans = PeriodeUsulan::query()
-            ->whereIn('jenis_usulan', ['jabatan', 'Usulan Jabatan', 'usulan-jabatan-dosen', 'usulan-jabatan-tendik'])
+            ->whereIn('jenis_usulan', ['jabatan', 'Usulan Jabatan', 'usulan-jabatan-dosen', 'usulan-jabatan-tendik', 'jabatan-dosen-regular', 'jabatan-dosen-pengangkatan', 'jabatan-tenaga-kependidikan'])
+            ->where(function($query) use ($periodeIdsWithUsulan) {
+                $query->where('status', 'Buka')  // Periode yang sedang aktif
+                      ->orWhereIn('id', $periodeIdsWithUsulan);  // Periode yang sudah tutup tapi pernah dibuat usulan (untuk history)
+            })
             ->withCount([
                 'usulans as total_usulan' => function ($query) use ($unitKerjaId) {
                     $query->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
@@ -134,6 +163,28 @@ class AdminFakultasController extends Controller
             ])
             ->latest()
             ->paginate(10);
+
+        // Debug query results
+        Log::info('Periode Usulan Pangkat Query Results untuk Admin Fakultas', [
+            'admin_id' => $admin->id,
+            'unit_kerja_id' => $unitKerjaId,
+            'total_periode_found' => $periodeUsulans->total(),
+            'periode_ids' => $periodeUsulans->pluck('id')->toArray(),
+            'periode_names' => $periodeUsulans->pluck('nama_periode')->toArray(),
+            'periode_statuses' => $periodeUsulans->pluck('status', 'id')->toArray(),
+            'periode_ids_with_usulan' => $periodeIdsWithUsulan
+        ]);
+
+        // Debug query results
+        Log::info('Periode Usulan Query Results untuk Admin Fakultas', [
+            'admin_id' => $admin->id,
+            'unit_kerja_id' => $unitKerjaId,
+            'total_periode_found' => $periodeUsulans->total(),
+            'periode_ids' => $periodeUsulans->pluck('id')->toArray(),
+            'periode_names' => $periodeUsulans->pluck('nama_periode')->toArray(),
+            'periode_statuses' => $periodeUsulans->pluck('status', 'id')->toArray(),
+            'periode_ids_with_usulan' => $periodeIdsWithUsulan
+        ]);
 
         // Calculate statistics
         $statistics = [
@@ -178,9 +229,35 @@ class AdminFakultasController extends Controller
 
         $unitKerjaId = $unitKerja->id;
 
-        // Get periode usulan khusus pangkat - Show all periods for pangkat
+        // Get usulan yang sudah dibuat oleh pegawai di fakultas ini terlebih dahulu
+        $usulans = Usulan::query()
+            ->whereIn('jenis_usulan', ['pangkat', 'Usulan Kepangkatan', 'kepangkatan'])
+            ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($query) use ($unitKerjaId) {
+                $query->where('id', $unitKerjaId);
+            })
+            ->with(['periodeUsulan', 'pegawai'])
+            ->get();
+
+        // Debug usulan yang ditemukan
+        Log::info('Usulan pangkat yang ditemukan untuk admin fakultas', [
+            'admin_id' => $admin->id,
+            'unit_kerja_id' => $unitKerjaId,
+            'unit_kerja_nama' => $unitKerja->nama,
+            'total_usulan_found' => $usulans->count(),
+            'usulan_ids' => $usulans->pluck('id')->toArray(),
+            'periode_ids_with_usulan' => $usulans->pluck('periode_usulan_id')->toArray()
+        ]);
+
+        // Get periode IDs yang sudah pernah dibuat usulan oleh pegawai di fakultas ini
+        $periodeIdsWithUsulan = $usulans->pluck('periode_usulan_id')->toArray();
+
+        // Get periode usulan khusus pangkat - Include periode yang aktif dan periode yang sudah tutup tapi pernah dibuat usulan
         $periodeUsulans = PeriodeUsulan::query()
             ->whereIn('jenis_usulan', ['pangkat', 'Usulan Kepangkatan', 'kepangkatan'])
+            ->where(function($query) use ($periodeIdsWithUsulan) {
+                $query->where('status', 'Buka')  // Periode yang sedang aktif
+                      ->orWhereIn('id', $periodeIdsWithUsulan);  // Periode yang sudah tutup tapi pernah dibuat usulan (untuk history)
+            })
             ->withCount([
                 'usulans as total_usulan' => function ($query) use ($unitKerjaId) {
                     $query->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
@@ -312,6 +389,10 @@ class AdminFakultasController extends Controller
                 $query->where('name', 'Penilai Universitas');
             })->orderBy('nama_lengkap')->get();
 
+            // Determine action permissions based on status
+            $canReturn = in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']);
+            $canForward = in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']);
+
             return view('backend.layouts.views.admin-fakultas.usulan.detail', [
                 'usulan' => $usulan,
                 'validationFields' => $validationFields,
@@ -325,6 +406,14 @@ class AdminFakultasController extends Controller
                 'backUrl' => route('admin-fakultas.periode.pendaftar', $usulan->periode_usulan_id),
                 'backText' => 'Kembali ke Daftar Pengusul',
                 'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
+                'config' => [
+                    'canReturn' => $canReturn,
+                    'canForward' => $canForward,
+                    'routePrefix' => 'admin-fakultas',
+                    'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
+                    'canView' => true, // Always allow viewing data
+                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
+                ],
                 'roleConfig' => [
                     'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
                     'canView' => true, // Always allow viewing data
@@ -771,53 +860,49 @@ class AdminFakultasController extends Controller
 
     public function showUsulanDocument(Usulan $usulan, $field)
     {
+        $user = Auth::user();
+
         // Authorization check untuk admin fakultas
-        $admin = Auth::user();
-        $adminFakultasId = $admin->unit_kerja_id;
+        $adminFakultasId = $user->unit_kerja_id;
         $usulanPegawaiFakultasId = $usulan->pegawai?->unitKerja?->subUnitKerja?->unit_kerja_id;
 
         if (!$adminFakultasId || $adminFakultasId !== $usulanPegawaiFakultasId) {
             abort(403, 'Akses ditolak. Anda tidak berhak melihat dokumen dari fakultas lain.');
         }
 
-        // Validasi field yang diizinkan
-        $allowedFields = [
-            'pakta_integritas', 'bukti_korespondensi', 'turnitin',
-            'upload_artikel', 'bukti_syarat_guru_besar'
-        ];
-
-        if (str_starts_with($field, 'bkd_')) {
-            $allowedFields[] = $field;
+        // Authorization check using DocumentAccessService (sama seperti pegawai)
+        if (!$this->documentAccessService->canAccessDocument($user, $usulan, $field)) {
+            abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk melihat dokumen ini.');
         }
 
-        if (!in_array($field, $allowedFields)) {
+        // Validate field access
+        if (!$this->documentAccessService->validateFieldAccess($user, $field)) {
             abort(404, 'Jenis dokumen tidak valid.');
         }
 
-        // Cari path file menggunakan method getDocumentPath
+        // Get file path
         $filePath = $usulan->getDocumentPath($field);
 
         if (!$filePath) {
             abort(404, 'File tidak ditemukan');
         }
 
-        // Determine correct disk and check file existence
-        $disk = 'local'; // Dokumen usulan selalu disimpan di local disk
+        // Determine correct disk based on field type (sama seperti pegawai)
+        $disk = $this->documentAccessService->getDiskForField($field);
+
         if (!Storage::disk($disk)->exists($filePath)) {
             abort(404, 'File tidak ditemukan di storage');
         }
 
+        // Log document access
+        $this->documentAccessService->logDocumentAccess($user, $usulan, $field, true);
+
         // Serve file
         $fullPath = Storage::disk($disk)->path($filePath);
-        if (!file_exists($fullPath)) {
-            abort(404, 'File tidak ditemukan di storage');
-        }
-
-        $mimeType = \Illuminate\Support\Facades\File::mimeType($fullPath);
 
         return response()->file($fullPath, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . basename($fullPath) . '"',
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => '0'
@@ -829,24 +914,23 @@ class AdminFakultasController extends Controller
      */
     public function showPegawaiDocument(Usulan $usulan, $field)
     {
+        $user = Auth::user();
+
         // Authorization check
-        $admin = Auth::user();
-        $adminFakultasId = $admin->unit_kerja_id;
+        $adminFakultasId = $user->unit_kerja_id;
         $usulanPegawaiFakultasId = $usulan->pegawai?->unitKerja?->subUnitKerja?->unit_kerja_id;
 
         if (!$adminFakultasId || $adminFakultasId !== $usulanPegawaiFakultasId) {
             abort(403, 'Akses ditolak. Anda tidak berhak melihat dokumen dari fakultas lain.');
         }
 
-        // Validasi field yang diizinkan
-        $allowedFields = [
-            'ijazah_terakhir', 'transkrip_nilai_terakhir', 'sk_pangkat_terakhir',
-            'sk_jabatan_terakhir', 'skp_tahun_pertama', 'skp_tahun_kedua',
-            'pak_konversi', 'sk_cpns', 'sk_pns', 'sk_penyetaraan_ijazah',
-            'disertasi_thesis_terakhir'
-        ];
+        // Authorization check using DocumentAccessService
+        if (!$this->documentAccessService->canAccessDocument($user, $usulan, $field)) {
+            abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk melihat dokumen ini.');
+        }
 
-        if (!in_array($field, $allowedFields)) {
+        // Validate field access
+        if (!$this->documentAccessService->validateFieldAccess($user, $field)) {
             abort(404, 'Jenis dokumen profil tidak valid.');
         }
 
@@ -857,17 +941,17 @@ class AdminFakultasController extends Controller
             abort(404, 'File tidak ditemukan');
         }
 
-        // Determine correct disk and check file existence
-        $disk = $this->getFileDisk($field);
+        // Determine correct disk based on field type
+        $disk = $this->documentAccessService->getDiskForField($field);
         if (!Storage::disk($disk)->exists($filePath)) {
             abort(404, 'File tidak ditemukan di storage');
         }
 
+        // Log document access
+        $this->documentAccessService->logDocumentAccess($user, $usulan, $field, true);
+
         // Serve file
         $fullPath = Storage::disk($disk)->path($filePath);
-        if (!file_exists($fullPath)) {
-            abort(404, 'File tidak ditemukan di storage');
-        }
 
         $mimeType = \Illuminate\Support\Facades\File::mimeType($fullPath);
 
@@ -951,25 +1035,26 @@ class AdminFakultasController extends Controller
         }
 
         try {
-            return \App\Models\KepegawaianUniversitas\PeriodeUsulan::withCount([
-                'usulans as jumlah_pengusul' => function ($query) use ($unitKerja) {
-                    $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview'])
-                        ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
+            return \App\Models\KepegawaianUniversitas\PeriodeUsulan::where('status', 'Buka') // Hanya periode yang aktif
+                ->withCount([
+                    'usulans as jumlah_pengusul' => function ($query) use ($unitKerja) {
+                        $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview'])
+                            ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
+                                $subQuery->where('id', $unitKerja->id);
+                            });
+                    },
+                    'usulans as perbaikan' => function ($query) use ($unitKerja) {
+                        $query->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan'])
+                            ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
+                                $subQuery->where('id', $unitKerja->id);
+                            });
+                    },
+                    'usulans as total_usulan' => function ($query) use ($unitKerja) {
+                        $query->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
                             $subQuery->where('id', $unitKerja->id);
                         });
-                },
-                'usulans as perbaikan' => function ($query) use ($unitKerja) {
-                    $query->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan'])
-                        ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
-                            $subQuery->where('id', $unitKerja->id);
-                        });
-                },
-                'usulans as total_usulan' => function ($query) use ($unitKerja) {
-                    $query->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
-                        $subQuery->where('id', $unitKerja->id);
-                    });
-                }
-            ])->latest()->paginate(10);
+                    }
+                ])->latest()->paginate(10);
         } catch (\Exception $e) {
             \Log::error('Error getting periode usulan: ' . $e->getMessage());
             return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);

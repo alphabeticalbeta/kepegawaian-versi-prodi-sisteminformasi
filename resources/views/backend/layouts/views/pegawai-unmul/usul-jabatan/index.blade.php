@@ -36,6 +36,9 @@
                 </h1>
                 <p class="mt-2 text-gray-600">
                     Daftar periode usulan jabatan yang tersedia untuk status kepegawaian Anda ({{ $pegawai->status_kepegawaian }}).
+                    @if($pegawai->jabatan_saat_usul)
+                        <br><span class="text-sm text-gray-500">Jabatan saat ini: <strong>{{ $pegawai->jabatan_saat_usul }}</strong></span>
+                    @endif
                 </p>
             </div>
         </div>
@@ -48,8 +51,37 @@
                 Daftar Periode Usulan Jabatan
             </h3>
             <p class="text-sm text-gray-500 mt-1">
-                Berikut adalah periode usulan jabatan yang sesuai dengan status kepegawaian Anda.
+                Berikut adalah periode usulan jabatan yang sesuai dengan status kepegawaian Anda. Periode yang sudah tutup tetap ditampilkan jika Anda pernah membuat usulan (sebagai history).
             </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <i data-lucide="trending-up" class="w-3 h-3 mr-1"></i>
+                    Kenaikan Jabatan Dosen Reguler
+                </span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <i data-lucide="user-plus" class="w-3 h-3 mr-1"></i>
+                    Pengangkatan Pertama Dosen
+                </span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                    <i data-lucide="users" class="w-3 h-3 mr-1"></i>
+                    Kenaikan Jabatan Tenaga Kependidikan
+                </span>
+            </div>
+            @if($pegawai->jenis_pegawai === 'Dosen' && $pegawai->jabatan_saat_usul)
+                <div class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-xs text-yellow-800">
+                        <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                        <strong>Filter Aktif:</strong> 
+                        @if($pegawai->jabatan_saat_usul === 'Tenaga Pengajar')
+                            Hanya menampilkan periode "Pengangkatan Pertama Dosen" (untuk Tenaga Pengajar → Asisten Ahli)
+                        @elseif(in_array($pegawai->jabatan_saat_usul, ['Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar']))
+                            Hanya menampilkan periode "Kenaikan Jabatan Dosen Reguler" (untuk jabatan minimal Asisten Ahli)
+                        @else
+                            Menampilkan periode sesuai jabatan saat ini
+                        @endif
+                    </p>
+                </div>
+            @endif
         </div>
 
         <div class="overflow-x-auto">
@@ -59,10 +91,12 @@
                         <tr>
                             <th scope="col" class="px-6 py-4 align-middle">No</th>
                             <th scope="col" class="px-6 py-4 align-middle">Nama Periode</th>
+                            <th scope="col" class="px-6 py-4 align-middle">Jenis Usulan Jabatan</th>
                             <th scope="col" class="px-6 py-4 align-middle">Tanggal Pembukaan</th>
                             <th scope="col" class="px-6 py-4 align-middle">Tanggal Penutupan</th>
                             <th scope="col" class="px-6 py-4 align-middle">Tanggal Awal Perbaikan</th>
                             <th scope="col" class="px-6 py-4 align-middle">Tanggal Akhir Perbaikan</th>
+                            <th scope="col" class="px-6 py-4 align-middle">Status Periode</th>
                             <th scope="col" class="px-6 py-4 align-middle">Aksi</th>
                         </tr>
                     </thead>
@@ -71,13 +105,35 @@
                             @php
                                 // Cek apakah pegawai sudah membuat usulan untuk periode ini
                                 $existingUsulan = $usulans->where('periode_usulan_id', $periode->id)->first();
+                                // Cek apakah periode sudah tutup
+                                $isPeriodClosed = $periode->status !== 'Buka' || now()->gt($periode->tanggal_selesai);
+                                // Cek apakah periode memiliki usulan (untuk history)
+                                $hasUsulan = $existingUsulan !== null;
                             @endphp
-                            <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
+                            <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200 {{ $isPeriodClosed && !$hasUsulan ? 'opacity-50' : '' }}">
                                 <td class="px-6 py-4 font-medium text-gray-900 align-middle">
                                     {{ $index + 1 }}
                                 </td>
                                 <td class="px-6 py-4 font-semibold text-gray-900 align-middle">
                                     {{ $periode->nama_periode }}
+                                </td>
+                                <td class="px-6 py-4 align-middle">
+                                    @php
+                                        $jenisUsulanLabel = match($periode->jenis_usulan) {
+                                            'jabatan-dosen-regular' => 'Kenaikan Jabatan Dosen Reguler',
+                                            'jabatan-dosen-pengangkatan' => 'Pengangkatan Pertama Dosen',
+                                            'jabatan-tenaga-kependidikan' => 'Kenaikan Jabatan Tenaga Kependidikan',
+                                            default => $periode->jenis_usulan
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                                        {{ $periode->jenis_usulan === 'jabatan-dosen-regular' ? 'bg-blue-100 text-blue-800' : '' }}
+                                        {{ $periode->jenis_usulan === 'jabatan-dosen-pengangkatan' ? 'bg-purple-100 text-purple-800' : '' }}
+                                        {{ $periode->jenis_usulan === 'jabatan-tenaga-kependidikan' ? 'bg-orange-100 text-orange-800' : '' }}
+                                        {{ !in_array($periode->jenis_usulan, ['jabatan-dosen-regular', 'jabatan-dosen-pengangkatan', 'jabatan-tenaga-kependidikan']) ? 'bg-gray-100 text-gray-800' : '' }}">
+                                        <i data-lucide="{{ $periode->jenis_usulan === 'jabatan-dosen-regular' ? 'trending-up' : ($periode->jenis_usulan === 'jabatan-dosen-pengangkatan' ? 'user-plus' : 'users') }}" class="w-3 h-3 mr-1"></i>
+                                        {{ $jenisUsulanLabel }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 align-middle">
                                     {{ $periode->tanggal_mulai ? $periode->tanggal_mulai->isoFormat('D MMMM YYYY') : '-' }}
@@ -90,6 +146,26 @@
                                 </td>
                                 <td class="px-6 py-4 align-middle">
                                     {{ $periode->tanggal_selesai_perbaikan ? $periode->tanggal_selesai_perbaikan->isoFormat('D MMMM YYYY') : '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-center align-middle">
+                                    @if($isPeriodClosed)
+                                        @if($hasUsulan)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                                                Periode Tutup (History)
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
+                                                Periode Tutup
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
+                                            Periode Aktif
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center align-middle">
                                     @if($existingUsulan)
@@ -124,12 +200,21 @@
                                             </button>
                                         </div>
                                     @else
-                                        {{-- Jika belum ada usulan, tampilkan tombol Membuat Usulan --}}
-                                        <a href="{{ route('pegawai-unmul.usulan-jabatan.create') }}?periode_id={{ $periode->id }}"
-                                           class="btn-animate inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-blue-500 border border-blue-500 rounded-lg hover:bg-gray-500 hover:text-white">
-                                            <i data-lucide="plus" class="w-3 h-3 mr-1"></i>
-                                            Membuat Usulan
-                                        </a>
+                                        {{-- Jika belum ada usulan, cek apakah periode masih aktif --}}
+                                        @if(!$isPeriodClosed)
+                                            {{-- Periode masih aktif, tampilkan tombol Membuat Usulan --}}
+                                            <a href="{{ route('pegawai-unmul.usulan-jabatan.create') }}?periode_id={{ $periode->id }}"
+                                               class="btn-animate inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-blue-500 border border-blue-500 rounded-lg hover:bg-blue-600 hover:text-white">
+                                                <i data-lucide="plus" class="w-3 h-3 mr-1"></i>
+                                                Membuat Usulan
+                                            </a>
+                                        @else
+                                            {{-- Periode sudah tutup dan tidak ada usulan, tampilkan pesan --}}
+                                            <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-lg">
+                                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                                                Periode Sudah Tutup
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>

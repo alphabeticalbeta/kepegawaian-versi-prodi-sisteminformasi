@@ -50,7 +50,23 @@ class UsulanController extends Controller
             $query->where('name', 'Penilai Universitas');
         })->orderBy('nama_lengkap')->get();
 
-        return view('backend.layouts.views.tim-senat.usulan.detail', compact('usulan', 'existingValidation', 'penilais'));
+        // Determine action permissions based on status
+        $canReturn = in_array($usulan->status_usulan, ['Direkomendasikan', 'Dikirim ke Sister']);
+        $canForward = in_array($usulan->status_usulan, ['Direkomendasikan', 'Dikirim ke Sister']);
+
+        return view('backend.layouts.views.tim-senat.usulan.detail', [
+            'usulan' => $usulan,
+            'existingValidation' => $existingValidation,
+            'penilais' => $penilais,
+            'config' => [
+                'canReturn' => $canReturn,
+                'canForward' => $canForward,
+                'routePrefix' => 'tim-senat',
+                'canEdit' => in_array($usulan->status_usulan, ['Direkomendasikan', 'Dikirim ke Sister']),
+                'canView' => true,
+                'submitFunctions' => ['save', 'tolak_usulan', 'setujui_usulan']
+            ]
+        ]);
     }
 
     /**

@@ -870,6 +870,49 @@
                     $penilaiValidation = $validasiData['tim_penilai'] ?? [];
                 }
                 
+                // PERBAIKAN: Pastikan data individual penilai juga dimasukkan ke dalam penilaiValidation
+                if (!empty($penilaiValidation) && !isset($penilaiValidation['individual_penilai'])) {
+                    $validasiData = $usulan->validasi_data ?? [];
+                    if (isset($validasiData['tim_penilai']['individual_penilai'])) {
+                        $penilaiValidation['individual_penilai'] = $validasiData['tim_penilai']['individual_penilai'];
+                    }
+                }
+                
+                // PERBAIKAN: Kumpulkan semua field yang tidak sesuai dari Tim Penilai untuk ditampilkan di tabel
+                $allPenilaiInvalidFields = [];
+                
+
+                
+                if (!empty($penilaiValidation)) {
+                    // Dari data validasi umum
+                    if (isset($penilaiValidation['validation'])) {
+                        foreach ($penilaiValidation['validation'] as $groupKey => $groupData) {
+                            if (is_array($groupData)) {
+                                foreach ($groupData as $fieldKey => $fieldData) {
+                                    if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                        $allPenilaiInvalidFields[$groupKey][$fieldKey] = $fieldData;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Dari data individual penilai
+                    if (isset($penilaiValidation['individual_penilai']) && is_array($penilaiValidation['individual_penilai'])) {
+                        foreach ($penilaiValidation['individual_penilai'] as $penilaiData) {
+                            foreach ($penilaiData as $groupKey => $groupData) {
+                                if (is_array($groupData)) {
+                                    foreach ($groupData as $fieldKey => $fieldData) {
+                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                            $allPenilaiInvalidFields[$groupKey][$fieldKey] = $fieldData;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 // Proses data penilai individual
                 if ($penilais->count() > 0) {
                     foreach ($penilais as $index => $penilai) {
@@ -896,22 +939,33 @@
                             // Cari data untuk penilai ini
                             $penilaiData = collect($individualPenilaiData)->firstWhere('penilai_id', $penilai->id);
                             
+
+                            
                             if ($penilaiData && is_array($penilaiData)) {
                                 // Proses field yang tidak sesuai untuk penilai ini
+                                $processedFields = 0;
                                 foreach ($penilaiData as $groupKey => $groupData) {
                                     if (is_array($groupData)) {
                                         foreach ($groupData as $fieldKey => $fieldData) {
                                             if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                                // Mapping field names untuk tampilan yang lebih user-friendly
+                                                $processedFields++;
+                                                
+
+                                                // PERBAIKAN: Mapping field names yang lebih lengkap untuk semua kategori field
                                                 $fieldLabelMap = [
+                                                    // Dokumen Admin Fakultas
                                                     'file_berita_senat' => 'File Berita Senat',
                                                     'file_surat_usulan' => 'File Surat Usulan',
                                                     'nomor_berita_senat' => 'Nomor Berita Senat',
                                                     'nomor_surat_usulan' => 'Nomor Surat Usulan',
+                                                    
+                                                    // Dokumen Usulan
                                                     'turnitin' => 'Dokumen Turnitin',
                                                     'upload_artikel' => 'Upload Artikel',
                                                     'pakta_integritas' => 'Pakta Integritas',
                                                     'bukti_korespondensi' => 'Bukti Korespondensi',
+                                                    
+                                                    // Dokumen Profil
                                                     'sk_pns' => 'SK PNS',
                                                     'sk_cpns' => 'SK CPNS',
                                                     'ijazah_terakhir' => 'Ijazah Terakhir',
@@ -923,11 +977,78 @@
                                                     'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
                                                     'pak_konversi' => 'PAK Konversi',
                                                     'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                                                    
+                                                    // Syarat Guru Besar
                                                     'syarat_guru_besar' => 'Syarat Guru Besar',
-                                                    'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                                                    'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar',
+                                                    
+                                                    // Data Pribadi
+                                                    'jenis_pegawai' => 'Jenis Pegawai',
+                                                    'status_kepegawaian' => 'Status Kepegawaian',
+                                                    'nip' => 'NIP',
+                                                    'nuptk' => 'NUPTK',
+                                                    'gelar_depan' => 'Gelar Depan',
+                                                    'nama_lengkap' => 'Nama Lengkap',
+                                                    'gelar_belakang' => 'Gelar Belakang',
+                                                    'email' => 'Email',
+                                                    'tempat_lahir' => 'Tempat Lahir',
+                                                    'tanggal_lahir' => 'Tanggal Lahir',
+                                                    'jenis_kelamin' => 'Jenis Kelamin',
+                                                    'nomor_handphone' => 'Nomor Handphone',
+                                                    
+                                                    // Data Kepegawaian
+                                                    'pangkat_saat_usul' => 'Pangkat',
+                                                    'tmt_pangkat' => 'TMT Pangkat',
+                                                    'jabatan_saat_usul' => 'Jabatan',
+                                                    'tmt_jabatan' => 'TMT Jabatan',
+                                                    'tmt_cpns' => 'TMT CPNS',
+                                                    'tmt_pns' => 'TMT PNS',
+                                                    'unit_kerja_saat_usul' => 'Unit Kerja',
+                                                    
+                                                    // Data Pendidikan
+                                                    'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                                                    'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                                                    'nama_prodi_jurusan' => 'Nama Program Studi/Jurusan',
+                                                    'mata_kuliah_diampu' => 'Mata Kuliah Diampu',
+                                                    'ranting_ilmu_kepakaran' => 'Bidang Kepakaran',
+                                                    'url_profil_sinta' => 'Profil SINTA',
+                                                    
+                                                    // Data Kinerja
+                                                    'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                                                    'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                                                    'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1),
+                                                    
+                                                    // Karya Ilmiah
+                                                    'jenis_karya' => 'Jenis Karya',
+                                                    'nama_jurnal' => 'Nama Jurnal',
+                                                    'judul_artikel' => 'Judul Artikel',
+                                                    'penerbit_artikel' => 'Penerbit Artikel',
+                                                    'volume_artikel' => 'Volume Artikel',
+                                                    'nomor_artikel' => 'Nomor Artikel',
+                                                    'edisi_artikel' => 'Edisi Artikel (Tahun)',
+                                                    'halaman_artikel' => 'Halaman Artikel',
+                                                    'link_artikel' => 'Link Artikel',
+                                                    'link_sinta' => 'Link SINTA',
+                                                    'link_scopus' => 'Link SCOPUS',
+                                                    'link_scimago' => 'Link SCIMAGO',
+                                                    'link_wos' => 'Link WoS'
                                                 ];
                                                 
-                                                $fieldLabel = isset($fieldGroups[$groupKey]['fields'][$fieldKey]) ? $fieldGroups[$groupKey]['fields'][$fieldKey] : ($fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey)));
+                                                // PERBAIKAN: Gunakan field mapping yang lebih lengkap untuk semua kategori field
+                                                $fieldLabel = '';
+                                                
+                                                // Cek apakah ada di fieldGroups terlebih dahulu
+                                                if (isset($fieldGroups[$groupKey]['fields'][$fieldKey])) {
+                                                    $fieldLabel = $fieldGroups[$groupKey]['fields'][$fieldKey];
+                                                }
+                                                // Jika tidak ada, gunakan fieldLabelMap
+                                                elseif (isset($fieldLabelMap[$fieldKey])) {
+                                                    $fieldLabel = $fieldLabelMap[$fieldKey];
+                                                }
+                                                // Fallback ke ucwords
+                                                else {
+                                                    $fieldLabel = ucwords(str_replace('_', ' ', $fieldKey));
+                                                }
                                                 
                                                 $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
                                             }
@@ -941,21 +1062,40 @@
                                 }
                             }
                             
-                            // Fallback: Jika tidak ada data individual, gunakan data dari validasi umum
-                            if (empty($penilaiInvalidFields) && !empty($penilaiValidation['validation'])) {
+                            // PERBAIKAN: Gunakan data dari validasi umum untuk semua field yang tidak sesuai
+                            // Tidak hanya jika data individual kosong, tapi juga untuk melengkapi data individual
+                            if (!empty($penilaiValidation['validation'])) {
                                 foreach ($penilaiValidation['validation'] as $groupKey => $groupData) {
                                     if (is_array($groupData)) {
                                         foreach ($groupData as $fieldKey => $fieldData) {
                                             if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                                // PERBAIKAN: Cek apakah field ini sudah ada dalam data individual
+                                                // Jika belum ada, tambahkan dari data validasi umum
+                                                $fieldAlreadyExists = false;
+                                                foreach ($penilaiInvalidFields as $existingField) {
+                                                    if (strpos($existingField, $fieldKey) !== false) {
+                                                        $fieldAlreadyExists = true;
+                                                        break;
+                                                    }
+                                                }
+                                                
+                                                // Jika field belum ada, tambahkan dari data validasi umum
+                                                if (!$fieldAlreadyExists) {
+                                                    // PERBAIKAN: Mapping field names yang lebih lengkap untuk semua kategori field (fallback)
                                                 $fieldLabelMap = [
+                                                    // Dokumen Admin Fakultas
                                                     'file_berita_senat' => 'File Berita Senat',
                                                     'file_surat_usulan' => 'File Surat Usulan',
                                                     'nomor_berita_senat' => 'Nomor Berita Senat',
                                                     'nomor_surat_usulan' => 'Nomor Surat Usulan',
+                                                    
+                                                    // Dokumen Usulan
                                                     'turnitin' => 'Dokumen Turnitin',
                                                     'upload_artikel' => 'Upload Artikel',
                                                     'pakta_integritas' => 'Pakta Integritas',
                                                     'bukti_korespondensi' => 'Bukti Korespondensi',
+                                                    
+                                                    // Dokumen Profil
                                                     'sk_pns' => 'SK PNS',
                                                     'sk_cpns' => 'SK CPNS',
                                                     'ijazah_terakhir' => 'Ijazah Terakhir',
@@ -967,13 +1107,70 @@
                                                     'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
                                                     'pak_konversi' => 'PAK Konversi',
                                                     'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                                                    
+                                                    // Syarat Guru Besar
                                                     'syarat_guru_besar' => 'Syarat Guru Besar',
-                                                    'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                                                    'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar',
+                                                    
+                                                    // Data Pribadi
+                                                    'jenis_pegawai' => 'Jenis Pegawai',
+                                                    'status_kepegawaian' => 'Status Kepegawaian',
+                                                    'nip' => 'NIP',
+                                                    'nuptk' => 'NUPTK',
+                                                    'gelar_depan' => 'Gelar Depan',
+                                                    'nama_lengkap' => 'Nama Lengkap',
+                                                    'gelar_belakang' => 'Gelar Belakang',
+                                                    'email' => 'Email',
+                                                    'tempat_lahir' => 'Tempat Lahir',
+                                                    'tanggal_lahir' => 'Tanggal Lahir',
+                                                    'jenis_kelamin' => 'Jenis Kelamin',
+                                                    'nomor_handphone' => 'Nomor Handphone',
+                                                    
+                                                    // Data Kepegawaian
+                                                    'pangkat_saat_usul' => 'Pangkat',
+                                                    'tmt_pangkat' => 'TMT Pangkat',
+                                                    'jabatan_saat_usul' => 'Jabatan',
+                                                    'tmt_jabatan' => 'TMT Jabatan',
+                                                    'tmt_cpns' => 'TMT CPNS',
+                                                    'tmt_pns' => 'TMT PNS',
+                                                    'unit_kerja_saat_usul' => 'Unit Kerja',
+                                                    
+                                                    // Data Pendidikan
+                                                    'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                                                    'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                                                    'nama_prodi_jurusan' => 'Nama Program Studi/Jurusan',
+                                                    'mata_kuliah_diampu' => 'Mata Kuliah Diampu',
+                                                    'ranting_ilmu_kepakaran' => 'Bidang Kepakaran',
+                                                    'url_profil_sinta' => 'Profil SINTA',
+                                                    
+                                                    // Data Kinerja
+                                                    'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                                                    'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                                                    'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1),
+                                                    
+                                                    // Karya Ilmiah
+                                                    'jenis_karya' => 'Jenis Karya',
+                                                    'nama_jurnal' => 'Nama Jurnal',
+                                                    'judul_artikel' => 'Judul Artikel',
+                                                    'penerbit_artikel' => 'Penerbit Artikel',
+                                                    'volume_artikel' => 'Volume Artikel',
+                                                    'nomor_artikel' => 'Nomor Artikel',
+                                                    'edisi_artikel' => 'Edisi Artikel (Tahun)',
+                                                    'halaman_artikel' => 'Halaman Artikel',
+                                                    'link_artikel' => 'Link Artikel',
+                                                    'link_sinta' => 'Link SINTA',
+                                                    'link_scopus' => 'Link SCOPUS',
+                                                    'link_scimago' => 'Link SCIMAGO',
+                                                    'link_wos' => 'Link WoS'
                                                 ];
                                                 
                                                 $fieldLabel = $fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
                                                 $penilaiInvalidFields[] = $fieldLabel . ' : ' . ($fieldData['keterangan'] ?? 'Tidak ada keterangan');
                                             }
+                                        }
+                                    }
+                                }
+                            }
                                         }
                                     }
                                 }
@@ -988,9 +1185,14 @@
                             $penilaiGeneralNotes[] = 'Belum memberikan penilaian';
                         }
                         
-                        // Tambahkan ke array utama (tampilkan semua penilai, termasuk yang belum menilai)
-                        $allPenilaiInvalidFields[$penilaiName] = $penilaiInvalidFields;
-                        $allPenilaiGeneralNotes[$penilaiName] = $penilaiGeneralNotes;
+                        // PERBAIKAN: Tambahkan ke array utama dengan struktur yang benar
+                        // Simpan data individual penilai ke dalam struktur yang dapat diakses
+                        if (!empty($penilaiInvalidFields)) {
+                            $allPenilaiInvalidFields[$penilaiName] = $penilaiInvalidFields;
+                        }
+                        if (!empty($penilaiGeneralNotes)) {
+                            $allPenilaiGeneralNotes[$penilaiName] = $penilaiGeneralNotes;
+                        }
                     }
                 } else {
                     // Fallback: Jika tidak ada data individual penilai, gunakan data umum
@@ -1042,16 +1244,21 @@
                                 if (is_array($groupData)) {
                                     foreach ($groupData as $fieldKey => $fieldData) {
                                         if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                            // Mapping field names untuk tampilan yang lebih user-friendly
+                                            // PERBAIKAN: Mapping field names yang lebih lengkap untuk semua kategori field (fallback ketiga)
                                             $fieldLabelMap = [
+                                                // Dokumen Admin Fakultas
                                                 'file_berita_senat' => 'File Berita Senat',
                                                 'file_surat_usulan' => 'File Surat Usulan',
                                                 'nomor_berita_senat' => 'Nomor Berita Senat',
                                                 'nomor_surat_usulan' => 'Nomor Surat Usulan',
+                                                
+                                                // Dokumen Usulan
                                                 'turnitin' => 'Dokumen Turnitin',
                                                 'upload_artikel' => 'Upload Artikel',
                                                 'pakta_integritas' => 'Pakta Integritas',
                                                 'bukti_korespondensi' => 'Bukti Korespondensi',
+                                                
+                                                // Dokumen Profil
                                                 'sk_pns' => 'SK PNS',
                                                 'sk_cpns' => 'SK CPNS',
                                                 'ijazah_terakhir' => 'Ijazah Terakhir',
@@ -1063,8 +1270,61 @@
                                                 'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
                                                 'pak_konversi' => 'PAK Konversi',
                                                 'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
+                                                
+                                                // Syarat Guru Besar
                                                 'syarat_guru_besar' => 'Syarat Guru Besar',
-                                                'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar'
+                                                'bukti_syarat_guru_besar' => 'Bukti Syarat Guru Besar',
+                                                
+                                                // Data Pribadi
+                                                'jenis_pegawai' => 'Jenis Pegawai',
+                                                'status_kepegawaian' => 'Status Kepegawaian',
+                                                'nip' => 'NIP',
+                                                'nuptk' => 'NUPTK',
+                                                'gelar_depan' => 'Gelar Depan',
+                                                'nama_lengkap' => 'Nama Lengkap',
+                                                'gelar_belakang' => 'Gelar Belakang',
+                                                'email' => 'Email',
+                                                'tempat_lahir' => 'Tempat Lahir',
+                                                'tanggal_lahir' => 'Tanggal Lahir',
+                                                'jenis_kelamin' => 'Jenis Kelamin',
+                                                'nomor_handphone' => 'Nomor Handphone',
+                                                
+                                                // Data Kepegawaian
+                                                'pangkat_saat_usul' => 'Pangkat',
+                                                'tmt_pangkat' => 'TMT Pangkat',
+                                                'jabatan_saat_usul' => 'Jabatan',
+                                                'tmt_jabatan' => 'TMT Jabatan',
+                                                'tmt_cpns' => 'TMT CPNS',
+                                                'tmt_pns' => 'TMT PNS',
+                                                'unit_kerja_saat_usul' => 'Unit Kerja',
+                                                
+                                                // Data Pendidikan
+                                                'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                                                'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                                                'nama_prodi_jurusan' => 'Nama Program Studi/Jurusan',
+                                                'mata_kuliah_diampu' => 'Mata Kuliah Diampu',
+                                                'ranting_ilmu_kepakaran' => 'Bidang Kepakaran',
+                                                'url_profil_sinta' => 'Profil SINTA',
+                                                
+                                                // Data Kinerja
+                                                'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                                                'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                                                'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1),
+                                                
+                                                // Karya Ilmiah
+                                                'jenis_karya' => 'Jenis Karya',
+                                                'nama_jurnal' => 'Nama Jurnal',
+                                                'judul_artikel' => 'Judul Artikel',
+                                                'penerbit_artikel' => 'Penerbit Artikel',
+                                                'volume_artikel' => 'Volume Artikel',
+                                                'nomor_artikel' => 'Nomor Artikel',
+                                                'edisi_artikel' => 'Edisi Artikel (Tahun)',
+                                                'halaman_artikel' => 'Halaman Artikel',
+                                                'link_artikel' => 'Link Artikel',
+                                                'link_sinta' => 'Link SINTA',
+                                                'link_scopus' => 'Link SCOPUS',
+                                                'link_scimago' => 'Link SCIMAGO',
+                                                'link_wos' => 'Link WoS'
                                             ];
                                             
                                             $fieldLabel = $fieldLabelMap[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
@@ -1578,13 +1838,12 @@
                                         
                                         // PERBAIKAN: Hanya tampilkan data validasi penilai untuk Kepegawaian Universitas
                                         // Role Penilai Universitas tidak boleh melihat data validasi penilai lain
-                                        if ($currentRole === 'Kepegawaian Universitas' && !empty($penilaiValidation)) {
-                                            if (isset($penilaiValidation['validation'][$groupKey][$fieldKey])) {
-                                                $penilaiFieldData = $penilaiValidation['validation'][$groupKey][$fieldKey];
-                                                if (isset($penilaiFieldData['status']) && $penilaiFieldData['status'] === 'tidak_sesuai') {
-                                                    $penilaiInvalidStatus = 'tidak_sesuai';
-                                                    $penilaiInvalidKeterangan = $penilaiFieldData['keterangan'] ?? 'Tidak ada keterangan';
-                                                }
+                                        if ($currentRole === 'Kepegawaian Universitas' && !empty($allPenilaiInvalidFields)) {
+                                            // Cek apakah field ini ada dalam data field yang tidak sesuai dari Tim Penilai
+                                            if (isset($allPenilaiInvalidFields[$groupKey][$fieldKey])) {
+                                                $penilaiFieldData = $allPenilaiInvalidFields[$groupKey][$fieldKey];
+                                                $penilaiInvalidStatus = 'tidak_sesuai';
+                                                $penilaiInvalidKeterangan = $penilaiFieldData['keterangan'] ?? 'Tidak ada keterangan';
                                             }
                                         }
                                     @endphp
@@ -2229,6 +2488,8 @@
                             </button>
                         @endif
 
+
+
                         {{-- ENHANCED: Tim Penilai Assessment Status with specific conditions --}}
                         @if(in_array($usulan->status_usulan, ['Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai', 'Usulan Direkomendasi Tim Penilai']))
                             @php
@@ -2406,9 +2667,9 @@
                                             <button type="button" id="btn-tidak-direkomendasikan" class="px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors flex items-center gap-2">
                                                 <i data-lucide="x-circle" class="w-4 h-4"></i>
                                                 Tidak Direkomendasikan
-                                        </button>
-                                    </div>
-                                @endif
+                                            </button>
+                                        </div>
+                                    @endif
                                 @elseif($totalPenilai === 0)
                                     {{-- Belum ada penilai - enhanced assignment actions --}}
                                     <div class="space-y-4">
@@ -3916,5 +4177,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Add usulan data for JavaScript access
+<script type="application/json" data-usulan>
+{
+    "id": {{ $usulan->id }},
+    "status_usulan": "{{ $usulan->status_usulan }}",
+    "validasi_data": @json($usulan->validasi_data ?? [])
+}
 </script>
 @endif

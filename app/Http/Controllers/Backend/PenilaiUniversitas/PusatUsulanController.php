@@ -94,6 +94,10 @@ class PusatUsulanController extends Controller
                 'Menunggu Hasil Penilaian Tim Penilai'
             ]) && !$penilaiIndividualStatus['is_completed'];
 
+            // Determine action permissions based on status
+            $canReturn = in_array($usulan->status_usulan, ['Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']);
+            $canForward = in_array($usulan->status_usulan, ['Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']);
+
             return view('backend.layouts.views.penilai-universitas.pusat-usulan.detail', [
                 'usulan' => $usulan,
                 'validationFields' => $validationFields,
@@ -103,6 +107,14 @@ class PusatUsulanController extends Controller
                 'consistencyCheck' => $consistencyCheck,
                 'penilaiIndividualStatus' => $penilaiIndividualStatus,
                 'validationSummary' => $validationSummary,
+                'config' => [
+                    'canReturn' => $canReturn,
+                    'canForward' => $canForward,
+                    'routePrefix' => 'penilai-universitas',
+                    'canEdit' => $canEdit,
+                    'canView' => true,
+                    'submitFunctions' => ['save', 'rekomendasikan', 'perbaikan_usulan']
+                ]
             ]);
 
         } catch (\Exception $e) {

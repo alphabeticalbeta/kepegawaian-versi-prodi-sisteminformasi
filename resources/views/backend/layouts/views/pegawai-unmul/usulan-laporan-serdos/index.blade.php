@@ -83,7 +83,53 @@
                                 <td class="px-6 py-4">{{ $usulan->created_at->isoFormat('D MMMM YYYY') }}</td>
                                 <td class="px-6 py-4 text-center">
                                     @php
-                                        $statusClass = match($usulan->status_usulan) {
+                                        // Function to get display status based on current status and role
+                                        function getDisplayStatus($usulan, $currentRole) {
+                                            $status = $usulan->status_usulan;
+                                            
+                                            // Mapping status berdasarkan alur kerja yang diminta
+                                            switch ($status) {
+                                                // Status untuk Pegawai
+                                                case 'Diajukan':
+                                                    return 'Usulan Dikirim ke Admin Fakultas';
+                                                
+                                                case 'Perbaikan Usulan':
+                                                    if ($currentRole === 'Pegawai') {
+                                                        return 'Usulan Perbaikan dari Admin Fakultas';
+                                                    }
+                                                    break;
+                                                
+                                                case 'Perbaikan dari Kepegawaian Universitas':
+                                                    if ($currentRole === 'Pegawai') {
+                                                        return 'Usulan Perbaikan dari Kepegawaian Universitas';
+                                                    }
+                                                    break;
+                                                
+                                                case 'Perbaikan dari Penilai Universitas':
+                                                    if ($currentRole === 'Pegawai') {
+                                                        return 'Usulan Perbaikan dari Penilai Universitas';
+                                                    }
+                                                    break;
+                                                
+                                                case 'Perbaikan dari Tim Sister':
+                                                    return 'Permintaan Perbaikan Usulan dari Tim Sister';
+                                                
+                                                case 'Dikirim ke Sister':
+                                                    return 'Usulan Sudah Dikirim ke Sister';
+                                                
+                                                default:
+                                                    return $status;
+                                            }
+                                            
+                                            return $status;
+                                        }
+                                        
+                                        // Get display status
+                                        $displayStatus = getDisplayStatus($usulan, 'Pegawai');
+                                        
+                                        // Status colors mapping
+                                        $statusColors = [
+                                            // Status lama (fallback)
                                             'Draft' => 'bg-gray-100 text-gray-800',
                                             'Diajukan' => 'bg-blue-100 text-blue-800',
                                             'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
@@ -92,11 +138,20 @@
                                             'Disetujui' => 'bg-green-100 text-green-800',
                                             'Direkomendasikan' => 'bg-purple-100 text-purple-800',
                                             'Ditolak' => 'bg-red-100 text-red-800',
-                                            default => 'bg-gray-100 text-gray-800'
-                                        };
+                                            
+                                            // Status baru
+                                            'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
+                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
+                                            'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-red-100 text-red-800',
+                                            'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
+                                            'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',
+                                            'Usulan Sudah Dikirim ke Sister' => 'bg-blue-100 text-blue-800',
+                                        ];
+                                        
+                                        $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusClass }}">
-                                        {{ $usulan->status_usulan }}
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusColor }}">
+                                        {{ $displayStatus }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">

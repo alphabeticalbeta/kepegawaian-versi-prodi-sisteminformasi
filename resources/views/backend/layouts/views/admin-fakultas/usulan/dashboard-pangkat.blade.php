@@ -166,7 +166,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-medium leading-6 text-gray-900">Daftar Periode Usulan Pangkat</h3>
                 <p class="mt-1 text-sm text-gray-500">
-                    Berikut adalah daftar periode usulan pangkat yang tersedia. Klik tombol aksi untuk melihat detail usulan periode tersebut.
+                    Berikut adalah daftar periode usulan pangkat yang tersedia. Periode yang sudah tutup tetap ditampilkan jika ada usulan dari fakultas Anda (sebagai history). Klik tombol aksi untuk melihat detail usulan periode tersebut.
                 </p>
             </div>
 
@@ -186,7 +186,13 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($periodeUsulans as $periode)
-                            <tr>
+                            @php
+                                // Cek apakah periode sudah tutup
+                                $isPeriodClosed = $periode->status !== 'Buka' || now()->gt($periode->tanggal_selesai);
+                                // Cek apakah periode memiliki usulan dari fakultas ini (untuk history)
+                                $hasUsulan = $periode->total_usulan > 0;
+                            @endphp
+                            <tr class="{{ $isPeriodClosed && !$hasUsulan ? 'opacity-50' : '' }}">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">{{ $periode->nama_periode }}</div>
                                     <div class="text-sm text-gray-500">Tahun {{ $periode->tahun_periode }}</div>
@@ -198,17 +204,24 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    @php
-                                        $statusColors = [
-                                            'Aktif' => 'bg-green-100 text-green-800',
-                                            'Tidak Aktif' => 'bg-red-100 text-red-800',
-                                            'Draft' => 'bg-gray-100 text-gray-800'
-                                        ];
-                                        $statusColor = $statusColors[$periode->status] ?? 'bg-gray-100 text-gray-800';
-                                    @endphp
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColor }}">
-                                        {{ $periode->status }}
-                                    </span>
+                                    @if($isPeriodClosed)
+                                        @if($hasUsulan)
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                                                Periode Tutup (History)
+                                            </span>
+                                        @else
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
+                                                Periode Tutup
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
+                                            Periode Aktif
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <span class="text-sm font-medium text-amber-600">{{ $periode->menunggu_validasi }}</span>
@@ -220,10 +233,28 @@
                                     <span class="text-sm font-medium text-gray-900">{{ $periode->total_usulan }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <a href="{{ route('admin-fakultas.periode.pendaftar', $periode->id) }}"
-                                       class="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-md transition-colors">
-                                        Lihat Usulan
-                                    </a>
+                                    @if($hasUsulan)
+                                        {{-- Ada usulan, tampilkan tombol Lihat Usulan --}}
+                                        <a href="{{ route('admin-fakultas.periode.pendaftar', $periode->id) }}"
+                                           class="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-md transition-colors">
+                                            <i data-lucide="eye" class="w-3 h-3 mr-1"></i>
+                                            Lihat Usulan
+                                        </a>
+                                    @else
+                                        @if(!$isPeriodClosed)
+                                            {{-- Periode masih aktif tapi belum ada usulan --}}
+                                            <span class="text-gray-500 bg-gray-100 px-3 py-1 rounded-md">
+                                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                                                Belum Ada Usulan
+                                            </span>
+                                        @else
+                                            {{-- Periode sudah tutup dan tidak ada usulan --}}
+                                            <span class="text-gray-400 bg-gray-50 px-3 py-1 rounded-md">
+                                                <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
+                                                Tidak Ada Usulan
+                                            </span>
+                                        @endif
+                                    @endif
                                 </td>
                             </tr>
                         @empty

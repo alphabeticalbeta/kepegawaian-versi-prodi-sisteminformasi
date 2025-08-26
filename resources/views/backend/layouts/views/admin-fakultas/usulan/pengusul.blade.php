@@ -70,7 +70,7 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Menunggu Review</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Usulan Dikirim ke Admin Fakultas</dt>
                                 <dd class="text-lg font-medium text-gray-900">{{ $usulans->where('status_usulan', 'Diajukan')->count() }}</dd>
                             </dl>
                         </div>
@@ -107,7 +107,7 @@
                         <div class="ml-5 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Perbaikan</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan'])->count() }}</dd>
+                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan', 'Perbaikan dari Kepegawaian Universitas', 'Perbaikan dari Penilai Universitas'])->count() }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -125,7 +125,7 @@
                         <div class="ml-5 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Selesai</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Diusulkan ke Universitas', 'Direkomendasikan'])->count() }}</dd>
+                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Diusulkan ke Universitas', 'Direkomendasikan', 'Disetujui'])->count() }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -186,19 +186,73 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     @php
-                                        $statusConfig = [
-                                            'Diajukan' => ['bg-yellow-100 text-yellow-800', 'clock'],
-                                            'Sedang Direview' => ['bg-blue-100 text-blue-800', 'eye'],
-                                            'Perbaikan Usulan' => ['bg-orange-100 text-orange-800', 'exclamation-triangle'],
-                                            'Diusulkan ke Universitas' => ['bg-purple-100 text-purple-800', 'arrow-up'],
-                                            'Direkomendasikan' => ['bg-green-100 text-green-800', 'check-circle'],
-                                            'Ditolak' => ['bg-red-100 text-red-800', 'x-circle']
+                                        // Function to get display status based on current status and role
+                                        function getDisplayStatus($usulan, $currentRole) {
+                                            $status = $usulan->status_usulan;
+                                            
+                                            // Mapping status berdasarkan alur kerja yang diminta
+                                            switch ($status) {
+                                                // Status untuk Admin Fakultas
+                                                case 'Diajukan':
+                                                    return 'Usulan Dikirim ke Admin Fakultas';
+                                                
+                                                case 'Perbaikan Usulan':
+                                                    if ($currentRole === 'Admin Fakultas') {
+                                                        return 'Permintaan Perbaikan dari Admin Fakultas';
+                                                    }
+                                                    break;
+                                                
+                                                case 'Diusulkan ke Universitas':
+                                                    if ($currentRole === 'Admin Fakultas') {
+                                                        return 'Usulan Disetujui Admin Fakultas';
+                                                    }
+                                                    break;
+                                                
+                                                case 'Perbaikan dari Kepegawaian Universitas':
+                                                    if ($currentRole === 'Admin Fakultas') {
+                                                        return 'Usulan Perbaikan dari Kepegawaian Universitas';
+                                                    }
+                                                    break;
+                                                
+                                                case 'Perbaikan dari Penilai Universitas':
+                                                    if ($currentRole === 'Admin Fakultas') {
+                                                        return 'Usulan Perbaikan dari Penilai Universitas';
+                                                    }
+                                                    break;
+                                                
+                                                default:
+                                                    return $status;
+                                            }
+                                            
+                                            return $status;
+                                        }
+                                        
+                                        // Get display status
+                                        $displayStatus = getDisplayStatus($usulan, 'Admin Fakultas');
+                                        
+                                        // Status colors mapping
+                                        $statusColors = [
+                                            // Status lama (fallback)
+                                            'Diajukan' => 'bg-yellow-100 text-yellow-800',
+                                            'Sedang Direview' => 'bg-blue-100 text-blue-800',
+                                            'Perbaikan Usulan' => 'bg-orange-100 text-orange-800',
+                                            'Diusulkan ke Universitas' => 'bg-purple-100 text-purple-800',
+                                            'Direkomendasikan' => 'bg-green-100 text-green-800',
+                                            'Ditolak' => 'bg-red-100 text-red-800',
+                                            
+                                            // Status baru
+                                            'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
+                                            'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
+                                            'Usulan Disetujui Admin Fakultas' => 'bg-green-100 text-green-800',
+                                            'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-red-100 text-red-800',
+                                            'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
                                         ];
-                                        $config = $statusConfig[$usulan->status_usulan] ?? ['bg-gray-100 text-gray-800', 'question-mark-circle'];
+                                        
+                                        $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
 
-                                    <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full {{ $config[0] }}">
-                                        {{ $usulan->status_usulan }}
+                                    <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColor }}">
+                                        {{ $displayStatus }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">

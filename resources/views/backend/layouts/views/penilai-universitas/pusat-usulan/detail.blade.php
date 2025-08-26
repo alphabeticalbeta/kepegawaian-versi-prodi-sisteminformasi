@@ -3,7 +3,7 @@
 @section('title', 'Detail Usulan - ' . $usulan->jenis_usulan)
 
 @section('content')
-    @include('backend.layouts.views.shared.usulan-detail', [
+    @include('backend.layouts.views.shared.usul-jabatan.usulan-detail-jabatan', [
         'usulan' => $usulan,
         'role' => 'Penilai Universitas',
         'existingValidation' => $existingValidation ?? null,

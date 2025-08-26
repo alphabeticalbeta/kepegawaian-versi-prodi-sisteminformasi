@@ -13,7 +13,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     {{-- Vite Integration - CSS dan JS --}}
-    @vite(['resources/css/app.css', 'resources/js/admin-universitas/index.js'])
+    @vite(['resources/css/app.css', 'resources/js/kepegawaian-universitas/index.js'])
 
     {{-- External Libraries --}}
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -62,6 +62,111 @@
             z-index: 40 !important;
             background: white !important;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+        }
+
+        /* Nested dropdown specific styles */
+        .nested-dropdown-container {
+            position: relative;
+            z-index: 35;
+        }
+
+        .nested-dropdown {
+            margin-left: 1rem;
+            border-left: 2px solid #e5e7eb;
+            padding-left: 0.5rem;
+            z-index: 36;
+            position: relative;
+            background: white;
+            overflow: hidden;
+        }
+
+        .nested-dropdown-container button[data-nested="true"] {
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            pointer-events: auto;
+            position: relative;
+            z-index: 37;
+        }
+
+        .nested-dropdown:not(.hidden) {
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        /* Parent dropdowns */
+        #sidebar .dropdown-menu:not(.nested-dropdown) {
+            z-index: 34;
+            position: relative;
+        }
+
+        /* Parent dropdown that contains nested dropdowns */
+        #sidebar .dropdown-menu:has(.nested-dropdown-container) {
+            z-index: 35;
+        }
+
+        /* Prevent event bubbling for nested dropdowns */
+        .nested-dropdown-container button[data-nested="true"]:focus {
+            outline: none;
+        }
+
+        /* Ensure proper spacing for nested dropdown items */
+        .nested-dropdown .relative a {
+            padding-left: 1rem;
+            border-left: 1px solid #f3f4f6;
+        }
+
+        /* Prevent nested dropdown from affecting parent dropdown visibility */
+        .nested-dropdown-container {
+            isolation: isolate;
+        }
+
+        /* Ensure nested dropdown stays within parent bounds */
+        .nested-dropdown {
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Specific styles for nested dropdown when hidden */
+        .nested-dropdown.hidden {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            overflow: hidden;
+        }
+
+        /* Specific styles for nested dropdown when visible */
+        .nested-dropdown:not(.hidden) {
+            max-height: 1000px !important;
+            opacity: 1 !important;
+        }
+
+        /* Ensure parent dropdown stays open when nested is toggled */
+        .dropdown-menu:has(.nested-dropdown-container) {
+            overflow: visible !important;
+        }
+
+        /* Prevent nested dropdown from closing parent */
+        .nested-dropdown-container button[data-nested="true"] {
+            pointer-events: auto !important;
+        }
+
+        /* Ensure proper z-index stacking */
+        .dropdown-menu {
+            position: relative;
+        }
+
+        .dropdown-menu:has(.nested-dropdown-container) {
+            z-index: 35 !important;
+        }
+
+        .nested-dropdown-container {
+            z-index: 36 !important;
+        }
+
+        .nested-dropdown {
+            z-index: 37 !important;
         }
 
         /* Admin Univ Usulan specific styles */
@@ -222,6 +327,140 @@
                 mainContent.classList.toggle('ml-16');
             }
         }
+    </script>
+
+    {{-- Specific JavaScript for Nested Dropdown Fix --}}
+    <script>
+        // Wait for all other scripts to load
+        window.addEventListener('load', function() {
+            console.log('=== NESTED DROPDOWN FIX INITIALIZED ===');
+            
+            // Remove all existing event listeners from dropdown buttons
+            const allDropdownButtons = document.querySelectorAll('button[data-collapse-toggle]');
+            console.log('Found dropdown buttons:', allDropdownButtons.length);
+            
+            allDropdownButtons.forEach((button, index) => {
+                console.log(`Button ${index}:`, button.getAttribute('data-collapse-toggle'));
+                
+                // Clone the button to remove all event listeners
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Add our specific event listener
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    const targetId = this.getAttribute('data-collapse-toggle');
+                    const target = document.getElementById(targetId);
+                    const isNested = this.hasAttribute('data-nested');
+                    
+                    console.log('Button clicked:', {
+                        targetId: targetId,
+                        isNested: isNested,
+                        target: target
+                    });
+                    
+                    if (!target) {
+                        console.error('Target not found:', targetId);
+                        return;
+                    }
+                    
+                    const isHidden = target.classList.contains('hidden');
+                    
+                    if (isNested) {
+                        console.log('Handling NESTED dropdown');
+                        
+                        // For nested dropdowns, ONLY toggle this one
+                        if (isHidden) {
+                            target.classList.remove('hidden');
+                            target.style.maxHeight = '1000px';
+                            target.style.opacity = '1';
+                            console.log('Nested dropdown OPENED');
+                        } else {
+                            target.classList.add('hidden');
+                            target.style.maxHeight = '0';
+                            target.style.opacity = '0';
+                            console.log('Nested dropdown CLOSED');
+                        }
+                        
+                        // Update icon
+                        const icon = this.querySelector('[data-lucide="chevron-down"]');
+                        if (icon) {
+                            icon.style.transform = isHidden ? 'rotate(180deg)' : '';
+                        }
+                        
+                        // Update aria
+                        this.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                        
+                    } else {
+                        console.log('Handling PARENT dropdown');
+                        
+                        // For parent dropdowns, close other parent dropdowns but NOT those with nested
+                        const allDropdowns = document.querySelectorAll('.dropdown-menu');
+                        
+                        allDropdowns.forEach(dropdown => {
+                            if (dropdown.id !== targetId) {
+                                // Check if this dropdown contains nested dropdowns
+                                const hasNested = dropdown.querySelector('.nested-dropdown-container') !== null;
+                                
+                                console.log('Checking dropdown:', {
+                                    id: dropdown.id,
+                                    hasNested: hasNested,
+                                    willClose: !hasNested
+                                });
+                                
+                                if (!hasNested) {
+                                    // Close this dropdown
+                                    dropdown.classList.add('hidden');
+                                    dropdown.style.maxHeight = '0';
+                                    dropdown.style.opacity = '0';
+                                    
+                                    // Reset its button
+                                    const otherButton = document.querySelector(`[data-collapse-toggle="${dropdown.id}"]`);
+                                    if (otherButton) {
+                                        otherButton.setAttribute('aria-expanded', 'false');
+                                        const otherIcon = otherButton.querySelector('[data-lucide="chevron-down"]');
+                                        if (otherIcon) {
+                                            otherIcon.style.transform = '';
+                                        }
+                                    }
+                                    
+                                    console.log('CLOSED dropdown:', dropdown.id);
+                                } else {
+                                    console.log('KEPT OPEN dropdown (has nested):', dropdown.id);
+                                }
+                            }
+                        });
+                        
+                        // Toggle the current dropdown
+                        if (isHidden) {
+                            target.classList.remove('hidden');
+                            target.style.maxHeight = '2000px';
+                            target.style.opacity = '1';
+                            console.log('Parent dropdown OPENED');
+                        } else {
+                            target.classList.add('hidden');
+                            target.style.maxHeight = '0';
+                            target.style.opacity = '0';
+                            console.log('Parent dropdown CLOSED');
+                        }
+                        
+                        // Update icon
+                        const icon = this.querySelector('[data-lucide="chevron-down"]');
+                        if (icon) {
+                            icon.style.transform = isHidden ? 'rotate(180deg)' : '';
+                        }
+                        
+                        // Update aria
+                        this.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                    }
+                });
+            });
+            
+            console.log('=== NESTED DROPDOWN FIX COMPLETE ===');
+        });
     </script>
 </body>
 </html>

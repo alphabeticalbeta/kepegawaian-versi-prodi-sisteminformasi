@@ -131,7 +131,23 @@ class UsulanController extends Controller
             $query->where('name', 'Penilai Universitas');
         })->orderBy('nama_lengkap')->get();
 
-        return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', compact('usulan', 'existingValidation', 'penilais'));
+        // Determine action permissions based on status
+        $canReturn = in_array($usulan->status_usulan, ['Usulan Direkomendasi Tim Penilai', 'Tidak Direkomendasikan', 'Diusulkan ke Universitas', 'Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']);
+        $canForward = in_array($usulan->status_usulan, ['Usulan Direkomendasi Tim Penilai', 'Tidak Direkomendasikan', 'Diusulkan ke Universitas', 'Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']);
+
+        return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', [
+            'usulan' => $usulan,
+            'existingValidation' => $existingValidation,
+            'penilais' => $penilais,
+            'config' => [
+                'canReturn' => $canReturn,
+                'canForward' => $canForward,
+                'routePrefix' => 'kepegawaian-universitas',
+                'canEdit' => in_array($usulan->status_usulan, ['Usulan Direkomendasi Tim Penilai', 'Tidak Direkomendasikan', 'Diusulkan ke Universitas', 'Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']),
+                'canView' => true,
+                'submitFunctions' => ['save', 'return_to_pegawai', 'forward_to_penilai', 'recommend', 'not_recommend']
+            ]
+        ]);
     }
 
     /**

@@ -184,7 +184,38 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php
+                                        // Function to get display status based on current status and role
+                                        function getDisplayStatus($usulan, $currentRole) {
+                                            $status = $usulan->status_usulan;
+                                            
+                                            // Mapping status berdasarkan alur kerja yang diminta
+                                            switch ($status) {
+                                                // Status untuk Tim Senat
+                                                case 'Direkomendasikan':
+                                                    if ($currentRole === 'Tim Senat') {
+                                                        return 'Usulan Direkomendasikan oleh Tim Senat';
+                                                    }
+                                                    break;
+                                                
+                                                case 'Dikirim ke Sister':
+                                                    return 'Usulan Sudah Dikirim ke Sister';
+                                                
+                                                case 'Perbaikan dari Tim Sister':
+                                                    return 'Permintaan Perbaikan Usulan dari Tim Sister';
+                                                
+                                                default:
+                                                    return $status;
+                                            }
+                                            
+                                            return $status;
+                                        }
+                                        
+                                        // Get display status
+                                        $displayStatus = getDisplayStatus($usulan, 'Tim Senat');
+                                        
+                                        // Status colors mapping
                                         $statusColors = [
+                                            // Status lama (fallback)
                                             'Diajukan' => 'bg-blue-100 text-blue-800',
                                             'Diusulkan ke Universitas' => 'bg-indigo-100 text-indigo-800',
                                             'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
@@ -194,8 +225,13 @@
                                             'Perbaikan Usulan' => 'bg-orange-100 text-orange-800',
                                             'Diusulkan ke Sister' => 'bg-purple-100 text-purple-800',
                                             'Perbaikan dari Tim Sister' => 'bg-orange-100 text-orange-800',
+                                            
+                                            // Status baru
+                                            'Usulan Direkomendasikan oleh Tim Senat' => 'bg-purple-100 text-purple-800',
+                                            'Usulan Sudah Dikirim ke Sister' => 'bg-blue-100 text-blue-800',
+                                            'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',
                                         ];
-                                        $statusColor = $statusColors[$usulan->status_usulan] ?? 'bg-gray-100 text-gray-800';
+                                        $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColor }}">
                                         @if($usulan->status_usulan === 'Direkomendasikan')
@@ -205,7 +241,7 @@
                                         @elseif($usulan->status_usulan === 'Ditolak')
                                             <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
                                         @endif
-                                        {{ $usulan->status_usulan }}
+                                        {{ $displayStatus }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
