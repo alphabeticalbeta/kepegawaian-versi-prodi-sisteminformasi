@@ -810,16 +810,42 @@ class Usulan extends Model
      */
     public function getValidasiByRole(string $role): array
     {
-        $roleData = $this->validasi_data[$role] ?? [];
+        // FIXED: Handle role name mapping for case sensitivity
+        $roleMapping = [
+            'Admin Fakultas' => 'admin_fakultas',
+            'Admin Universitas' => 'admin_universitas',
+            'Penilai Universitas' => 'penilai_universitas',
+            'Kepegawaian Universitas' => 'kepegawaian_universitas',
+            'Tim Senat' => 'tim_senat',
+            'Pegawai' => 'pegawai'
+        ];
+        
+        // Map role name to database key
+        $dbRole = $roleMapping[$role] ?? strtolower(str_replace(' ', '_', $role));
+        
+        $roleData = $this->validasi_data[$dbRole] ?? [];
 
-        // If the role data exists but doesn't have 'validation' key, return empty array
-        // This handles both old and new data structures
+        // FIXED: Ensure consistent structure - always return with validation key
         if (isset($roleData['validation'])) {
             return $roleData;
         }
 
-        // For backward compatibility, if data exists but no 'validation' key, return as is
-        return $roleData;
+        // For backward compatibility, if data exists but no 'validation' key, 
+        // wrap it in the new structure
+        if (!empty($roleData)) {
+            return [
+                'validation' => $roleData,
+                'validated_by' => null,
+                'validated_at' => null
+            ];
+        }
+
+        // Return empty structure with validation key
+        return [
+            'validation' => [],
+            'validated_by' => null,
+            'validated_at' => null
+        ];
     }
 
     /**
@@ -829,7 +855,7 @@ class Usulan extends Model
     {
         $currentValidasi = $this->validasi_data ?? [];
 
-        // Preserve existing validation data and merge with new data
+        // FIXED: Preserve existing validation data and merge with new data
         $existingValidation = $currentValidasi[$role] ?? [];
         $existingValidationData = $existingValidation['validation'] ?? [];
 
@@ -844,7 +870,8 @@ class Usulan extends Model
             }
         }
 
-        // Update validation structure - preserve existing data like dokumen_pendukung
+        // FIXED: Update validation structure - preserve existing data like dokumen_pendukung
+        // Ensure we don't lose existing data that's not in validation
         $currentValidasi[$role] = array_merge($existingValidation, [
             'validation' => $existingValidationData,
             'validated_by' => $validatedBy,
@@ -852,6 +879,15 @@ class Usulan extends Model
         ]);
 
         $this->validasi_data = $currentValidasi;
+        
+        // FIXED: Add logging for debugging
+        \Log::info('setValidasiByRole called', [
+            'role' => $role,
+            'validated_by' => $validatedBy,
+            'input_data' => $validasiData,
+            'merged_data' => $existingValidationData,
+            'final_structure' => $currentValidasi[$role]
+        ]);
     }
 
     /**
@@ -867,7 +903,10 @@ class Usulan extends Model
      */
     public function getFieldValidationStatus(string $role, string $category, string $field): string
     {
-        return $this->validasi_data[$role][$category][$field]['status'] ?? 'sesuai';
+        // FIXED: Access validation data with correct structure
+        $roleData = $this->validasi_data[$role] ?? [];
+        $validationData = $roleData['validation'] ?? [];
+        return $validationData[$category][$field]['status'] ?? 'sesuai';
     }
 
     /**
@@ -875,7 +914,10 @@ class Usulan extends Model
      */
     public function getFieldValidationKeterangan(string $role, string $category, string $field): string
     {
-        return $this->validasi_data[$role][$category][$field]['keterangan'] ?? '';
+        // FIXED: Access validation data with correct structure
+        $roleData = $this->validasi_data[$role] ?? [];
+        $validationData = $roleData['validation'] ?? [];
+        return $validationData[$category][$field]['keterangan'] ?? '';
     }
 
     /**
@@ -884,12 +926,9 @@ class Usulan extends Model
     public function hasInvalidFields(string $role): bool
     {
         $validasi = $this->getValidasiByRole($role);
+        $validationData = $validasi['validation'] ?? [];
 
-        foreach ($validasi as $category => $fields) {
-            if (in_array($category, ['validated_by', 'validated_at', 'dokumen_pendukung'])) {
-                continue;
-            }
-
+        foreach ($validationData as $category => $fields) {
             foreach ($fields as $field => $data) {
                 if (($data['status'] ?? 'sesuai') === 'tidak_sesuai') {
                     return true;
@@ -907,12 +946,9 @@ class Usulan extends Model
     {
         $invalidFields = [];
         $validasi = $this->getValidasiByRole($role);
+        $validationData = $validasi['validation'] ?? [];
 
-        foreach ($validasi as $category => $fields) {
-            if (in_array($category, ['validated_by', 'validated_at'])) {
-                continue;
-            }
-
+        foreach ($validationData as $category => $fields) {
             foreach ($fields as $field => $data) {
                 if (($data['status'] ?? 'sesuai') === 'tidak_sesuai') {
                     $invalidFields[] = [
@@ -1306,7 +1342,22 @@ public function getSenateDecisionCounts(): array
         });
     }
 
-    // Status constants for Tim Penilai assessment
+    // Status constants for standardized status
+    const STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS = 'Usulan Dikirim ke Admin Fakultas';
+    const STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS = 'Usulan Perbaikan dari Admin Fakultas';
+    const STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS = 'Permintaan Perbaikan dari Admin Fakultas';
+    const STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS = 'Usulan Disetujui Admin Fakultas';
+    const STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Perbaikan dari Kepegawaian Universitas';
+    const STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Disetujui Kepegawaian Universitas';
+    const STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Permintaan Perbaikan dari Penilai Universitas';
+    const STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Usulan Perbaikan dari Penilai Universitas';
+    const STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS = 'Usulan Direkomendasi dari Penilai Universitas';
+    const STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS = 'Usulan Direkomendasi Penilai Universitas';
+    const STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT = 'Usulan Direkomendasikan oleh Tim Senat';
+    const STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER = 'Usulan Sudah Dikirim ke Sister';
+    const STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER = 'Permintaan Perbaikan Usulan dari Tim Sister';
+    
+    // Legacy status constants (for backward compatibility)
     const STATUS_PERBAIKAN_DARI_TIM_PENILAI = 'Perbaikan Dari Tim Penilai';
     const STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI = 'Usulan Direkomendasi Tim Penilai';
     const STATUS_TIDAK_DIREKOMENDASI = 'Tidak Direkomendasikan';
@@ -1367,10 +1418,9 @@ public function getSenateDecisionCounts(): array
     {
         // Only auto-update if usulan is in penilai assessment phase
         $penilaiAssessmentStatuses = [
-            'Sedang Direview',
-            'Menunggu Hasil Penilaian Tim Penilai',
-            'Perbaikan Dari Tim Penilai',
-            'Usulan Direkomendasi Tim Penilai'
+            'Usulan Disetujui Kepegawaian Universitas',
+            'Permintaan Perbaikan dari Penilai Universitas',
+            'Usulan Direkomendasi dari Penilai Universitas'
         ];
 
         if (!in_array($this->status_usulan, $penilaiAssessmentStatuses)) {

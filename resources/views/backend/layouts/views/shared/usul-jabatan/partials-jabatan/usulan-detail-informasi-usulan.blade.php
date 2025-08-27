@@ -24,7 +24,7 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-800">Jenis Usulan</label>
                 <p class="text-xs text-gray-600 mb-2">Jenis usulan yang diajukan</p>
-                <input type="text" value="{{ $usulan->jenis_usulan ?? '-' }}"
+                <input type="text" value="{{ \App\Helpers\UsulanHelper::formatJenisUsulan($usulan->jenis_usulan) ?? '-' }}"
                        class="block w-full border-gray-200 rounded-lg shadow-sm bg-gray-100 px-4 py-3 text-gray-800 font-medium cursor-not-allowed" disabled>
             </div>
         </div>

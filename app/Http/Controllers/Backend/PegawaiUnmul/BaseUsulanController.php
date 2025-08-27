@@ -168,7 +168,7 @@ abstract class BaseUsulanController extends Controller
                     $this->validateUploadedFile($file, $key);
 
                     // Use FileStorageService for upload
-                    $path = $this->fileStorage->uploadFile($file, $uploadPath);
+                    $path = $this->fileStorage->uploadFile($file, $uploadPath, $key);
 
                     $filePaths[$key] = [
                         'path' => $path,

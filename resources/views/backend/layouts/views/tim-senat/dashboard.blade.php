@@ -42,7 +42,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Menunggu Keputusan</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Direkomendasikan')->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Usulan Direkomendasikan oleh Tim Senat')->count() }}</p>
                         <p class="text-xs text-gray-500 mt-1">Usulan yang perlu diputuskan</p>
                     </div>
                 </div>

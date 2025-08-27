@@ -1,8 +1,8 @@
 {{-- Action Buttons Component --}}
 @php
     $canEdit = $canEdit ?? in_array($usulan->status_usulan, [
-        'Diusulkan ke Universitas',
-        'Sedang Direview Universitas',
+        'Usulan Disetujui Admin Fakultas',
+        'Usulan Disetujui Kepegawaian Universitas',
     ]);
     // Baca syarat dari model
     $minSetuju = $usulan->getSenateMinSetuju();
@@ -14,17 +14,17 @@
 
     // Determine if usulan can be edited
      $canEdit = $canEdit ?? in_array($usulan->status_usulan, [
-        'Diusulkan ke Universitas',
-        'Sedang Direview Universitas',
+        'Usulan Disetujui Admin Fakultas',
+        'Usulan Disetujui Kepegawaian Universitas',
     ]);
 
     $isCompleted = in_array($usulan->status_usulan, [
-                    'Perbaikan Usulan',
-        'Dikembalikan',
-        'Diteruskan Ke Universitas',
-        'Disetujui',
-        'Direkomendasikan',
-        'Ditolak'
+                    'Usulan Perbaikan dari Admin Fakultas',
+        'Usulan Perbaikan dari Kepegawaian Universitas',
+        'Usulan Perbaikan dari Penilai Universitas',
+        'Usulan Sudah Dikirim ke Sister',
+        'Usulan Direkomendasikan oleh Tim Senat',
+        'Permintaan Perbaikan Usulan dari Tim Sister'
     ]);
 @endphp
 
@@ -91,7 +91,7 @@
 
             @else
                 {{-- Read-only Status Indicators --}}
-                @if($usulan->status_usulan === 'Perbaikan Usulan')
+                @if($usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas')
                     <div class="flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-800 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -111,7 +111,7 @@
                         <span class="font-medium">Usulan sudah diteruskan ke tingkat universitas</span>
                     </div>
 
-                @elseif($usulan->status_usulan === 'Direkomendasikan')
+                @elseif($usulan->status_usulan === 'Usulan Direkomendasikan oleh Tim Senat')
                     <div class="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -1,17 +1,29 @@
-{{-- Header Info Card - Informasi Dasar Usulan --}}
-<div class="bg-white shadow-md rounded-lg mb-6">
-    <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
-        <h3 class="text-lg font-semibold text-gray-800">Informasi Usulan</h3>
+{{-- Usulan Header Component --}}
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i data-lucide="file-text" class="w-6 h-6 text-white mr-3"></i>
+                <h1 class="text-xl font-bold text-white">
+                    Detail Usulan
+                </h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-white/80 text-sm">
+                    ID: {{ $usulan->id }}
+                </span>
+            </div>
+        </div>
     </div>
+
     <div class="p-6">
+        {{-- Main Info Row --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {{-- Nama Lengkap --}}
+            {{-- Nama Pegawai --}}
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Nama Lengkap</p>
-                <p class="text-base font-semibold text-gray-900">
-                    {{ $usulan->pegawai->gelar_depan ?? '' }}
+                <p class="text-sm font-medium text-gray-500 mb-1">Nama Pegawai</p>
+                <p class="text-base font-semibold text-gray-800">
                     {{ $usulan->pegawai->nama_lengkap ?? 'N/A' }}
-                    {{ $usulan->pegawai->gelar_belakang ?? '' }}
                 </p>
             </div>
 
@@ -26,8 +38,8 @@
             {{-- Jenis Usulan --}}
             <div>
                 <p class="text-sm font-medium text-gray-500 mb-1">Jenis Usulan</p>
-                <p class="text-base text-gray-800 capitalize">
-                    {{ str_replace(['usulan-', '-'], [' ', ' '], $usulan->jenis_usulan) }}
+                <p class="text-base text-gray-800">
+                    {{ \App\Helpers\UsulanHelper::formatJenisUsulan($usulan->jenis_usulan) }}
                 </p>
             </div>
 

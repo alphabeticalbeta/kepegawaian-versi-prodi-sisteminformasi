@@ -129,8 +129,9 @@
                                     {{ $periode->nama_periode }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        {{ ucwords(str_replace(['-', '_'], ' ', $periode->jenis_usulan)) }}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ \App\Helpers\UsulanHelper::getJenisUsulanBadgeClass($periode->jenis_usulan) }}">
+                                        <i data-lucide="{{ \App\Helpers\UsulanHelper::getJenisUsulanIcon($periode->jenis_usulan) }}" class="w-3 h-3 mr-1"></i>
+                                        {{ \App\Helpers\UsulanHelper::formatJenisUsulan($periode->jenis_usulan) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">

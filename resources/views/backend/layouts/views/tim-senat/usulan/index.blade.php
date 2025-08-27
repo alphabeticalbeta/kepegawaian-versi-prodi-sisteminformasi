@@ -39,7 +39,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Menunggu Keputusan</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Direkomendasikan')->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $usulans->where('status_usulan', 'Usulan Direkomendasikan oleh Tim Senat')->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -91,7 +91,7 @@
                 <div class="flex items-center space-x-4">
                     <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                         <option value="">Semua Status</option>
-                        <option value="Direkomendasikan">Menunggu Keputusan</option>
+                        <option value="Usulan Direkomendasikan oleh Tim Senat">Menunggu Keputusan</option>
                         <option value="Disetujui">Disetujui</option>
                         <option value="Ditolak">Ditolak</option>
                     </select>
@@ -160,7 +160,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $usulan->jenis_usulan }}</div>
+                                    <div class="text-sm text-gray-900">{{ \App\Helpers\UsulanHelper::formatJenisUsulan($usulan->jenis_usulan) }}</div>
                                     @if($usulan->jabatanLama && $usulan->jabatanTujuan)
                                         <div class="text-xs text-gray-500">
                                             {{ $usulan->jabatanLama->jabatan }} → {{ $usulan->jabatanTujuan->jabatan }}
@@ -191,10 +191,10 @@
                                             // Mapping status berdasarkan alur kerja yang diminta
                                             switch ($status) {
                                                 // Status untuk Tim Senat
-                                                case 'Direkomendasikan':
-                                                    if ($currentRole === 'Tim Senat') {
-                                                        return 'Usulan Direkomendasikan oleh Tim Senat';
-                                                    }
+                                                                case 'Usulan Direkomendasikan oleh Tim Senat':
+                    if ($currentRole === 'Tim Senat') {
+                        return 'Usulan Direkomendasikan oleh Tim Senat';
+                    }
                                                     break;
                                                 
                                                 case 'Dikirim ke Sister':
@@ -217,9 +217,9 @@
                                         $statusColors = [
                                             // Status lama (fallback)
                                             'Diajukan' => 'bg-blue-100 text-blue-800',
-                                            'Diusulkan ke Universitas' => 'bg-indigo-100 text-indigo-800',
+                                            'Usulan Disetujui Admin Fakultas' => 'bg-indigo-100 text-indigo-800',
                                             'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
-                                            'Direkomendasikan' => 'bg-purple-100 text-purple-800',
+                                            'Usulan Direkomendasikan oleh Tim Senat' => 'bg-purple-100 text-purple-800',
                                             'Disetujui' => 'bg-green-100 text-green-800',
                                             'Ditolak' => 'bg-red-100 text-red-800',
                                             'Perbaikan Usulan' => 'bg-orange-100 text-orange-800',

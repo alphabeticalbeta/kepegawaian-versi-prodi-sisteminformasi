@@ -451,7 +451,7 @@ class DataPegawaiController extends Controller
                 // Store new file using FileStorageService
                 $uploadPath = 'pegawai-files/' . $column;
                 $file = $request->file($column);
-                $path = $this->fileStorage->uploadFile($file, $uploadPath);
+                                    $path = $this->fileStorage->uploadFile($file, $uploadPath, $key);
                 $validatedData[$column] = $path;
 
                 \Log::info("File uploaded using FileStorageService", [

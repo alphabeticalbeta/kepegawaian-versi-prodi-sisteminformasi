@@ -660,7 +660,7 @@ class UsulanJabatanController extends BaseUsulanController
         ]);
 
         $canEdit = in_array($usulan->status_usulan, [
-            'Draft', 'Perbaikan Usulan', 'Dikembalikan'
+            'Draft', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Dikembalikan'
         ]);
 
         // Get periode usulan
@@ -1276,7 +1276,7 @@ class UsulanJabatanController extends BaseUsulanController
                     $file = $request->file($key);
 
                     // Use FileStorageService for upload
-                    $path = $this->fileStorage->uploadFile($file, $uploadPath);
+                    $path = $this->fileStorage->uploadFile($file, $uploadPath, $key);
 
                     // 3. Prepare new document data
                     $newDocumentData = [

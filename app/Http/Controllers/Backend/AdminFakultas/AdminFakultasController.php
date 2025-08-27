@@ -324,10 +324,15 @@ class AdminFakultasController extends Controller
             /** @var \App\Models\KepegawaianUniversitas\Pegawai $admin */
             $admin = Auth::user();
 
-            // OPTIMASI: Cache admin data untuk mengurangi query
-            $adminFakultasId = Cache::remember("admin_fakultas_id_{$admin->id}", 300, function () use ($admin) {
-                return $admin->unit_kerja_id;
-            });
+            // Get admin data with null safety check
+            if (!$admin) {
+                Log::error('Show usulan failed: No authenticated user', [
+                    'usulan_id' => $usulan->id
+                ]);
+                return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            }
+
+            $adminFakultasId = $admin->unit_kerja_id;
 
             // OPTIMASI: Gunakan eager loading yang optimal
             $usulan->load([
@@ -345,14 +350,13 @@ class AdminFakultasController extends Controller
                 'logs.dilakukanOleh:id,nama_lengkap'
             ]);
 
-            // OPTIMASI: Cache fakultas ID untuk authorization check
-            $usulanPegawaiFakultasId = Cache::remember("usulan_fakultas_{$usulan->id}", 300, function () use ($usulan) {
-                return $usulan->pegawai?->unitKerja?->subUnitKerja?->unit_kerja_id;
-            });
+            // Get fakultas ID directly (no cache for now to ensure fresh data)
+            $usulanPegawaiFakultasId = $usulan->pegawai?->unitKerja?->subUnitKerja?->unit_kerja_id;
 
-            if (!$adminFakultasId || $adminFakultasId !== $usulanPegawaiFakultasId) {
+            if (!$adminFakultasId || !$usulanPegawaiFakultasId || $adminFakultasId !== $usulanPegawaiFakultasId) {
                 Log::warning('Admin Fakultas mencoba akses usulan dari fakultas lain.', [
                     'admin_id' => $admin->id,
+                    'admin_name' => $admin->nama_lengkap ?? 'Unknown',
                     'admin_fakultas_id' => $adminFakultasId,
                     'usulan_id' => $usulan->id,
                     'usulan_fakultas_id' => $usulanPegawaiFakultasId
@@ -361,28 +365,26 @@ class AdminFakultasController extends Controller
                     ->with('error', 'Akses ditolak. Anda tidak berhak melihat usulan dari fakultas lain.');
             }
 
-            // OPTIMASI: Cache validation fields
-            $validationFields = Cache::remember("validation_fields_{$usulan->id}_admin_fakultas", 300, function () use ($usulan) {
-                return \App\Models\KepegawaianUniversitas\Usulan::getValidationFieldsWithDynamicBkd($usulan, 'admin_fakultas');
-            });
+            // Get validation fields directly (no cache for now to ensure fresh data)
+            $validationFields = \App\Models\KepegawaianUniversitas\Usulan::getValidationFieldsWithDynamicBkd($usulan, 'admin_fakultas');
 
-            // OPTIMASI: Cache BKD labels
-            $bkdLabels = Cache::remember("bkd_labels_{$usulan->id}", 300, function () use ($usulan) {
-                return $usulan->getBkdDisplayLabels();
-            });
+            // Get BKD labels directly (no cache for now to ensure fresh data)
+            $bkdLabels = $usulan->getBkdDisplayLabels();
 
             // Get validation data directly from database (no cache for now)
+            // Force refresh usulan model to get latest data
+            $usulan->refresh();
             $existingValidation = $usulan->getValidasiByRole('admin_fakultas');
             \Log::info('Loading validation data directly', [
                 'usulan_id' => $usulan->id,
                 'validation_keys' => array_keys($existingValidation),
-                'has_validation_key' => isset($existingValidation['validation'])
+                'has_validation_key' => isset($existingValidation['validation']),
+                'validation_structure' => $existingValidation,
+                'raw_validasi_data' => $usulan->validasi_data
             ]);
 
-            // OPTIMASI: Cache dokumen data
-            $dokumenData = Cache::remember("dokumen_data_{$usulan->id}", 300, function () use ($usulan) {
-                return $this->processDokumenDataForView($usulan);
-            });
+            // Get dokumen data directly (no cache for now to ensure fresh data)
+            $dokumenData = $this->processDokumenDataForView($usulan);
 
             // Get penilais data for popup
             $penilais = \App\Models\KepegawaianUniversitas\Pegawai::whereHas('roles', function($query) {
@@ -390,8 +392,8 @@ class AdminFakultasController extends Controller
             })->orderBy('nama_lengkap')->get();
 
             // Determine action permissions based on status
-            $canReturn = in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']);
-            $canForward = in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']);
+            $canReturn = $usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas';
+            $canForward = $usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas';
 
             return view('backend.layouts.views.admin-fakultas.usulan.detail', [
                 'usulan' => $usulan,
@@ -400,22 +402,22 @@ class AdminFakultasController extends Controller
                 'bkdLabels' => $bkdLabels,
                 'dokumenData' => $dokumenData,
                 'penilais' => $penilais,
-                // Multi-role configuration
-                'currentRole' => 'admin_fakultas',
+                // FIXED: Use consistent pattern with other controllers
+                'role' => 'Admin Fakultas',
                 'formAction' => route('admin-fakultas.usulan.save-validation', $usulan->id),
                 'backUrl' => route('admin-fakultas.periode.pendaftar', $usulan->periode_usulan_id),
                 'backText' => 'Kembali ke Daftar Pengusul',
-                'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
+                'canEdit' => in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
                 'config' => [
                     'canReturn' => $canReturn,
                     'canForward' => $canForward,
                     'routePrefix' => 'admin-fakultas',
-                    'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
+                    'canEdit' => in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
                     'canView' => true, // Always allow viewing data
                     'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
                 ],
                 'roleConfig' => [
-                    'canEdit' => in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview']),
+                    'canEdit' => in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
                     'canView' => true, // Always allow viewing data
                     'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
                 ]
@@ -469,7 +471,7 @@ class AdminFakultasController extends Controller
 
             // Update status based on action
             if ($action === 'submit') {
-                $usulan->status_usulan = 'Diusulkan ke Universitas';
+                $usulan->status_usulan = 'Usulan Disetujui Admin Fakultas';
                 $logMessage = 'Usulan diteruskan ke universitas';
             } else {
                 $logMessage = 'Draft validasi disimpan';
@@ -773,20 +775,190 @@ class AdminFakultasController extends Controller
                     $logMessage = 'Usulan berhasil diperbaiki dan dikirim kembali ke Universitas.';
                     break;
 
+                case 'kirim_perbaikan':
+                    // Alias untuk return_to_pegawai - backward compatibility
+                    $validatedData = $request->validate([
+                        'validation' => 'required|array',
+                        'catatan_umum' => 'required|string|min:10|max:2000'
+                    ], [
+                        'catatan_umum.required' => 'Catatan untuk pegawai wajib diisi.',
+                        'catatan_umum.min' => 'Catatan untuk pegawai minimal 10 karakter.',
+                    ]);
+
+                    $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+                    $invalidFields = $usulan->getInvalidFields('admin_fakultas');
+
+                    // Buat catatan lengkap untuk pegawai
+                    $catatanDetail = ["Usulan dikembalikan oleh Admin Fakultas untuk perbaikan."];
+                    if (count($invalidFields) > 0) {
+                        $catatanDetail[] = "\nItem yang perlu diperbaiki:";
+                        foreach ($invalidFields as $field) {
+                            $catatanDetail[] = "• " . ucwords(str_replace('_', ' ', $field['field'])) . ": {$field['keterangan']}";
+                        }
+                    }
+                    $catatanDetail[] = "\nCatatan Tambahan:";
+                    $catatanDetail[] = $validatedData['catatan_umum'];
+                    $catatanLengkap = implode("\n", $catatanDetail);
+
+                    // Update usulan
+                    $usulan->status_usulan = 'Perbaikan Usulan';
+                    $usulan->catatan_verifikator = $catatanLengkap;
+                    $logMessage = 'Usulan dikembalikan ke Pegawai untuk perbaikan.';
+                    break;
+
+                case 'perbaikan_usulan':
+                    // Alias untuk return_to_pegawai - backward compatibility
+                    $validatedData = $request->validate([
+                        'validation' => 'required|array',
+                        'catatan_umum' => 'required|string|min:10|max:2000'
+                    ], [
+                        'catatan_umum.required' => 'Catatan untuk pegawai wajib diisi.',
+                        'catatan_umum.min' => 'Catatan untuk pegawai minimal 10 karakter.',
+                    ]);
+
+                    $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+                    $invalidFields = $usulan->getInvalidFields('admin_fakultas');
+
+                    // Buat catatan lengkap untuk pegawai
+                    $catatanDetail = ["Usulan dikembalikan oleh Admin Fakultas untuk perbaikan."];
+                    if (count($invalidFields) > 0) {
+                        $catatanDetail[] = "\nItem yang perlu diperbaiki:";
+                        foreach ($invalidFields as $field) {
+                            $catatanDetail[] = "• " . ucwords(str_replace('_', ' ', $field['field'])) . ": {$field['keterangan']}";
+                        }
+                    }
+                    $catatanDetail[] = "\nCatatan Tambahan:";
+                    $catatanDetail[] = $validatedData['catatan_umum'];
+                    $catatanLengkap = implode("\n", $catatanDetail);
+
+                    // Update usulan
+                    $usulan->status_usulan = 'Perbaikan Usulan';
+                    $usulan->catatan_verifikator = $catatanLengkap;
+                    $logMessage = 'Usulan dikembalikan ke Pegawai untuk perbaikan.';
+                    break;
+
+                case 'rekomendasikan':
+                    // Alias untuk forward_to_university - backward compatibility
+                    // Check if this is initial submission or resend
+                    $currentValidasi = $usulan->validasi_data;
+                    $dokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
+                    $isInitialSubmission = empty($dokumenPendukung) || !isset($dokumenPendukung['file_surat_usulan_path']);
+
+                    $rules = [
+                        'validation' => 'required|array',
+                        'dokumen_pendukung.nomor_surat_usulan' => 'nullable|string|max:255',
+                        'dokumen_pendukung.nomor_berita_senat' => 'nullable|string|max:255',
+                    ];
+
+                    $messages = [
+                        'dokumen_pendukung.nomor_surat_usulan.max' => 'Nomor surat usulan maksimal 255 karakter.',
+                        'dokumen_pendukung.nomor_berita_senat.max' => 'Nomor berita senat maksimal 255 karakter.',
+                    ];
+
+                    // Only require files for initial submission if files are provided
+                    if ($isInitialSubmission) {
+                        // Support both bracket and dot notation
+                        $rules['dokumen_pendukung.file_surat_usulan'] = 'nullable|file|mimes:pdf|max:2048';
+                        $rules['dokumen_pendukung.file_berita_senat'] = 'nullable|file|mimes:pdf|max:2048';
+                        $rules['dokumen_pendukung[file_surat_usulan]'] = 'nullable|file|mimes:pdf|max:2048';
+                        $rules['dokumen_pendukung[file_berita_senat]'] = 'nullable|file|mimes:pdf|max:2048';
+                        $messages['dokumen_pendukung.file_surat_usulan.mimes'] = 'File surat usulan harus berformat PDF.';
+                        $messages['dokumen_pendukung.file_berita_senat.mimes'] = 'File berita senat harus berformat PDF.';
+                        $messages['dokumen_pendukung[file_surat_usulan].mimes'] = 'File surat usulan harus berformat PDF.';
+                        $messages['dokumen_pendukung[file_berita_senat].mimes'] = 'File berita senat harus berformat PDF.';
+                    }
+
+                    $validatedData = $request->validate($rules, $messages);
+
+                    $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+
+                    // Cek lagi setelah data validasi disimpan (warning only, not blocking)
+                    if ($usulan->hasInvalidFields('admin_fakultas')) {
+                        $invalidFields = $usulan->getInvalidFields('admin_fakultas');
+                        Log::warning('Admin Fakultas mengirim usulan dengan field yang tidak sesuai', [
+                            'usulan_id' => $usulan->id,
+                            'admin_id' => $adminId,
+                            'invalid_fields_count' => count($invalidFields),
+                            'invalid_fields' => $invalidFields
+                        ]);
+                    }
+
+                    // Simpan dokumen pendukung fakultas
+                    $currentValidasi = $usulan->validasi_data;
+                    $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
+
+                    // Update text fields (handle null values)
+                    if (isset($validatedData['dokumen_pendukung']['nomor_surat_usulan'])) {
+                        $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
+                    }
+                    if (isset($validatedData['dokumen_pendukung']['nomor_berita_senat'])) {
+                        $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
+                    }
+
+                    // Handle file uploads menggunakan FileStorageService
+                    $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
+                        $request,
+                        $usulan,
+                        'file_surat_usulan',
+                        'dokumen-fakultas/surat-usulan'
+                    );
+
+                    $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
+                        $request,
+                        $usulan,
+                        'file_berita_senat',
+                        'dokumen-fakultas/berita-senat'
+                    );
+
+                    $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
+                    $usulan->validasi_data = $currentValidasi;
+
+                    // Update status usulan
+                    $usulan->status_usulan = 'Diusulkan ke Universitas';
+                    $logMessage = 'Usulan divalidasi dan diteruskan ke Universitas.';
+                    break;
+
                 default: // save_only
                     // Validasi khusus untuk aksi 'simpan saja'
+                    Log::info('save_only action triggered', [
+                        'usulan_id' => $usulan->id,
+                        'admin_id' => $adminId,
+                        'request_data' => $request->all()
+                    ]);
+                    
                     $validatedData = $request->validate([
                         'validation' => 'required|array',
                     ]);
 
+                    Log::info('Validation passed', [
+                        'usulan_id' => $usulan->id,
+                        'validation_data' => $validatedData['validation']
+                    ]);
+
                     $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+
+                    Log::info('setValidasiByRole completed', [
+                        'usulan_id' => $usulan->id,
+                        'final_validasi_data' => $usulan->validasi_data
+                    ]);
 
                     // DON'T change status automatically - keep it as 'Diajukan' until dokumen pendukung is filled
                     $logMessage = 'Hasil validasi disimpan oleh Admin Fakultas.';
                     break;
             }
 
+            Log::info('Before saving usulan', [
+                'usulan_id' => $usulan->id,
+                'validasi_data' => $usulan->validasi_data
+            ]);
+            
             $usulan->save();
+            
+            Log::info('After saving usulan', [
+                'usulan_id' => $usulan->id,
+                'saved' => true
+            ]);
+            
             $usulan->createLog($usulan->status_usulan, $statusLama, $logMessage, $adminId);
 
             // OPTIMASI: Clear cache setelah data berubah
@@ -1121,13 +1293,31 @@ class AdminFakultasController extends Controller
                 'validation.*.*' => 'array',
                 'validation.*.*.status' => 'required|in:sesuai,tidak_sesuai',
                 'validation.*.*.keterangan' => 'nullable|string',
-                'action_type' => 'required|in:save_only'
+                'action_type' => 'required|in:autosave,save_only'
             ]);
 
-            // Quick authorization check
+            // Quick authorization check with null safety
             $admin = Auth::user();
-            if ($admin->unit_kerja_id !== $usulan->pegawai?->unitKerja?->subUnitKerja?->unit_kerja_id) {
-                return response()->json(['error' => 'Unauthorized'], 403);
+            if (!$admin) {
+                \Log::error('Autosave failed: No authenticated user', [
+                    'usulan_id' => $usulan->id,
+                    'request_data' => $request->all()
+                ]);
+                return response()->json(['error' => 'Authentication required'], 401);
+            }
+
+            $adminFakultasId = $admin->unit_kerja_id;
+            $usulanFakultasId = $usulan->pegawai?->unitKerja?->subUnitKerja?->unit_kerja_id;
+
+            if (!$adminFakultasId || !$usulanFakultasId || $adminFakultasId !== $usulanFakultasId) {
+                \Log::warning('Autosave unauthorized access attempt', [
+                    'usulan_id' => $usulan->id,
+                    'admin_id' => $admin->id,
+                    'admin_fakultas_id' => $adminFakultasId,
+                    'usulan_fakultas_id' => $usulanFakultasId,
+                    'admin_name' => $admin->nama_lengkap ?? 'Unknown'
+                ]);
+                return response()->json(['error' => 'Unauthorized access'], 403);
             }
 
             // Use the improved setValidasiByRole method for consistency
@@ -1137,22 +1327,27 @@ class AdminFakultasController extends Controller
             // Status should remain 'Diajukan' until Admin Fakultas explicitly submits with dokumen pendukung
 
             $usulan->save();
+            
+            // Refresh the model to ensure we have the latest data
+            $usulan->refresh();
 
-            // Clear all related caches untuk memastikan data terbaru dimuat saat reload
+            // Clear specific caches untuk memastikan data terbaru dimuat saat reload
             Cache::forget("existing_validation_{$usulan->id}_admin_fakultas");
             Cache::forget("validation_fields_{$usulan->id}_admin_fakultas");
             Cache::forget("bkd_labels_{$usulan->id}");
             Cache::forget("dokumen_data_{$usulan->id}");
             Cache::forget("usulan_fakultas_{$usulan->id}");
             Cache::forget("admin_fakultas_id_" . Auth::id());
-
-            // Clear all cache patterns related to this usulan
-            $cacheKeys = Cache::get('cache_keys') ?? [];
-            foreach ($cacheKeys as $key) {
-                if (str_contains($key, "{$usulan->id}") || str_contains($key, 'admin_fakultas')) {
-                    Cache::forget($key);
-                }
-            }
+            
+            // Clear usulan model cache
+            Cache::forget("usulan_{$usulan->id}");
+            Cache::forget("usulan_validation_{$usulan->id}_admin_fakultas");
+            
+            // Log cache clearing
+            \Log::info('Cache cleared for usulan', [
+                'usulan_id' => $usulan->id,
+                'admin_id' => Auth::id()
+            ]);
 
             // Get the saved validation data for logging
             $savedValidation = $usulan->getValidasiByRole('admin_fakultas');
@@ -1163,7 +1358,9 @@ class AdminFakultasController extends Controller
                 'usulan_id' => $usulan->id,
                 'saved_categories' => array_keys($validationData),
                 'total_fields_saved' => array_sum(array_map('count', $validationData)),
-                'status' => $usulan->status_usulan
+                'status' => $usulan->status_usulan,
+                'validation_data_structure' => $savedValidation,
+                'raw_validation_data' => $usulan->validasi_data
             ]);
 
             return response()->json([
@@ -1537,15 +1734,24 @@ class AdminFakultasController extends Controller
     {
         $cacheKeys = [
             "validation_fields_{$usulan->id}",
+            "validation_fields_{$usulan->id}_admin_fakultas",
             "bkd_labels_{$usulan->id}",
             "existing_validation_{$usulan->id}_admin_fakultas",
             "dokumen_data_{$usulan->id}",
-            "usulan_fakultas_{$usulan->id}"
+            "usulan_fakultas_{$usulan->id}",
+            "usulan_{$usulan->id}",
+            "usulan_validation_{$usulan->id}_admin_fakultas"
         ];
 
         foreach ($cacheKeys as $key) {
             Cache::forget($key);
         }
+        
+        // Log cache clearing
+        \Log::info('Usulan cache cleared', [
+            'usulan_id' => $usulan->id,
+            'cache_keys' => $cacheKeys
+        ]);
     }
 
     /**

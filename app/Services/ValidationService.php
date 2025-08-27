@@ -81,8 +81,8 @@ class ValidationService
     public function canSubmitToSister(Usulan $usulan): bool
     {
         return in_array($usulan->status_usulan, [
-            'Direkomendasikan',
-            'Disetujui'
+            'Usulan Direkomendasikan oleh Tim Senat',
+            'Usulan Sudah Dikirim ke Sister'
         ]);
     }
 
@@ -91,7 +91,7 @@ class ValidationService
      */
     public function canSubmitPerbaikanFromSister(Usulan $usulan): bool
     {
-        return $usulan->status_usulan === 'Perbaikan dari Tim Sister';
+        return $usulan->status_usulan === 'Permintaan Perbaikan Usulan dari Tim Sister';
     }
 
     /**
@@ -100,8 +100,8 @@ class ValidationService
     public function canSubmitToAdminUnivUsulan(Usulan $usulan): bool
     {
         return in_array($usulan->status_usulan, [
-            'Perbaikan dari Tim Sister',
-            'Diajukan'
+            'Permintaan Perbaikan Usulan dari Tim Sister',
+            'Usulan Dikirim ke Admin Fakultas'
         ]);
     }
 

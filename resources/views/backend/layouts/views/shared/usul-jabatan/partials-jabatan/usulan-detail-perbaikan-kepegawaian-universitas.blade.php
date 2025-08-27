@@ -1,5 +1,5 @@
 {{-- Perbaikan dari Kepegawaian Universitas untuk Role Admin Fakultas Section --}}
-@if($currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Perbaikan Usulan' && !empty($usulan->catatan_verifikator) && isset($usulan->validasi_data['admin_universitas']['validation']))
+@if($currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas' && !empty($usulan->catatan_verifikator) && isset($usulan->validasi_data['admin_universitas']['validation']))
     @php
         // Define field categories relevant for Admin Fakultas
         $adminFakultasFieldCategories = [

@@ -88,8 +88,8 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Sedang Direview</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->where('status_usulan', 'Sedang Direview')->count() }}</dd>
+                                                            <dt class="text-sm font-medium text-gray-500 truncate">Sedang Direview</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ $usulans->where('status_usulan', 'Usulan Disetujui Kepegawaian Universitas')->count() }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -107,7 +107,7 @@
                         <div class="ml-5 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Perbaikan</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan', 'Perbaikan dari Kepegawaian Universitas', 'Perbaikan dari Penilai Universitas'])->count() }}</dd>
+                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas'])->count() }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -125,7 +125,7 @@
                         <div class="ml-5 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Selesai</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Diusulkan ke Universitas', 'Direkomendasikan', 'Disetujui'])->count() }}</dd>
+                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Usulan Disetujui Admin Fakultas', 'Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister'])->count() }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -196,13 +196,13 @@
                                                 case 'Diajukan':
                                                     return 'Usulan Dikirim ke Admin Fakultas';
                                                 
-                                                case 'Perbaikan Usulan':
+                                                case 'Usulan Perbaikan dari Admin Fakultas':
                                                     if ($currentRole === 'Admin Fakultas') {
                                                         return 'Permintaan Perbaikan dari Admin Fakultas';
                                                     }
                                                     break;
                                                 
-                                                case 'Diusulkan ke Universitas':
+                                                case 'Usulan Disetujui Admin Fakultas':
                                                     if ($currentRole === 'Admin Fakultas') {
                                                         return 'Usulan Disetujui Admin Fakultas';
                                                     }
@@ -234,9 +234,9 @@
                                         $statusColors = [
                                             // Status lama (fallback)
                                             'Diajukan' => 'bg-yellow-100 text-yellow-800',
-                                            'Sedang Direview' => 'bg-blue-100 text-blue-800',
-                                            'Perbaikan Usulan' => 'bg-orange-100 text-orange-800',
-                                            'Diusulkan ke Universitas' => 'bg-purple-100 text-purple-800',
+                                            'Usulan Disetujui Kepegawaian Universitas' => 'bg-blue-100 text-blue-800',
+                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
+                                            'Usulan Disetujui Admin Fakultas' => 'bg-purple-100 text-purple-800',
                                             'Direkomendasikan' => 'bg-green-100 text-green-800',
                                             'Ditolak' => 'bg-red-100 text-red-800',
                                             

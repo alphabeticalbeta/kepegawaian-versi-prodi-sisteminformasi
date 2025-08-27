@@ -6,8 +6,7 @@
             <i data-lucide="refresh-cw" class="w-4 h-4 inline mr-1"></i>
             Perubahan validasi tersimpan otomatis. Gunakan tombol berikut untuk melanjutkan proses.
         </div>
-        <form id="action-form" action="{{ route((isset($config['routePrefix']) ? $config['routePrefix'] : 'admin-fakultas') . '.save-validation', $usulan->id) }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-3 flex-wrap" autocomplete="off" novalidate>
-            @csrf
+        <div class="flex items-center gap-3 flex-wrap">
             <input type="hidden" name="action_type" id="action_type" value="save_only">
             <input type="hidden" name="catatan_umum" id="catatan_umum" value="">
 
@@ -17,38 +16,46 @@
 
                 
                 {{-- ENHANCED: Specific status-based action buttons with improved logic --}}
-                @if($usulan->status_usulan === 'Diusulkan ke Universitas')
+                @if($usulan->status_usulan === 'Usulan Disetujui Admin Fakultas')
                     {{-- Initial validation buttons - only for new submissions --}}
-                    <button type="button" id="btn-perbaikan-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
-                        <i data-lucide="user-x" class="w-4 h-4"></i>
-                        Perbaikan ke Pegawai
-                    </button>
+                    <div class="flex flex-col lg:flex-row gap-4 w-full">
+                        <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                            <button type="button" id="btn-perbaikan-pegawai" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="user-x" class="w-4 h-4"></i>
+                                <span class="font-medium">Perbaikan ke Pegawai</span>
+                            </button>
 
-                    <button type="button" id="btn-perbaikan-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
-                        <i data-lucide="building-2" class="w-4 h-4"></i>
-                        Perbaikan ke Fakultas
-                    </button>
+                            <button type="button" id="btn-perbaikan-fakultas" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="building-2" class="w-4 h-4"></i>
+                                <span class="font-medium">Perbaikan ke Fakultas</span>
+                            </button>
 
-                    <button type="button" id="btn-teruskan-penilai" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                        <i data-lucide="user-check" class="w-4 h-4"></i>
-                        Teruskan ke Penilai
-                    </button>
+                            <button type="button" id="btn-teruskan-penilai" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="user-check" class="w-4 h-4"></i>
+                                <span class="font-medium">Teruskan ke Penilai</span>
+                            </button>
 
-                    <button type="button" id="btn-tidak-direkomendasikan" class="px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors flex items-center gap-2">
-                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                        Tidak Direkomendasikan
-                    </button>
+                            <button type="button" id="btn-tidak-direkomendasikan" class="px-6 py-3 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                <span class="font-medium">Tidak Direkomendasikan</span>
+                            </button>
+                        </div>
+                    </div>
                 @endif
 
-                @if($usulan->status_usulan === 'Direkomendasikan')
+                @if($usulan->status_usulan === 'Usulan Direkomendasikan oleh Tim Senat')
                     {{-- Forward to Senat button - only when recommended --}}
-                    <button type="button" id="btn-teruskan-senat" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
-                        <i data-lucide="crown" class="w-4 h-4"></i>
-                        Teruskan ke Senat
-                    </button>
+                    <div class="flex flex-col lg:flex-row gap-4 w-full">
+                        <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                            <button type="button" id="btn-teruskan-senat" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="crown" class="w-4 h-4"></i>
+                                <span class="font-medium">Teruskan ke Senat</span>
+                            </button>
+                        </div>
+                    </div>
                 @endif
 
-                @if($usulan->status_usulan === 'Dikirim ke Sister')
+                @if($usulan->status_usulan === 'Usulan Sudah Dikirim ke Sister')
                     {{-- Sister processing status --}}
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
@@ -60,7 +67,7 @@
                     </div>
                 @endif
 
-                @if($usulan->status_usulan === 'Perbaikan dari Tim Sister')
+                @if($usulan->status_usulan === 'Permintaan Perbaikan Usulan dari Tim Sister')
                     {{-- Sister correction request --}}
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
@@ -73,7 +80,7 @@
                 @endif
 
                 {{-- ENHANCED: Tim Penilai Assessment Status with specific conditions --}}
-                @if(in_array($usulan->status_usulan, ['Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai', 'Usulan Direkomendasi Tim Penilai']))
+                @if(in_array($usulan->status_usulan, ['Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas', 'Usulan Direkomendasi dari Penilai Universitas']))
                     @php
                         // ENHANCED ERROR HANDLING: Use new progress information method
                         $progressInfo = $usulan->getPenilaiAssessmentProgress();
@@ -187,7 +194,7 @@
                         </div>
 
                         {{-- ENHANCED: Specific actions based on final assessment result --}}
-                        @if($usulan->status_usulan === 'Perbaikan Dari Tim Penilai')
+                        @if($usulan->status_usulan === 'Permintaan Perbaikan dari Penilai Universitas')
                             {{-- Actions for correction needed --}}
                             <div class="flex flex-wrap gap-2">
                                 <button type="button" id="btn-perbaikan-ke-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
@@ -210,7 +217,7 @@
                                     Tidak Direkomendasikan
                                 </button>
                             </div>
-                        @elseif($usulan->status_usulan === 'Usulan Direkomendasi Tim Penilai')
+                        @elseif($usulan->status_usulan === 'Usulan Direkomendasi dari Penilai Universitas')
                             {{-- Actions for recommended usulan --}}
                             <div class="flex flex-wrap gap-2">
                                 <button type="button" id="btn-kirim-ke-senat" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
@@ -343,50 +350,62 @@
         @elseif($currentRole === 'Admin Fakultas')
             {{-- Admin Fakultas Action Buttons --}}
             
-            {{-- Auto Save Button for Admin Fakultas --}}
-            <button type="button" id="btn-autosave-admin-fakultas" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                <i data-lucide="save" class="w-4 h-4"></i>
-                Simpan Validasi
-            </button>
-            
-            @if($usulan->status_usulan === 'Perbaikan Usulan')
+            @if($usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas' || $usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas')
                 {{-- Admin Fakultas Action Buttons for Perbaikan --}}
-                <button type="button" id="btn-kirim-ke-universitas" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim ke Universitas
-                </button>
-            @elseif($usulan->status_usulan === 'Diajukan')
-                {{-- Admin Fakultas Action Buttons for Initial Validation --}}
-                <div class="flex flex-col sm:flex-row gap-3 w-full">
-                @if(isset($config['canReturn']) && $config['canReturn'])
-                    <button type="button" id="btn-perbaikan" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
-                        Perbaikan ke Pegawai
-                </button>
-                @endif
-
-                @if(isset($config['canForward']) && $config['canForward'])
-                    <button type="button" id="btn-forward" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                        Kirim ke Universitas
-                </button>
-                @endif
+                @if($usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas')
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mr-2"></i>
+                            <span class="text-sm text-red-800">
+                                <strong>Status:</strong> Kepegawaian Universitas meminta perbaikan pada usulan ini.
+                            </span>
+                        </div>
                     </div>
-            @elseif($usulan->status_usulan === 'Perbaikan dari Kepegawaian Universitas')
-                {{-- Admin Fakultas Action Buttons for Kepegawaian Universitas Correction --}}
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                    <div class="flex items-center">
-                        <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mr-2"></i>
-                        <span class="text-sm text-red-800">
-                            <strong>Status:</strong> Kepegawaian Universitas meminta perbaikan pada usulan ini.
-                        </span>
+                @endif
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kirim-ke-universitas" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim ke Universitas</span>
+                        </button>
+                    </div>
+                    
+                    {{-- Auto Save Button positioned on the right --}}
+                    <div class="flex justify-center lg:justify-end">
+                        <button type="button" id="btn-autosave-admin-fakultas" class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="font-medium">Simpan Validasi</span>
+                        </button>
                     </div>
                 </div>
-                <button type="button" id="btn-kirim-ke-universitas" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim ke Universitas
-                </button>
-            @elseif($usulan->status_usulan === 'Perbaikan dari Penilai Universitas')
+            @elseif($usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas')
+                {{-- Admin Fakultas Action Buttons for Initial Validation --}}
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        @if(isset($config['canReturn']) && $config['canReturn'])
+                            <button type="button" id="btn-perbaikan" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                                <span class="font-medium">Perbaikan ke Pegawai</span>
+                            </button>
+                        @endif
+
+                        @if(isset($config['canForward']) && $config['canForward'])
+                            <button type="button" id="btn-forward" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                <span class="font-medium">Kirim ke Universitas</span>
+                            </button>
+                        @endif
+                    </div>
+                    
+                    {{-- Auto Save Button positioned on the right --}}
+                    <div class="flex justify-center lg:justify-end">
+                        <button type="button" id="btn-autosave-admin-fakultas" class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="font-medium">Simpan Validasi</span>
+                        </button>
+                    </div>
+                </div>
+            @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Penilai Universitas')
                 {{-- Admin Fakultas Action Buttons for Penilai Universitas Correction --}}
                 <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
@@ -396,14 +415,26 @@
                         </span>
                     </div>
                 </div>
-                <button type="button" id="btn-kirim-ke-universitas" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim ke Universitas
-                </button>
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kirim-ke-universitas" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim ke Universitas</span>
+                        </button>
+                    </div>
+                    
+                    {{-- Auto Save Button positioned on the right --}}
+                    <div class="flex justify-center lg:justify-end">
+                        <button type="button" id="btn-autosave-admin-fakultas" class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="font-medium">Simpan Validasi</span>
+                        </button>
+                    </div>
+                </div>
             @endif
         @elseif($currentRole === 'Tim Senat')
             {{-- Tim Senat Action Buttons --}}
-            @if($usulan->status_usulan === 'Direkomendasikan')
+            @if($usulan->status_usulan === 'Usulan Direkomendasikan oleh Tim Senat')
                 <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="crown" class="w-4 h-4 text-purple-600 mr-2"></i>
@@ -412,11 +443,15 @@
                         </span>
                     </div>
                 </div>
-                <button type="button" id="btn-kirim-ke-sister" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim ke Sister
-                </button>
-            @elseif($usulan->status_usulan === 'Dikirim ke Sister')
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kirim-ke-sister" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim ke Sister</span>
+                        </button>
+                    </div>
+                </div>
+            @elseif($usulan->status_usulan === 'Usulan Sudah Dikirim ke Sister')
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="send" class="w-4 h-4 text-blue-600 mr-2"></i>
@@ -428,7 +463,7 @@
             @endif
         @elseif($currentRole === 'Pegawai')
             {{-- Pegawai Action Buttons --}}
-            @if($usulan->status_usulan === 'Perbaikan Usulan')
+            @if($usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas')
                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 mr-2"></i>
@@ -437,11 +472,15 @@
                         </span>
                     </div>
                 </div>
-                <button type="button" id="btn-kirim-perbaikan" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim Perbaikan
-                </button>
-            @elseif($usulan->status_usulan === 'Perbaikan dari Kepegawaian Universitas')
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kirim-perbaikan-admin-fakultas" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim Perbaikan</span>
+                        </button>
+                    </div>
+                </div>
+            @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas')
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mr-2"></i>
@@ -450,11 +489,15 @@
                         </span>
                     </div>
                 </div>
-                <button type="button" id="btn-kirim-perbaikan" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim Perbaikan
-                </button>
-            @elseif($usulan->status_usulan === 'Perbaikan dari Penilai Universitas')
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kirim-perbaikan-kepegawaian" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim Perbaikan</span>
+                        </button>
+                    </div>
+                </div>
+            @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Penilai Universitas')
                 <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-600 mr-2"></i>
@@ -463,11 +506,15 @@
                         </span>
                     </div>
                 </div>
-                <button type="button" id="btn-kirim-perbaikan" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim Perbaikan
-                </button>
-            @elseif($usulan->status_usulan === 'Perbaikan dari Tim Sister')
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kirim-perbaikan-penilai" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim Perbaikan</span>
+                        </button>
+                    </div>
+                </div>
+            @elseif($usulan->status_usulan === 'Permintaan Perbaikan Usulan dari Tim Sister')
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mr-2"></i>
@@ -476,37 +523,43 @@
                         </span>
                     </div>
                 </div>
-                <button type="button" id="btn-kirim-perbaikan" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim Perbaikan
-                </button>
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kirim-perbaikan-sister" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim Perbaikan</span>
+                        </button>
+                    </div>
+                </div>
             @endif
         @elseif($currentRole === 'Penilai Universitas')
             {{-- Penilai Universitas Field-by-Field Validation Section --}}
             @if($canEdit)
                 {{-- Action Buttons for Penilai Universitas (when can edit) --}}
-                <div class="flex flex-row gap-3 mb-4 overflow-x-auto">
-                    <button type="button" id="btn-autosave-penilai" class="flex-shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm">
-                        <i data-lucide="save" class="w-4 h-4"></i>
-                        Simpan Validasi
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1 overflow-x-auto">
+                        <button type="button" id="btn-autosave-penilai" class="flex-shrink-0 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="font-medium">Simpan Validasi</span>
                         </button>
-                    <button type="button" id="btn-rekomendasikan-penilai" class="flex-shrink-0 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i>
-                            Rekomendasikan
+                        <button type="button" id="btn-rekomendasikan-penilai" class="flex-shrink-0 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            <span class="font-medium">Rekomendasikan</span>
                         </button>
-                    <button type="button" id="btn-perbaikan-penilai" class="flex-shrink-0 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2 text-sm">
-                        <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
-                        Perbaikan ke Admin Universitas
-                    </button>
-                    <button type="button" id="btn-tidak-rekomendasikan-penilai" class="flex-shrink-0 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm">
-                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                        Tidak Rekomendasikan
-                    </button>
-                    <button type="button" id="btn-kembali-penilai" class="flex-shrink-0 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        Kembali
+                        <button type="button" id="btn-perbaikan-penilai" class="flex-shrink-0 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                            <span class="font-medium">Perbaikan ke Admin Universitas</span>
+                        </button>
+                        <button type="button" id="btn-tidak-rekomendasikan-penilai" class="flex-shrink-0 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            <span class="font-medium">Tidak Rekomendasikan</span>
+                        </button>
+                        <button type="button" id="btn-kembali-penilai" class="flex-shrink-0 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            <span class="font-medium">Kembali</span>
                         </button>
                     </div>
+                </div>
             @else
                 {{-- Read-only mode for Penilai Universitas (after validation completed) --}}
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -522,13 +575,17 @@
                 </div>
                 
                 {{-- Only show Kembali button for completed assessment --}}
-                <button type="button" id="btn-kembali-penilai" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    Kembali
-                </button>
+                <div class="flex flex-col lg:flex-row gap-4 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                        <button type="button" id="btn-kembali-penilai-readonly" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            <span class="font-medium">Kembali</span>
+                        </button>
+                    </div>
+                </div>
             @endif
         @endif
-        </form>
+        </div>
     </div>
 </div>
 @endif

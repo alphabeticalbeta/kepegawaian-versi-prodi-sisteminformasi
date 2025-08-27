@@ -51,8 +51,8 @@ class UsulanController extends Controller
         })->orderBy('nama_lengkap')->get();
 
         // Determine action permissions based on status
-        $canReturn = in_array($usulan->status_usulan, ['Direkomendasikan', 'Dikirim ke Sister']);
-        $canForward = in_array($usulan->status_usulan, ['Direkomendasikan', 'Dikirim ke Sister']);
+        $canReturn = in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister']);
+        $canForward = in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister']);
 
         return view('backend.layouts.views.tim-senat.usulan.detail', [
             'usulan' => $usulan,
@@ -62,7 +62,7 @@ class UsulanController extends Controller
                 'canReturn' => $canReturn,
                 'canForward' => $canForward,
                 'routePrefix' => 'tim-senat',
-                'canEdit' => in_array($usulan->status_usulan, ['Direkomendasikan', 'Dikirim ke Sister']),
+                'canEdit' => in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister']),
                 'canView' => true,
                 'submitFunctions' => ['save', 'tolak_usulan', 'setujui_usulan']
             ]
@@ -76,7 +76,7 @@ class UsulanController extends Controller
     {
 
         // Check if usulan is in correct status
-        if ($usulan->status_usulan !== 'Direkomendasikan') {
+        if ($usulan->status_usulan !== 'Usulan Direkomendasikan oleh Tim Senat') {
             return response()->json([
                 'success' => false,
                 'message' => 'Usulan tidak dapat diproses karena status tidak sesuai.'

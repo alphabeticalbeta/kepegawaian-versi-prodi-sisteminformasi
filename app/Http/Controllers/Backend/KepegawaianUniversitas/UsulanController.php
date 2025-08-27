@@ -132,8 +132,8 @@ class UsulanController extends Controller
         })->orderBy('nama_lengkap')->get();
 
         // Determine action permissions based on status
-        $canReturn = in_array($usulan->status_usulan, ['Usulan Direkomendasi Tim Penilai', 'Tidak Direkomendasikan', 'Diusulkan ke Universitas', 'Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']);
-        $canForward = in_array($usulan->status_usulan, ['Usulan Direkomendasi Tim Penilai', 'Tidak Direkomendasikan', 'Diusulkan ke Universitas', 'Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']);
+        $canReturn = in_array($usulan->status_usulan, ['Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas']);
+        $canForward = in_array($usulan->status_usulan, ['Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas']);
 
         return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', [
             'usulan' => $usulan,
@@ -143,7 +143,7 @@ class UsulanController extends Controller
                 'canReturn' => $canReturn,
                 'canForward' => $canForward,
                 'routePrefix' => 'kepegawaian-universitas',
-                'canEdit' => in_array($usulan->status_usulan, ['Usulan Direkomendasi Tim Penilai', 'Tidak Direkomendasikan', 'Diusulkan ke Universitas', 'Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai']),
+                'canEdit' => in_array($usulan->status_usulan, ['Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas']),
                 'canView' => true,
                 'submitFunctions' => ['save', 'return_to_pegawai', 'forward_to_penilai', 'recommend', 'not_recommend']
             ]

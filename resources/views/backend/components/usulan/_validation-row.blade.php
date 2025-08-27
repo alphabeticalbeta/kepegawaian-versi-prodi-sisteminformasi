@@ -2,8 +2,10 @@
     $fieldHelper = new \App\Helpers\UsulanFieldHelper($usulan);
     $fieldValue = $fieldHelper->getFieldValue($category, $field);
 
-    $currentStatus = $existingValidation[$category][$field]['status'] ?? 'sesuai';
-    $currentKeterangan = $existingValidation[$category][$field]['keterangan'] ?? '';
+    // FIXED: Access validation data with correct structure
+    $validationData = $existingValidation['validation'] ?? [];
+    $currentStatus = $validationData[$category][$field]['status'] ?? 'sesuai';
+    $currentKeterangan = $validationData[$category][$field]['keterangan'] ?? '';
 @endphp
 
 <tbody class="divide-y divide-gray-200">

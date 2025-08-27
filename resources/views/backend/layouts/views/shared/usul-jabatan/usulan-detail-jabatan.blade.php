@@ -223,7 +223,7 @@
         'dokumen_admin_fakultas' => [
             'label' => 'Dokumen yang Dikirim ke Universitas',
             'icon' => 'file-text',
-            'isEditableForm' => $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview', 'Direkomendasikan', 'Disetujui', 'Ditolak', 'Perbaikan Usulan', 'Diajukan']),
+            'isEditableForm' => $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
             'fields' => [
                 'nomor_surat_usulan' => 'Nomor Surat Usulan',
                 'file_surat_usulan' => 'File Surat Usulan',
@@ -238,17 +238,15 @@
     
     // Determine if user can edit
     $canEdit = false;
-    if ($currentRole === 'Admin Universitas' && in_array($usulan->status_usulan, ['Diajukan', 'Sedang Direview'])) {
+    if ($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas'])) {
         $canEdit = true;
-    } elseif ($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview', 'Direkomendasikan', 'Disetujui', 'Ditolak', 'Perbaikan Usulan', 'Diajukan', 'Perbaikan dari Kepegawaian Universitas', 'Perbaikan dari Penilai Universitas'])) {
+    } elseif ($currentRole === 'Penilai Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas'])) {
         $canEdit = true;
-    } elseif ($currentRole === 'Penilai Universitas' && in_array($usulan->status_usulan, ['Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai'])) {
+    } elseif ($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas'])) {
         $canEdit = true;
-    } elseif ($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Direkomendasi Tim Penilai', 'Tidak Direkomendasikan', 'Diusulkan ke Universitas', 'Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai'])) {
+    } elseif ($currentRole === 'Tim Senat' && in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister'])) {
         $canEdit = true;
-    } elseif ($currentRole === 'Tim Senat' && in_array($usulan->status_usulan, ['Direkomendasikan', 'Dikirim ke Sister'])) {
-        $canEdit = true;
-    } elseif ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Perbaikan Usulan', 'Perbaikan dari Kepegawaian Universitas', 'Perbaikan dari Penilai Universitas', 'Perbaikan dari Tim Sister'])) {
+    } elseif ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Usulan dari Tim Sister'])) {
         $canEdit = true;
     }
     
@@ -273,6 +271,28 @@
             }
         }
     }
+    
+    // Determine action permissions based on status and role
+    $canReturn = false;
+    $canForward = false;
+    
+    if ($currentRole === 'Admin Fakultas') {
+        if ($usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas') {
+            $canReturn = true;
+            $canForward = true;
+        } elseif (in_array($usulan->status_usulan, ['Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas'])) {
+            $canForward = true;
+        }
+    }
+    
+    // Create config array for action bar
+    $actionConfig = [
+        'canReturn' => $canReturn,
+        'canForward' => $canForward,
+        'routePrefix' => $routePrefix,
+        'canEdit' => $canEdit,
+        'canView' => true
+    ];
 @endphp
 
 {{-- Content starts here --}}
@@ -318,16 +338,31 @@
         {{-- Include Informasi Usulan Partial --}}
         @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-informasi-usulan')
 
-        {{-- CSRF token for autosave --}}
+        {{-- Form wrapper untuk validation table dan action bar --}}
         @if($canEdit)
-            @csrf
+            <form id="action-form" action="{{ route($routePrefix . '.save-validation', $usulan->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6" autocomplete="off" novalidate>
+                @csrf
+                <meta name="csrf-token" content="{{ csrf_token() }}">
+                
+                {{-- Include Validation Table Partial --}}
+                @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-validation-table')
+
+                {{-- Include Action Bar Partial --}}
+                @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-action-bar', [
+                    'config' => $actionConfig,
+                    'currentRole' => $currentRole
+                ])
+            </form>
+        @else
+            {{-- Include Validation Table Partial (read-only) --}}
+            @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-validation-table')
+
+            {{-- Include Action Bar Partial (read-only) --}}
+            @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-action-bar', [
+                'config' => $actionConfig,
+                'currentRole' => $currentRole
+            ])
         @endif
-
-        {{-- Include Validation Table Partial --}}
-        @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-validation-table')
-
-        {{-- Include Action Bar Partial --}}
-        @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-action-bar')
 
         {{-- Include JavaScript Partial --}}
         @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-javascript')

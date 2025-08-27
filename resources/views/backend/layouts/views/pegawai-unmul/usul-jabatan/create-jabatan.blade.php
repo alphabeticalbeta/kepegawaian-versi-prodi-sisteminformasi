@@ -172,8 +172,8 @@
                         }
                         
                         // Collect general notes for this penilai
-                        if (isset($penilaiData['keterangan_umum']) && !empty($penilaiData['keterangan_umum'])) {
-                            $penilaiGeneralNotes[] = $penilaiData['keterangan_umum'];
+                        if (!empty($usulan->catatan_verifikator)) {
+                            $penilaiGeneralNotes[] = $usulan->catatan_verifikator;
                         }
                     }
                     
@@ -603,9 +603,43 @@
                                                 </div>
                                             @endforeach
                                         </div>
+                                        
+                                        {{-- Catatan Tambahan untuk Admin Fakultas --}}
+                                        @if($roleKey === 'admin_fakultas' && !empty($usulan->catatan_verifikator))
+                                            @php
+                                                // Ekstrak hanya bagian "Catatan Tambahan:" dari catatan verifikator
+                                                $catatanVerifikator = $usulan->catatan_verifikator;
+                                                $catatanTambahan = '';
+                                                
+                                                if (strpos($catatanVerifikator, 'Catatan Tambahan:') !== false) {
+                                                    $parts = explode('Catatan Tambahan:', $catatanVerifikator);
+                                                    if (count($parts) > 1) {
+                                                        $catatanTambahan = trim($parts[1]);
+                                                    }
+                                                }
+                                            @endphp
+                                            
+                                            @if(!empty($catatanTambahan))
+                                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                                    <div class="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                                        <i data-lucide="message-square" class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0"></i>
+                                                        <div class="flex-1">
+                                                            <div class="text-sm font-medium text-amber-800">
+                                                                Catatan Tambahan
+                                                            </div>
+                                                            <div class="text-sm text-amber-700 mt-1">
+                                                                {{ $catatanTambahan }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
+
+
 
                             <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div class="flex items-start">
@@ -712,6 +746,8 @@
                 </div>
             @endif
 
+
+
             {{-- Informasi Periode Usulan --}}
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
                 <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
@@ -804,7 +840,7 @@
                 $isRevisionFromUniversity = false;
                 $isRevisionFromFakultas = false;
 
-                if ($isEditMode && $usulan && $usulan->status_usulan === 'Perbaikan Usulan') {
+                if ($isEditMode && $usulan && $usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas') {
                     // Check validation data to determine source of revision
                     $adminUnivValidation = $usulan->getValidasiByRole('admin_universitas');
                     $adminFakultasValidation = $usulan->getValidasiByRole('admin_fakultas');
@@ -844,7 +880,7 @@
                         </button>
 
                         {{-- Conditional Submit Buttons --}}
-                        @if($isEditMode && $usulan && $usulan->status_usulan === 'Perbaikan Usulan')
+                        @if($isEditMode && $usulan && $usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas')
                             {{-- Revision Mode: Show appropriate button based on who requested revision --}}
                             @if($isRevisionFromUniversity)
                                 <button type="submit" name="action" value="submit_to_university"

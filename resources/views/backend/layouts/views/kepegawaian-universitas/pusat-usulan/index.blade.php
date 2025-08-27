@@ -58,7 +58,12 @@
                         @forelse ($periodeUsulans as $periode)
                             <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
                                 <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{{ $periode->nama_periode }}</td>
-                                <td class="px-6 py-4 capitalize">{{ $periode->jenis_usulan }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ \App\Helpers\UsulanHelper::getJenisUsulanBadgeClass($periode->jenis_usulan) }}">
+                                        <i data-lucide="{{ \App\Helpers\UsulanHelper::getJenisUsulanIcon($periode->jenis_usulan) }}" class="w-3 h-3 mr-1"></i>
+                                        {{ \App\Helpers\UsulanHelper::formatJenisUsulan($periode->jenis_usulan) }}
+                                    </span>
+                                </td>
                                 <td class="px-6 py-4">{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->isoFormat('D MMM') }} - {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->isoFormat('D MMM YYYY') }}</td>
                                 <td class="px-6 py-4">
                                     @if($periode->tanggal_mulai_perbaikan)

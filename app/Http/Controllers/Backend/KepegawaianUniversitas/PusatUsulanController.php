@@ -75,8 +75,8 @@ class PusatUsulanController extends Controller
 
         // Determine if can edit based on status
         $canEdit = in_array($usulan->status_usulan, [
-            'Diusulkan ke Universitas',
-            'Sedang Direview Universitas',
+            'Usulan Disetujui Admin Fakultas',
+            'Usulan Disetujui Kepegawaian Universitas',
         ]);
 
         // Get penilais data for popup
@@ -199,7 +199,7 @@ class PusatUsulanController extends Controller
     public function process(Request $request, Usulan $usulan)
     {
         // 1) Guard status
-        if (!in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview Universitas'])) {
+        if (!in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas'])) {
             return redirect()->back()->with('error', 'Aksi tidak dapat dilakukan karena status usulan saat ini adalah: ' . $usulan->status_usulan);
         }
 
@@ -306,8 +306,8 @@ class PusatUsulanController extends Controller
 
                 case 'save_only':
                     // Jika masih awal, ubah ke "Sedang Direview Universitas" sesuai komentarmu
-                    if ($statusLama === 'Diusulkan ke Universitas') {
-                        $usulan->status_usulan = 'Sedang Direview Universitas';
+                    if ($statusLama === 'Usulan Disetujui Admin Fakultas') {
+                        $usulan->status_usulan = 'Usulan Disetujui Kepegawaian Universitas';
                     }
                     $logMessage = 'Validasi dari Admin Universitas disimpan.';
                     break;

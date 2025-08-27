@@ -6,7 +6,7 @@
 
     @php
     // Cek apakah ada usulan yang perlu diperbaiki
-        $usulanPerluPerbaikan = $usulans->firstWhere('status_usulan', 'Perbaikan Usulan');
+        $usulanPerluPerbaikan = $usulans->firstWhere('status_usulan', 'Usulan Perbaikan dari Admin Fakultas');
     @endphp
 
     @if($usulanPerluPerbaikan)
@@ -60,7 +60,7 @@
                     <tbody>
                         @forelse ($usulans as $usulan)
                             <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
-                                <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap capitalize">{{ $usulan->jenis_usulan }}</td>
+                                <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{{ \App\Helpers\UsulanHelper::formatJenisUsulan($usulan->jenis_usulan) }}</td>
                                 <td class="px-6 py-4">{{ $usulan->periodeUsulan->nama_periode }}</td>
                                 <td class="px-6 py-4">{{ $usulan->created_at->isoFormat('D MMMM YYYY') }}</td>
                                 <td class="px-6 py-4 text-center">
@@ -75,7 +75,7 @@
                                                 case 'Diajukan':
                                                     return 'Usulan Dikirim ke Admin Fakultas';
                                                 
-                                                case 'Perbaikan Usulan':
+                                                case 'Usulan Perbaikan dari Admin Fakultas':
                                                     if ($currentRole === 'Pegawai') {
                                                         return 'Usulan Perbaikan dari Admin Fakultas';
                                                     }
@@ -115,7 +115,7 @@
                                             'Draft' => 'bg-gray-100 text-gray-800',
                                             'Diajukan' => 'bg-blue-100 text-blue-800',
                                             'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
-                                            'Perbaikan Usulan' => 'bg-orange-100 text-orange-800',
+                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
                                             'Dikembalikan' => 'bg-red-100 text-red-800',
                                             'Disetujui' => 'bg-green-100 text-green-800',
                                             'Direkomendasikan' => 'bg-purple-100 text-purple-800',
@@ -159,11 +159,11 @@
                                             };
 
                                             // Tentukan apakah bisa edit atau hanya lihat detail
-                                            $canEdit = in_array($usulan->status_usulan, ['Draft', 'Perbaikan Usulan', 'Dikembalikan ke Pegawai']);
+                                            $canEdit = in_array($usulan->status_usulan, ['Draft', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']);
                                             $actionRoute = $canEdit ? $routeName . '.edit' : $routeName . '.show';
                                         @endphp
 
-                                        @if($usulan->status_usulan == 'Perbaikan Usulan')
+                                        @if($usulan->status_usulan == 'Usulan Perbaikan dari Admin Fakultas')
                                             <a href="{{ route($actionRoute, $usulan) }}"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200">
                                                 <i data-lucide="edit" class="w-3 h-3 mr-1"></i>

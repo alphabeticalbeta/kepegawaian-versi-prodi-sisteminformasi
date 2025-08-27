@@ -71,7 +71,7 @@
                                 $usulansForAssessment = $periode->usulans->filter(function($usulan) use ($currentPenilaiId) {
                                     return $usulan->penilais->contains('id', $currentPenilaiId) && 
                                            in_array($usulan->status_usulan, [
-                                               'Sedang Direview',
+                                               'Usulan Disetujui Kepegawaian Universitas',
                                                'Menunggu Hasil Penilaian Tim Penilai',
                                                'Perbaikan Dari Tim Penilai',
                                                'Usulan Direkomendasi Tim Penilai'

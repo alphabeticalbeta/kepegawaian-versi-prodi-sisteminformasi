@@ -126,7 +126,7 @@ class FileStorageService
             }
 
             try {
-                $filePath = $this->uploadFile($file, $storagePath);
+                $filePath = $this->uploadFile($file, $storagePath, $fieldName);
                 $debugInfo['upload_success'] = true;
                 $debugInfo['uploaded_file_path'] = $filePath;
 

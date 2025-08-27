@@ -1,5 +1,5 @@
 {{-- Tim Penilai Assessment Progress Section --}}
-@if($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Sedang Direview', 'Menunggu Hasil Penilaian Tim Penilai', 'Perbaikan Dari Tim Penilai', 'Usulan Direkomendasi Tim Penilai']))
+@if($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas', 'Usulan Direkomendasi dari Penilai Universitas']))
     <div class="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-8">
         <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
             <div class="flex items-center justify-between">

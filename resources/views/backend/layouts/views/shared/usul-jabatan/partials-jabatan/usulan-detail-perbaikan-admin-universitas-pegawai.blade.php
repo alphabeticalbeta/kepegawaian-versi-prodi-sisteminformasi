@@ -1,5 +1,5 @@
 {{-- Perbaikan dari Admin Universitas untuk Role Pegawai Section --}}
-@if($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Perbaikan Usulan', 'Dikembalikan']) && !empty($usulan->catatan_verifikator) && isset($usulan->validasi_data['admin_universitas']['validation']))
+@if($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']) && !empty($usulan->catatan_verifikator) && isset($usulan->validasi_data['admin_universitas']['validation']))
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
             <h2 class="text-xl font-bold text-white flex items-center">

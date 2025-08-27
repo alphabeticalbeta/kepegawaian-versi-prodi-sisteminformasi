@@ -65,7 +65,7 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($activePeriods as $periode)
                             @php
-                                $usulansForValidation = $periode->usulans->where('status_usulan', 'Diusulkan ke Universitas');
+                                $usulansForValidation = $periode->usulans->where('status_usulan', 'Usulan Disetujui Admin Fakultas');
                                 $jumlahValidasi = $usulansForValidation->count();
                             @endphp
                             <tr>
@@ -74,8 +74,9 @@
                                     <div class="text-sm text-gray-500">Tahun {{ $periode->tahun_periode ?? date('Y', strtotime($periode->tanggal_mulai)) }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        {{ $periode->jenis_usulan }}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ \App\Helpers\UsulanHelper::getJenisUsulanBadgeClass($periode->jenis_usulan) }}">
+                                        <i data-lucide="{{ \App\Helpers\UsulanHelper::getJenisUsulanIcon($periode->jenis_usulan) }}" class="w-3 h-3 mr-1"></i>
+                                        {{ \App\Helpers\UsulanHelper::formatJenisUsulan($periode->jenis_usulan) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
