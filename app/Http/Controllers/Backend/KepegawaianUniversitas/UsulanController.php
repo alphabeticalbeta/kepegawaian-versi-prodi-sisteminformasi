@@ -90,9 +90,13 @@ class UsulanController extends Controller
         // Statistik untuk periode ini
         $stats = [
             'total_usulan' => $periode->usulans()->count(),
-            'usulan_disetujui' => $periode->usulans()->where('status_usulan', 'Disetujui')->count(),
-            'usulan_ditolak' => $periode->usulans()->where('status_usulan', 'Ditolak')->count(),
-            'usulan_pending' => $periode->usulans()->whereIn('status_usulan', ['Menunggu Verifikasi', 'Dalam Proses'])->count(),
+            'usulan_disetujui' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+            'usulan_ditolak' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
+            'usulan_pending' => $periode->usulans()->whereIn('status_usulan', [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
+            ])->count(),
         ];
 
         return view('backend.layouts.views.kepegawaian-universitas.usulan.index', compact(
@@ -132,8 +136,20 @@ class UsulanController extends Controller
         })->orderBy('nama_lengkap')->get();
 
         // Determine action permissions based on status
-        $canReturn = in_array($usulan->status_usulan, ['Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas']);
-        $canForward = in_array($usulan->status_usulan, ['Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas']);
+        $canReturn = in_array($usulan->status_usulan, [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
+        ]);
+        $canForward = in_array($usulan->status_usulan, [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
+        ]);
 
         return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', [
             'usulan' => $usulan,
@@ -143,7 +159,13 @@ class UsulanController extends Controller
                 'canReturn' => $canReturn,
                 'canForward' => $canForward,
                 'routePrefix' => 'kepegawaian-universitas',
-                'canEdit' => in_array($usulan->status_usulan, ['Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas']),
+                'canEdit' => in_array($usulan->status_usulan, [
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
+                ]),
                 'canView' => true,
                 'submitFunctions' => ['save', 'return_to_pegawai', 'forward_to_penilai', 'recommend', 'not_recommend']
             ]

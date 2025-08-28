@@ -30,8 +30,8 @@ class DashboardController extends Controller
                 'total_usulan_dosen' => Usulan::whereHas('pegawai', function($q) {
                     $q->where('jenis_pegawai', 'Dosen');
                 })->count(),
-                'usulan_pending_review' => Usulan::where('status_usulan', 'Menunggu Review Senat')->count(),
-                'usulan_reviewed' => Usulan::where('status_usulan', 'Sudah Direview Senat')->count(),
+                'usulan_pending_review' => Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+                'usulan_reviewed' => Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT)->count(),
                 'total_dosen' => Pegawai::where('jenis_pegawai', 'Dosen')->count(),
             ];
 
@@ -46,11 +46,11 @@ class DashboardController extends Controller
                 'penilais:id,nama_lengkap,nip'
             ])
             ->whereIn('status_usulan', [
-                'Direkomendasikan',
-                'Disetujui',
-                'Ditolak',
-                'Diusulkan ke Sister',
-                'Perbaikan dari Tim Sister'
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER
             ])
             ->latest()
             ->get();

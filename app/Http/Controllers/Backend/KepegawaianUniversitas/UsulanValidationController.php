@@ -31,7 +31,6 @@ class UsulanValidationController extends Controller
         // Get usulans that are ready for university validation
         $usulans = Usulan::whereIn('status_usulan', [
                 'Diusulkan ke Universitas',
-                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI, // Status yang sebenarnya ada
                 'Perbaikan Usulan', // Include returned usulans
                 'Sedang Direview'   // Include those being reviewed (can be returned)
             ])
@@ -64,9 +63,13 @@ class UsulanValidationController extends Controller
         // Calculate statistics
         $stats = [
             'total_usulan' => $usulans->total(),
-            'usulan_disetujui' => $usulans->where('status_usulan', 'Disetujui')->count(),
-            'usulan_ditolak' => $usulans->where('status_usulan', 'Ditolak')->count(),
-            'usulan_pending' => $usulans->whereIn('status_usulan', ['Menunggu Verifikasi', 'Dalam Proses', 'Diusulkan ke Universitas'])->count(),
+            'usulan_disetujui' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+            'usulan_ditolak' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
+            'usulan_pending' => $usulans->whereIn('status_usulan', [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
+            ])->count(),
         ];
 
         return view('backend.layouts.views.kepegawaian-universitas.usulan.index', compact(
@@ -110,13 +113,12 @@ class UsulanValidationController extends Controller
 
         // ENHANCED: Check if usulan is in correct status for Admin Universitas
         $allowedStatuses = [
-            'Diusulkan ke Universitas',
-            'Perbaikan Usulan', 
-            'Sedang Direview',
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
-            'Menunggu Hasil Penilaian Tim Penilai',    // ← STATUS INTERMEDIATE BARU
-            'Perbaikan Dari Tim Penilai',              // ← STATUS BARU
-            'Usulan Direkomendasi Tim Penilai'         // ← STATUS BARU
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
         ];
         
         if (!in_array($usulan->status_usulan, $allowedStatuses)) {
@@ -129,11 +131,10 @@ class UsulanValidationController extends Controller
 
         // Determine if Admin Universitas can edit (based on status)
         $canEdit = in_array($usulan->status_usulan, [
-            'Diusulkan ke Universitas', 
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI,
-            'Menunggu Hasil Penilaian Tim Penilai',    // ← SUPPORT STATUS INTERMEDIATE
-            'Perbaikan Dari Tim Penilai',              // ← SUPPORT STATUS BARU
-            'Usulan Direkomendasi Tim Penilai'         // ← SUPPORT STATUS BARU
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
         ]);
 
         // Get active penilais for selection
@@ -324,7 +325,7 @@ class UsulanValidationController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = 'Perbaikan Usulan';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
         $usulan->catatan_verifikator = $request->input('catatan_umum');
         $usulan->save();
 
@@ -380,7 +381,7 @@ class UsulanValidationController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = 'Sedang Direview';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -431,7 +432,7 @@ class UsulanValidationController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = 'Perbaikan Usulan';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
         $usulan->catatan_verifikator = $request->input('catatan_umum');
         $usulan->save();
 
@@ -476,7 +477,7 @@ class UsulanValidationController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = 'Direkomendasikan';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
 
         // Save validation data with forward note
         $validationData = $request->input('validation');
@@ -520,7 +521,7 @@ class UsulanValidationController extends Controller
         switch ($actionType) {
             case 'approve_perbaikan':
                 // Admin Univ setuju dengan perbaikan usulan, teruskan ke pegawai
-                $usulan->status_usulan = 'Perbaikan Usulan';
+                $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
                 $catatan = "Admin Universitas menyetujui hasil review Tim Penilai. " . $request->input('catatan_umum');
                 $usulan->catatan_verifikator = $catatan;
 
@@ -546,7 +547,7 @@ class UsulanValidationController extends Controller
                     ], 422);
                 }
 
-                $usulan->status_usulan = 'Direkomendasikan';
+                $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
                 $catatan = "Admin Universitas menyetujui rekomendasi Tim Penilai. " . $request->input('catatan_umum');
                 $usulan->catatan_verifikator = $catatan;
 
@@ -565,7 +566,7 @@ class UsulanValidationController extends Controller
 
             case 'reject_perbaikan':
                 // Admin Univ tidak setuju dengan perbaikan, kembalikan ke penilai
-                $usulan->status_usulan = 'Sedang Direview';
+                $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS;
                 $catatan = "Admin Universitas tidak menyetujui hasil review. " . $request->input('catatan_umum');
                 $usulan->catatan_verifikator = $catatan;
 
@@ -584,7 +585,7 @@ class UsulanValidationController extends Controller
 
             case 'reject_rekomendasi':
                 // Admin Univ tidak setuju dengan rekomendasi, kembalikan ke penilai
-                $usulan->status_usulan = 'Sedang Direview';
+                $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS;
                 $catatan = "Admin Universitas tidak menyetujui rekomendasi. " . $request->input('catatan_umum');
                 $usulan->catatan_verifikator = $catatan;
 
@@ -626,7 +627,7 @@ class UsulanValidationController extends Controller
         $catatan = $request->input('catatan_verifikator');
         
         // Update usulan status to "Tidak Direkomendasikan"
-        $usulan->status_usulan = 'Tidak Direkomendasikan';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
         $usulan->catatan_verifikator = $catatan;
 
         // Add rejection data to validasi_data
@@ -673,7 +674,7 @@ class UsulanValidationController extends Controller
         ]);
 
         // Update usulan status back to 'Diusulkan ke Universitas'
-        $usulan->status_usulan = 'Diusulkan ke Universitas';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -834,7 +835,7 @@ class UsulanValidationController extends Controller
         $catatan = $request->input('catatan_verifikator');
         
         // Update usulan status
-        $usulan->status_usulan = 'Perbaikan Usulan';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
         $usulan->catatan_verifikator = $catatan;
 
         // Add action data to validasi_data
@@ -875,7 +876,7 @@ class UsulanValidationController extends Controller
         $catatan = $request->input('catatan_verifikator');
         
         // Update usulan status
-        $usulan->status_usulan = 'Perbaikan Usulan';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
         $usulan->catatan_verifikator = $catatan;
 
         // Add action data to validasi_data
@@ -916,7 +917,7 @@ class UsulanValidationController extends Controller
         $catatan = $request->input('catatan_verifikator');
         
         // Update usulan status back to review
-        $usulan->status_usulan = 'Sedang Direview';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS;
 
         // Add action data to validasi_data
         $currentValidasi = $usulan->validasi_data ?? [];
@@ -956,7 +957,7 @@ class UsulanValidationController extends Controller
         $catatan = $request->input('catatan_verifikator');
         
         // Update usulan status
-        $usulan->status_usulan = 'Direkomendasikan';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
 
         // Add action data to validasi_data
         $currentValidasi = $usulan->validasi_data ?? [];

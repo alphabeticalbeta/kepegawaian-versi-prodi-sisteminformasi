@@ -6,7 +6,7 @@ use App\Http\Requests\Backend\PegawaiUnmul\StoreJabatanUsulanRequest;
 use App\Models\KepegawaianUniversitas\Jabatan;
 use App\Models\KepegawaianUniversitas\Pegawai;
 use App\Models\KepegawaianUniversitas\PeriodeUsulan;
-use App\Models\KepegawaianUniversitas\Usulan as UsulanModel;
+use App\Models\KepegawaianUniversitas\Usulan;
 use App\Models\KepegawaianUniversitas\UsulanDokumen;
 use App\Models\KepegawaianUniversitas\UsulanLog;
 use Illuminate\Http\Request;
@@ -133,7 +133,7 @@ class UsulanJabatanController extends BaseUsulanController
      * Display the specified usulan jabatan.
      * Show detail view in read-only mode.
      */
-    public function show(UsulanModel $usulan)
+    public function show(Usulan $usulan)
     {
         // Ownership guard (should already be handled by route binding)
         if ($usulan->pegawai_id !== Auth::id()) {
@@ -267,7 +267,7 @@ class UsulanJabatanController extends BaseUsulanController
         }
 
         // Cek usulan yang sudah ada untuk periode ini
-        $existingUsulan = UsulanModel::where('pegawai_id', Auth::id())
+        $existingUsulan = Usulan::where('pegawai_id', Auth::id())
             ->where('periode_usulan_id', $daftarPeriode->id)
             ->whereIn('jenis_usulan', $this->getEligibleJenisUsulan($pegawai))
             ->first();
@@ -294,7 +294,7 @@ class UsulanJabatanController extends BaseUsulanController
         $formConfig = $this->getFormConfigByJenjang($jenjangType);
 
         // Buat dummy usulan untuk compatibility dengan blade
-        $usulan = new UsulanModel();
+        $usulan = new Usulan();
 
         $bkdSemesters = $this->generateBkdSemesterLabels($daftarPeriode);
 
@@ -373,9 +373,9 @@ class UsulanJabatanController extends BaseUsulanController
         // Determine status based on action
         $action = $request->input('action');
         $statusUsulan = match($action) {
-            'submit' => UsulanModel::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-            'save_draft' => UsulanModel::STATUS_DRAFT_USULAN,
-            default => UsulanModel::STATUS_DRAFT_USULAN
+            'submit' => 'Diajukan',
+            'save_draft' => 'Draft',
+            default => 'Draft'
         };
 
         // ... sisa kode method store() tetap sama ...
@@ -507,7 +507,7 @@ class UsulanJabatanController extends BaseUsulanController
                     'usulan_data' => $usulanData
                 ]);
 
-                $usulan = UsulanModel::create($usulanData);
+                $usulan = Usulan::create($usulanData);
 
                 Log::info('=== USULAN CREATED ===', [
                     'usulan_id' => $usulan->id,
@@ -602,11 +602,11 @@ class UsulanJabatanController extends BaseUsulanController
             }
 
             // Create usulan with minimal data
-            $usulan = new UsulanModel();
+            $usulan = new \App\Models\KepegawaianUniversitas\Usulan();
             $usulan->pegawai_id = $pegawai->id;
             $usulan->periode_usulan_id = $periode->id;
             $usulan->jenis_usulan = 'Usulan Jabatan';
-            $usulan->status_usulan = UsulanModel::STATUS_DRAFT_USULAN;
+            $usulan->status_usulan = 'Draft';
             $usulan->data_usulan = $request->all();
             $usulan->save();
 
@@ -615,7 +615,7 @@ class UsulanJabatanController extends BaseUsulanController
             $usulanLog->usulan_id = $usulan->id;
             $usulanLog->dilakukan_oleh_id = $pegawai->id;
             $usulanLog->status_sebelumnya = null;
-            $usulanLog->status_baru = UsulanModel::STATUS_DRAFT_USULAN;
+            $usulanLog->status_baru = 'Draft';
             $usulanLog->catatan = 'Usulan jabatan dibuat via test method';
             $usulanLog->save();
 
@@ -646,7 +646,7 @@ class UsulanJabatanController extends BaseUsulanController
      * Show the form for editing the specified usulan jabatan
      * SIMPLIFIED: Back to standard {usulan} parameter
      */
-    public function edit(UsulanModel $usulan)
+    public function edit(Usulan $usulan)
     {
 
         if ($usulan->pegawai_id !== Auth::id()) {
@@ -656,24 +656,11 @@ class UsulanJabatanController extends BaseUsulanController
         $pegawai = Auth::user();
 
         $isReadOnly = in_array($usulan->status_usulan, [
-            UsulanModel::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-            UsulanModel::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_DIREKOMENDASIKAN,
-            UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
-            UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
+            'Diajukan', 'Sedang Direview', 'Disetujui', 'Direkomendasikan'
         ]);
 
         $canEdit = in_array($usulan->status_usulan, [
-            UsulanModel::STATUS_DRAFT_USULAN,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_TIM_SISTER
+            'Draft', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Dikembalikan'
         ]);
 
         // Get periode usulan
@@ -727,7 +714,7 @@ class UsulanJabatanController extends BaseUsulanController
      * Update the specified usulan jabatan
      * SIMPLIFIED: Back to standard {usulan} parameter
      */
-    public function update(StoreJabatanUsulanRequest $request, UsulanModel $usulan)
+    public function update(StoreJabatanUsulanRequest $request, Usulan $usulan)
     {
 
         // Authorization check
@@ -753,13 +740,12 @@ class UsulanJabatanController extends BaseUsulanController
         // Determine status based on action
         $action = $request->input('action');
         $statusUsulan = match($action) {
-            'submit_to_fakultas' => UsulanModel::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-            'submit_perbaikan_fakultas' => UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            'submit_perbaikan_university' => UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
-            'submit_perbaikan_penilai' => UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
-            'submit_perbaikan_tim_sister' => UsulanModel::STATUS_PERBAIKAN_SUDAH_DIKIRIM_KE_SISTER,
-            'save_draft' => $this->determineDraftStatus($oldStatus),
-            default => UsulanModel::STATUS_DRAFT_USULAN
+            'submit_to_fakultas' => \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
+            'submit_perbaikan_fakultas' => \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+            'submit_perbaikan_university' => \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
+            'submit_perbaikan_penilai' => \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+            'save_draft' => 'Draft',
+            default => 'Draft'
         };
 
         Log::info('Starting usulan update', [
@@ -817,18 +803,8 @@ class UsulanJabatanController extends BaseUsulanController
                     'data_usulan' => $dataUsulanLama,
                 ];
 
-                // Clear verifikator notes if status changes from perbaikan requests
-                if (in_array($oldStatus, [
-                    UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                    UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
-                    UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
-                    UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER
-                ]) && in_array($statusUsulan, [
-                    UsulanModel::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
-                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
-                ])) {
+                // Clear verifikator notes if status changes from "Perlu Perbaikan"
+                if ($oldStatus === 'Dikembalikan ke Pegawai' && $statusUsulan === 'Diajukan') {
                     $updateData['catatan_verifikator'] = null;
                 }
 
@@ -856,13 +832,12 @@ class UsulanJabatanController extends BaseUsulanController
             }
 
             $message = match($action) {
-                'submit_to_fakultas' => 'Usulan berhasil dikirim ke Admin Fakultas untuk ditinjau.',
-                'submit_perbaikan_fakultas' => 'Perbaikan berhasil dikirim ke Admin Fakultas untuk ditinjau kembali.',
-                'submit_perbaikan_university' => 'Perbaikan berhasil dikirim ke Kepegawaian Universitas untuk ditinjau.',
-                'submit_perbaikan_penilai' => 'Perbaikan berhasil dikirim ke Penilai Universitas untuk ditinjau.',
-                'submit_perbaikan_tim_sister' => 'Perbaikan berhasil dikirim ke Tim Sister untuk ditinjau.',
+                'submit' => 'Usulan kenaikan jabatan berhasil diperbarui dan diajukan. Tim verifikasi akan meninjau usulan Anda.',
+                'submit_to_fakultas' => 'Usulan berhasil dikembalikan ke Admin Fakultas untuk ditinjau kembali.',
+                'submit_to_university' => 'Usulan berhasil dikembalikan ke Admin Universitas untuk ditinjau kembali.',
+                'submit_perbaikan_sister' => 'Perbaikan dari Tim Sister berhasil dikirim ke Admin Universitas untuk validasi kembali.',
                 'save_draft' => 'Perubahan pada usulan Anda berhasil disimpan sebagai Draft.',
-                default => 'Aksi berhasil dilakukan.'
+                default => 'Perubahan pada usulan Anda berhasil disimpan.'
             };
 
             Log::info('Usulan update completed successfully', [
@@ -901,7 +876,7 @@ class UsulanJabatanController extends BaseUsulanController
      * Show usulan document
      * ENHANCED: Using DocumentAccessService for better security and disk management
      */
-    public function showUsulanDocument(UsulanModel $usulan, $field)
+    public function showUsulanDocument(Usulan $usulan, $field)
     {
         $user = Auth::user();
 
@@ -948,7 +923,7 @@ class UsulanJabatanController extends BaseUsulanController
      * Get usulan logs
      * SIMPLIFIED: Back to standard {usulan} parameter
      */
-    public function getLogs(UsulanModel $usulan)
+    public function getLogs(Usulan $usulan)
     {
         return $this->getUsulanLogs($usulan);
     }
@@ -957,7 +932,7 @@ class UsulanJabatanController extends BaseUsulanController
      * Debug method untuk development
      * SIMPLIFIED: Back to standard {usulan} parameter
      */
-    public function debugUpdate(Request $request, UsulanModel $usulan)
+    public function debugUpdate(Request $request, Usulan $usulan)
     {
         if (!app()->environment('local')) {
             abort(404);
@@ -1471,36 +1446,16 @@ class UsulanJabatanController extends BaseUsulanController
     }
 
     /**
-     * Determine appropriate draft status based on current status
-     */
-    private function determineDraftStatus($currentStatus)
-    {
-        return match($currentStatus) {
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => UsulanModel::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS => UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => UsulanModel::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER => UsulanModel::STATUS_DRAFT_PERBAIKAN_TIM_SISTER,
-            default => UsulanModel::STATUS_DRAFT_USULAN
-        };
-    }
-
-    /**
      * Remove the specified usulan from storage.
      */
     public function destroy($id)
     {
-        $usulan = UsulanModel::where('id', $id)
+        $usulan = Usulan::where('id', $id)
                         ->where('pegawai_id', Auth::id())
                         ->firstOrFail();
 
         // Only allow deletion if status is Draft or Perlu Perbaikan
-        if (!in_array($usulan->status_usulan, [
-            UsulanModel::STATUS_DRAFT_USULAN,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-            UsulanModel::STATUS_DRAFT_PERBAIKAN_TIM_SISTER
-        ])) {
+        if (!in_array($usulan->status_usulan, ['Draft', 'Perlu Perbaikan'])) {
             return redirect()->route('pegawai-unmul.usulan-jabatan.index')
                 ->with('error', 'Usulan tidak dapat dihapus karena status tidak memungkinkan.');
         }

@@ -21,20 +21,15 @@
             'Usulan Sudah Dikirim ke Sister' => 'bg-blue-100 text-blue-800 border-blue-300',
             'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800 border-red-300',
             
+            // Draft status constants (untuk Pegawai role)
+            'Draft Usulan' => 'bg-gray-100 text-gray-800 border-gray-300',
+            'Draft Perbaikan Admin Fakultas' => 'bg-amber-100 text-amber-800 border-amber-300',
+            'Draft Perbaikan Kepegawaian Universitas' => 'bg-red-100 text-red-800 border-red-300',
+            'Draft Perbaikan Penilai Universitas' => 'bg-orange-100 text-orange-800 border-orange-300',
+            'Draft Perbaikan Tim Sister' => 'bg-red-100 text-red-800 border-red-300',
+            
             // Fallback untuk status lama (akan dihapus setelah migrasi)
-            'Draft' => 'bg-gray-100 text-gray-800 border-gray-300',
-            'Diajukan' => 'bg-blue-100 text-blue-800 border-blue-300',
-            'Sedang Direview' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
             'Menunggu Hasil Penilaian Tim Penilai' => 'bg-orange-100 text-orange-800 border-orange-300',
-            'Perbaikan Dari Tim Penilai' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-            'Usulan Direkomendasi Tim Penilai' => 'bg-green-100 text-green-800 border-green-300',
-            'Tidak Direkomendasikan' => 'bg-red-100 text-red-800 border-red-300',
-            'Disetujui' => 'bg-green-100 text-green-800 border-green-300',
-            'Direkomendasikan' => 'bg-purple-100 text-purple-800 border-purple-300',
-            'Ditolak' => 'bg-red-100 text-red-800 border-red-300',
-            'Diusulkan ke Universitas' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
-            'Perbaikan Usulan' => 'bg-amber-100 text-amber-800 border-amber-300',
-            'Perbaikan dari Tim Sister' => 'bg-red-100 text-red-800 border-red-300',
         ];
         
         $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800 border-gray-300';

@@ -87,7 +87,7 @@ class StoreJabatanUsulanRequest extends FormRequest
             'catatan' => 'nullable|string|max:1000',
 
             // ACTION - Keep required
-            'action' => 'required|string|in:save_draft,submit,submit_to_university,submit_to_fakultas',
+            'action' => 'required|string|in:save_draft,submit_to_fakultas,submit_perbaikan_fakultas,submit_perbaikan_university,submit_perbaikan_penilai',
         ];
 
         return $rules;
@@ -119,7 +119,7 @@ class StoreJabatanUsulanRequest extends FormRequest
                 if ($pegawai) {
                     $usulanAktif = Usulan::where('pegawai_id', $pegawai->id)
                         ->where('jenis_usulan', $jenisUsulanPeriode)
-                        ->whereNotIn('status_usulan', ['Direkomendasikan', 'Ditolak'])
+                        ->whereNotIn('status_usulan', [Usulan::STATUS_DIREKOMENDASIKAN, Usulan::STATUS_TIDAK_DIREKOMENDASIKAN])
                         ->exists();
 
                     if ($usulanAktif) {

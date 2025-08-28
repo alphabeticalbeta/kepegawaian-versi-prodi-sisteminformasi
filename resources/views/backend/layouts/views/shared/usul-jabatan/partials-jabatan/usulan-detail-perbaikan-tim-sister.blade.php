@@ -1,5 +1,5 @@
 {{-- Perbaikan dari Tim Sister untuk Role Pegawai Section --}}
-@if($currentRole === 'Pegawai' && $usulan->status_usulan === 'Perbaikan dari Tim Sister' && !empty($usulan->catatan_verifikator))
+@if($currentRole === 'Pegawai' && $usulan->status_usulan === 'Permintaan Perbaikan Usulan dari Tim Sister' && !empty($usulan->catatan_verifikator))
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5">
             <h2 class="text-xl font-bold text-white flex items-center">
@@ -20,10 +20,7 @@
                 </div>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 class="text-sm font-medium text-gray-900 mb-3">Keterangan Umum:</h4>
-                <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ $usulan->catatan_verifikator }}</div>
-            </div>
+
 
             @if(isset($usulan->validasi_data['tim_sister']['validation']))
                 <div class="mt-4">
@@ -36,7 +33,12 @@
                                 if (is_array($groupData)) {
                                     foreach ($groupData as $fieldKey => $fieldData) {
                                         if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                            $fieldLabel = $fieldGroups[$groupKey]['fields'][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                            // Handle fields that might be closures
+                                        $groupFields = $fieldGroups[$groupKey]['fields'] ?? [];
+                                        if (is_callable($groupFields)) {
+                                            $groupFields = $groupFields();
+                                        }
+                                        $fieldLabel = $groupFields[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
                                             $invalidFields[] = [
                                                 'group' => $fieldGroups[$groupKey]['label'] ?? ucwords(str_replace('_', ' ', $groupKey)),
                                                 'field' => $fieldLabel,

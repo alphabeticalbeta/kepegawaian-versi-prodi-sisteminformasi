@@ -210,12 +210,17 @@
                         <p class="text-sm text-rose-700 font-medium mb-1">Status Usulan</p>
                         <p class="font-medium">
                             <span class="px-3 py-2 text-sm font-bold rounded-xl shadow-sm inline-flex items-center max-w-full status-badge
-                                @if($usulan->status_usulan === 'Draft') bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300
-                                @elseif($usulan->status_usulan === 'Diajukan') bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300
-                                @elseif($usulan->status_usulan === 'Diterima') bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300
-                                @elseif($usulan->status_usulan === 'Ditolak') bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300
-                                @elseif($usulan->status_usulan === 'Perlu Perbaikan') bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-300
-                                @elseif($usulan->status_usulan === 'Dikembalikan ke Pegawai') bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300
+                                @if($usulan->status_usulan === 'Draft Usulan') bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300
+                                @elseif($usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas') bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300
+                                @elseif($usulan->status_usulan === 'Usulan Disetujui Admin Fakultas') bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300
+                                @elseif($usulan->status_usulan === 'Usulan Tidak Direkomendasi Admin Fakultas') bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300
+                                @elseif($usulan->status_usulan === 'Permintaan Perbaikan dari Admin Fakultas') bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-300
+                                @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas') bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300
+                                @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas') bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300
+                                @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Penilai Universitas') bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300
+                                @elseif($usulan->status_usulan === 'Usulan Direkomendasikan oleh Tim Senat') bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300
+                                @elseif($usulan->status_usulan === 'Usulan Sudah Dikirim ke Sister') bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300
+                                @elseif($usulan->status_usulan === 'Permintaan Perbaikan Usulan dari Tim Sister') bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300
                                 @else bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300
                                 @endif" title="{{ $usulan->status_usulan }}">
                                 {{ $usulan->status_usulan }}

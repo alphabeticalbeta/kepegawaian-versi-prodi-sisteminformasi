@@ -62,11 +62,11 @@ class DashboardController extends Controller
     {
         return [
             'total_usulan' => Usulan::where('pegawai_id', $pegawaiId)->count(),
-            'usulan_pending' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', 'Diajukan')->count(),
-            'usulan_approved' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', 'Direkomendasikan')->count(),
-            'usulan_rejected' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', 'Ditolak')->count(),
-            'usulan_returned' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', 'Perlu Perbaikan')->count(),
-            'usulan_draft' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', 'Draft')->count(),
+            'usulan_pending' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
+            'usulan_approved' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+            'usulan_rejected' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
+            'usulan_returned' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)->count(),
+            'usulan_draft' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN)->count(),
         ];
     }
 

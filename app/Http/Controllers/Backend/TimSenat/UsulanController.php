@@ -16,7 +16,7 @@ class UsulanController extends Controller
     public function index()
     {
         // Get usulans that are ready for senat decision
-        $usulans = Usulan::where('status_usulan', 'Direkomendasikan')
+        $usulans = Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)
             ->with(['pegawai', 'periodeUsulan'])
             ->latest()
             ->paginate(10);
@@ -37,7 +37,7 @@ class UsulanController extends Controller
         ]);
 
         // Check if usulan is in correct status for Tim Senat
-        if ($usulan->status_usulan !== 'Direkomendasikan') {
+        if ($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN) {
             return redirect()->route('tim-senat.usulan.index')
                 ->with('error', 'Usulan tidak dapat diproses karena status tidak sesuai.');
         }
@@ -51,8 +51,8 @@ class UsulanController extends Controller
         })->orderBy('nama_lengkap')->get();
 
         // Determine action permissions based on status
-        $canReturn = in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister']);
-        $canForward = in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister']);
+        $canReturn = in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT, \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER]);
+        $canForward = in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT, \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER]);
 
         return view('backend.layouts.views.tim-senat.usulan.detail', [
             'usulan' => $usulan,
@@ -62,7 +62,7 @@ class UsulanController extends Controller
                 'canReturn' => $canReturn,
                 'canForward' => $canForward,
                 'routePrefix' => 'tim-senat',
-                'canEdit' => in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister']),
+                'canEdit' => in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT, \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER]),
                 'canView' => true,
                 'submitFunctions' => ['save', 'tolak_usulan', 'setujui_usulan']
             ]
@@ -76,7 +76,7 @@ class UsulanController extends Controller
     {
 
         // Check if usulan is in correct status
-        if ($usulan->status_usulan !== 'Usulan Direkomendasikan oleh Tim Senat') {
+        if ($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT) {
             return response()->json([
                 'success' => false,
                 'message' => 'Usulan tidak dapat diproses karena status tidak sesuai.'
@@ -161,7 +161,7 @@ class UsulanController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = 'Ditolak';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
         $usulan->data_usulan['keputusan_senat'] = [
             'status' => 'Ditolak',
             'alasan' => $request->input('alasan_penolakan'),
@@ -196,7 +196,7 @@ class UsulanController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = 'Disetujui';
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
         $usulan->data_usulan['keputusan_senat'] = [
             'status' => 'Disetujui',
             'catatan' => $request->input('catatan_persetujuan'),

@@ -256,31 +256,23 @@ class Usulan extends Model
     public function getStatusBadgeClassAttribute(): string
     {
         return match($this->status_usulan) {
-            // Status standar baru
-            self::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800',
-            self::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800',
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800',
-            self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
-            self::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
-            self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-indigo-100 text-indigo-800',
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800',
-            self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800',
-            self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800',
-            self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800',
-            self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT => 'bg-purple-100 text-purple-800',
-            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER => 'bg-blue-100 text-blue-800',
-            self::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER => 'bg-red-100 text-red-800',
-            
-            // Draft status constants
-            self::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800',
-            self::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800',
-            self::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
-            self::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800',
-            self::STATUS_DRAFT_PERBAIKAN_TIM_SISTER => 'bg-red-100 text-red-800',
-            
-            // Legacy status constants (fallback)
-            self::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI => 'bg-orange-100 text-orange-800',
-            
+            'Draft' => 'bg-gray-100 text-gray-800',
+            'Diajukan' => 'bg-blue-100 text-blue-800',
+            'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
+            'Sedang Direview Universitas' => 'bg-yellow-100 text-yellow-800',
+            'Perlu Perbaikan' => 'bg-orange-100 text-orange-800',
+            'Dikembalikan' => 'bg-red-100 text-red-800',
+            'Dikembalikan ke Pegawai' => 'bg-red-100 text-red-800',
+            'Disetujui' => 'bg-green-100 text-green-800',
+            'Direkomendasikan' => 'bg-purple-100 text-purple-800',
+            'Tidak Direkomendasikan' => 'bg-red-100 text-red-800',
+            'Sedang Dinilai' => 'bg-indigo-100 text-indigo-800',
+            'Sedang Direview Senat' => 'bg-purple-100 text-purple-800',
+            'Diusulkan ke Universitas' => 'bg-blue-100 text-blue-800',
+            'Diusulkan ke Sister' => 'bg-indigo-100 text-indigo-800',
+            'Perbaikan dari Tim Sister' => 'bg-orange-100 text-orange-800',
+            'Ditolak' => 'bg-red-100 text-red-800',
+            'Ditolak Universitas' => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800'
         };
     }
@@ -291,14 +283,10 @@ class Usulan extends Model
     public function getCanEditAttribute(): bool
     {
         return in_array($this->status_usulan, [
-            self::STATUS_DRAFT_USULAN,
-            self::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            self::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_TIM_SISTER,
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
-            self::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER
+            'Draft',
+            'Perlu Perbaikan',
+            'Dikembalikan',
+            'Perbaikan dari Tim Sister'
         ]);
     }
 
@@ -308,13 +296,11 @@ class Usulan extends Model
     public function getIsReadOnlyAttribute(): bool
     {
         return in_array($this->status_usulan, [
-            self::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-            self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
-            self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT,
-            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER
+            'Diajukan',
+            'Sedang Direview',
+            'Disetujui',
+            'Direkomendasikan',
+            'Diusulkan ke Sister'
         ]);
     }
 
@@ -614,16 +600,7 @@ class Usulan extends Model
      */
     public function scopeEditable($query)
     {
-        return $query->whereIn('status_usulan', [
-            self::STATUS_DRAFT_USULAN,
-            self::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            self::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_TIM_SISTER,
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
-            self::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER
-        ]);
+        return $query->whereIn('status_usulan', ['Draft', 'Perlu Perbaikan', 'Dikembalikan']);
     }
 
     /**
@@ -631,15 +608,7 @@ class Usulan extends Model
      */
     public function scopeReadOnly($query)
     {
-        return $query->whereIn('status_usulan', [
-            self::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-            self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
-            self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT,
-            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER
-        ]);
+        return $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview', 'Disetujui', 'Direkomendasikan']);
     }
 
     /**
@@ -647,12 +616,7 @@ class Usulan extends Model
      */
     public function scopeActive($query)
     {
-        return $query->whereNotIn('status_usulan', [
-            self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT,
-            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER,
-            self::STATUS_DIREKOMENDASIKAN,
-            self::STATUS_TIDAK_DIREKOMENDASIKAN
-        ]);
+        return $query->whereNotIn('status_usulan', ['Direkomendasikan', 'Ditolak']);
     }
 
     /**
@@ -660,12 +624,7 @@ class Usulan extends Model
      */
     public function scopeCompleted($query)
     {
-        return $query->whereIn('status_usulan', [
-            self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT,
-            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER,
-            self::STATUS_DIREKOMENDASIKAN,
-            self::STATUS_TIDAK_DIREKOMENDASIKAN
-        ]);
+        return $query->whereIn('status_usulan', ['Direkomendasikan', 'Ditolak']);
     }
 
     /**
@@ -697,13 +656,7 @@ class Usulan extends Model
      */
     public function isDraft(): bool
     {
-        return in_array($this->status_usulan, [
-            self::STATUS_DRAFT_USULAN,
-            self::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            self::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_TIM_SISTER
-        ]);
+        return $this->status_usulan === 'Draft';
     }
 
     /**
@@ -711,13 +664,7 @@ class Usulan extends Model
      */
     public function isSubmitted(): bool
     {
-        return !in_array($this->status_usulan, [
-            self::STATUS_DRAFT_USULAN,
-            self::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            self::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-            self::STATUS_DRAFT_PERBAIKAN_TIM_SISTER
-        ]);
+        return !in_array($this->status_usulan, ['Draft']);
     }
 
     /**
@@ -725,14 +672,7 @@ class Usulan extends Model
      */
     public function isApproved(): bool
     {
-        return in_array($this->status_usulan, [
-            self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
-            self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT,
-            self::STATUS_DIREKOMENDASIKAN
-        ]);
+        return in_array($this->status_usulan, ['Disetujui', 'Direkomendasikan']);
     }
 
     /**
@@ -740,9 +680,7 @@ class Usulan extends Model
      */
     public function isRejected(): bool
     {
-        return in_array($this->status_usulan, [
-            self::STATUS_TIDAK_DIREKOMENDASIKAN
-        ]);
+        return $this->status_usulan === 'Ditolak';
     }
 
     /**
@@ -750,11 +688,7 @@ class Usulan extends Model
      */
     public function needsRevision(): bool
     {
-        return in_array($this->status_usulan, [
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
-            self::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER
-        ]);
+        return in_array($this->status_usulan, ['Perlu Perbaikan', 'Dikembalikan']);
     }
 
     /**
@@ -1367,13 +1301,7 @@ public function getSenateDecisionCounts(): array
      */
     public function scopeNeedsValidation($query)
     {
-        return $query->whereIn('status_usulan', [
-            self::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-            self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
-            self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
-            self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
-        ]);
+        return $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview']);
     }
 
     /**
@@ -1420,7 +1348,6 @@ public function getSenateDecisionCounts(): array
     const STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS = 'Permintaan Perbaikan dari Admin Fakultas';
     const STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS = 'Usulan Disetujui Admin Fakultas';
     const STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Perbaikan dari Kepegawaian Universitas';
-    const STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Permintaan Perbaikan dari Kepegawaian Universitas';
     const STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Disetujui Kepegawaian Universitas';
     const STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Permintaan Perbaikan dari Penilai Universitas';
     const STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Usulan Perbaikan dari Penilai Universitas';
@@ -1433,15 +1360,12 @@ public function getSenateDecisionCounts(): array
     const STATUS_DIREKOMENDASIKAN = 'Direkomendasikan';
     const STATUS_TIDAK_DIREKOMENDASIKAN = 'Tidak Direkomendasikan';
     
-    // Draft status constants (for Pegawai role)
-    const STATUS_DRAFT_USULAN = 'Draft Usulan';
-    const STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS = 'Draft Perbaikan Admin Fakultas';
-    const STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS = 'Draft Perbaikan Kepegawaian Universitas';
-    const STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS = 'Draft Perbaikan Penilai Universitas';
-    const STATUS_DRAFT_PERBAIKAN_TIM_SISTER = 'Draft Perbaikan Tim Sister';
-    
     // Legacy status constants (for backward compatibility) - HAPUS YANG TIDAK DIGUNAKAN
+    const STATUS_PERBAIKAN_DARI_TIM_PENILAI = 'Perbaikan Dari Tim Penilai';
+    const STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI = 'Usulan Direkomendasi Tim Penilai';
+    const STATUS_TIDAK_DIREKOMENDASI = 'Tidak Direkomendasikan';
     const STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI = 'Menunggu Hasil Penilaian Tim Penilai';
+    const STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI = 'Usulan dikirim ke Tim Penilai';
 
     /**
      * Determine final status based on Tim Penilai assessment results
@@ -1466,7 +1390,7 @@ public function getSenateDecisionCounts(): array
         // If any penilai gives 'Perlu Perbaikan', result is perbaikan
         $hasPerbaikan = $penilais->where('pivot.status_penilaian', 'Perlu Perbaikan')->count() > 0;
         if ($hasPerbaikan) {
-            return self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+            return self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
         }
         
         // Count recommendations (Sesuai = rekomendasi)
@@ -1475,17 +1399,17 @@ public function getSenateDecisionCounts(): array
         // Logic based on number of penilai
         switch ($totalPenilai) {
             case 1:
-                return $rekomendasiCount > 0 ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+                return $rekomendasiCount > 0 ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
                 
             case 2:
-                return ($rekomendasiCount == 2) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+                return ($rekomendasiCount == 2) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
                 
             case 3:
-                return ($rekomendasiCount >= 2) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+                return ($rekomendasiCount >= 2) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
                 
             default:
                 // For more than 3 penilai, use majority vote
-                return ($rekomendasiCount > ($totalPenilai - $rekomendasiCount)) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+                return ($rekomendasiCount > ($totalPenilai - $rekomendasiCount)) ? self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI : self::STATUS_PERBAIKAN_DARI_TIM_PENILAI;
         }
     }
 

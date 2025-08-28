@@ -6,7 +6,7 @@
 
     @php
     // Cek apakah ada usulan yang perlu diperbaiki
-        $usulanPerluPerbaikan = $usulans->firstWhere('status_usulan', 'Usulan Perbaikan dari Admin Fakultas');
+        $usulanPerluPerbaikan = $usulans->firstWhere('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS);
     @endphp
 
     @if($usulanPerluPerbaikan)
@@ -72,31 +72,45 @@
                                             // Mapping status berdasarkan alur kerja yang diminta
                                             switch ($status) {
                                                 // Status untuk Pegawai
-                                                case 'Diajukan':
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS:
                                                     return 'Usulan Dikirim ke Admin Fakultas';
                                                 
-                                                case 'Usulan Perbaikan dari Admin Fakultas':
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
+                                                    if ($currentRole === 'Pegawai') {
+                                                        return 'Permintaan Perbaikan dari Admin Fakultas';
+                                                    }
+                                                    break;
+                                                
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
                                                     if ($currentRole === 'Pegawai') {
                                                         return 'Usulan Perbaikan dari Admin Fakultas';
                                                     }
                                                     break;
                                                 
-                                                case 'Perbaikan dari Kepegawaian Universitas':
+
+                                                
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS:
                                                     if ($currentRole === 'Pegawai') {
                                                         return 'Usulan Perbaikan dari Kepegawaian Universitas';
                                                     }
                                                     break;
                                                 
-                                                case 'Perbaikan dari Penilai Universitas':
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
+                                                    if ($currentRole === 'Pegawai') {
+                                                        return 'Permintaan Perbaikan dari Penilai Universitas';
+                                                    }
+                                                    break;
+                                                
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
                                                     if ($currentRole === 'Pegawai') {
                                                         return 'Usulan Perbaikan dari Penilai Universitas';
                                                     }
                                                     break;
                                                 
-                                                case 'Perbaikan dari Tim Sister':
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER:
                                                     return 'Permintaan Perbaikan Usulan dari Tim Sister';
                                                 
-                                                case 'Dikirim ke Sister':
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER:
                                                     return 'Usulan Sudah Dikirim ke Sister';
                                                 
                                                 default:
@@ -112,19 +126,22 @@
                                         // Status colors mapping
                                         $statusColors = [
                                             // Status lama (fallback)
-                                            'Draft' => 'bg-gray-100 text-gray-800',
-                                            'Diajukan' => 'bg-blue-100 text-blue-800',
-                                            'Sedang Direview' => 'bg-yellow-100 text-yellow-800',
-                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
-                                            'Dikembalikan' => 'bg-red-100 text-red-800',
-                                            'Disetujui' => 'bg-green-100 text-green-800',
-                                            'Direkomendasikan' => 'bg-purple-100 text-purple-800',
-                                            'Ditolak' => 'bg-red-100 text-red-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-yellow-100 text-yellow-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-orange-100 text-orange-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-red-100 text-red-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN => 'bg-purple-100 text-purple-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN => 'bg-red-100 text-red-800',
                                             
                                             // Status baru
                                             'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
-                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
-                                            'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-red-100 text-red-800',
+                                            'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
+                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
+
+                                            'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-orange-100 text-orange-800',
+                                            'Permintaan Perbaikan dari Penilai Universitas' => 'bg-red-100 text-red-800',
                                             'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
                                             'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',
                                             'Usulan Sudah Dikirim ke Sister' => 'bg-blue-100 text-blue-800',
@@ -159,11 +176,21 @@
                                             };
 
                                             // Tentukan apakah bisa edit atau hanya lihat detail
-                                            $canEdit = in_array($usulan->status_usulan, ['Draft', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']);
+                                            $canEdit = in_array($usulan->status_usulan, [
+                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
+                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
+                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
+                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
+                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
+                                            ]);
                                             $actionRoute = $canEdit ? $routeName . '.edit' : $routeName . '.show';
                                         @endphp
 
-                                        @if($usulan->status_usulan == 'Usulan Perbaikan dari Admin Fakultas')
+                                        @if(in_array($usulan->status_usulan, [
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
+                                        ]))
                                             <a href="{{ route($actionRoute, $usulan) }}"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200">
                                                 <i data-lucide="edit" class="w-3 h-3 mr-1"></i>

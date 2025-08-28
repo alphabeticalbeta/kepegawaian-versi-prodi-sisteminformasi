@@ -75,7 +75,7 @@ abstract class BaseUsulanController extends Controller
     {
         return Usulan::where('pegawai_id', $pegawaiId)
             ->where('jenis_usulan', $jenisUsulan)
-            ->whereNotIn('status_usulan', ['Direkomendasikan', 'Ditolak'])
+            ->whereNotIn('status_usulan', [\App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN, \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN])
             ->exists();
     }
 

@@ -160,7 +160,7 @@
                                            class="text-indigo-600 hover:text-indigo-900 font-medium text-sm">
                                             Detail
                                         </a>
-                                        @if($usulan->status_usulan === 'Draft')
+                                        @if($usulan->status_usulan === 'Draft Usulan')
                                             <a href="{{ route('pegawai-unmul.usulan-laporan-serdos.edit', $usulan->id) }}"
                                                class="text-blue-600 hover:text-blue-900 font-medium text-sm">
                                                 Edit

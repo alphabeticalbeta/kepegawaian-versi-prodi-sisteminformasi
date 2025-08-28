@@ -119,13 +119,19 @@ class DashboardController extends Controller
 
         $periodeUsulans = PeriodeUsulan::withCount([
             'usulans as jumlah_pengusul' => function ($query) use ($unitKerjaId) {
-                $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview'])
+                $query->whereIn('status_usulan', [
+                    Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
+                    Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS
+                ])
                     ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                         $subQuery->where('id', $unitKerjaId);
                     });
             },
             'usulans as perbaikan' => function ($query) use ($unitKerjaId) {
-                $query->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan'])
+                $query->whereIn('status_usulan', [
+                    Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+                    Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                ])
                     ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                         $subQuery->where('id', $unitKerjaId);
                     });

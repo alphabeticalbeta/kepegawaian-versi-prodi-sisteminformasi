@@ -2,6 +2,9 @@
 @extends('backend.layouts.roles.pegawai-unmul.app')
 
 @php
+    // Import Usulan model for constants
+    use App\Models\KepegawaianUniversitas\Usulan as UsulanModel;
+    
     // Set default values for variables that might not be defined
     $isEditMode = $isEditMode ?? false;
     $isReadOnly = $isReadOnly ?? false;
@@ -345,10 +348,16 @@
             // Cek kelengkapan data profil
             $requiredFields = [
                 'nama_lengkap', 'nip', 'email', 'tempat_lahir', 'tanggal_lahir',
-                'jenis_kelamin', 'nomor_handphone', 'gelar_depan', 'gelar_belakang',
+                'jenis_kelamin', 'nomor_handphone', 'gelar_belakang',
+                'nama_universitas_sekolah', 'nama_prodi_jurusan',
                 'ijazah_terakhir', 'transkrip_nilai_terakhir', 'sk_pangkat_terakhir',
                 'sk_jabatan_terakhir', 'skp_tahun_pertama', 'skp_tahun_kedua'
             ];
+
+            // Tambahkan Disertasi/Thesis Terakhir jika usulan jabatan dosen reguler
+            if ($pegawai->jenis_pegawai === 'Dosen' && isset($jenisUsulanPeriode) && str_contains($jenisUsulanPeriode, 'dosen-regular')) {
+                $requiredFields[] = 'disertasi_thesis_terakhir';
+            }
 
             $missingFields = [];
             foreach ($requiredFields as $field) {
@@ -835,30 +844,7 @@
 
             {{-- Form Actions --}}
             @if(!$isShowMode)
-            @php
-                // Determine who sent the revision request based on validation data
-                $isRevisionFromUniversity = false;
-                $isRevisionFromFakultas = false;
-
-                if ($isEditMode && $usulan && $usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas') {
-                    // Check validation data to determine source of revision
-                    $adminUnivValidation = $usulan->getValidasiByRole('admin_universitas');
-                    $adminFakultasValidation = $usulan->getValidasiByRole('admin_fakultas');
-
-                    // If Admin Universitas has validation data, revision is from university
-                    if (!empty($adminUnivValidation)) {
-                        $isRevisionFromUniversity = true;
-                    }
-                    // If only Admin Fakultas has validation data, revision is from fakultas
-                    elseif (!empty($adminFakultasValidation)) {
-                        $isRevisionFromFakultas = true;
-                    }
-                    // Default: if uncertain, assume from fakultas
-                    else {
-                        $isRevisionFromFakultas = true;
-                    }
-                }
-            @endphp
+            {{-- Button conditions simplified based on status --}}
 
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                 <div class="flex items-center justify-between">
@@ -867,62 +853,188 @@
                         Pastikan semua data yang diperlukan telah diisi dengan benar
                     </div>
                     <div class="flex items-center gap-3">
-                        <button type="button" onclick="history.back()"
-                                class="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                            Batal
-                        </button>
-
                         {{-- Save Draft Button (always available) --}}
-                        <button type="submit" name="action" value="save_draft"
+                        <button type="button" onclick="showConfirmationModal('save_draft', document.getElementById('usulan-form'))"
                                 class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
                             <i data-lucide="save" class="w-4 h-4"></i>
                             Simpan Usulan
                         </button>
 
                         {{-- Conditional Submit Buttons --}}
-                        @if($isEditMode && $usulan && $usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas')
-                            {{-- Revision Mode: Show appropriate button based on who requested revision --}}
-                            @if($isRevisionFromUniversity)
-                                <button type="submit" name="action" value="submit_to_university"
-                                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                    Kirim ke Universitas
-                                </button>
-                            @elseif($isRevisionFromFakultas)
-                                <button type="submit" name="action" value="submit_to_fakultas"
-                                        class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                    Kirim ke Fakultas
-                                </button>
-                            @endif
-                        @elseif($isEditMode && $usulan && $usulan->status_usulan === 'Perbaikan dari Tim Sister')
-                            {{-- Perbaikan dari Tim Sister Mode --}}
-                            <button type="submit" name="action" value="submit_perbaikan_sister"
-                                    class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                        @if($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_fakultas', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>
-                                Kirim Perbaikan ke Universitas
+                                Kirim Usulan Perbaikan dari Admin Fakultas
                             </button>
-                        @else
-                            {{-- Normal Mode: Submit to fakultas --}}
-                            <button type="submit" name="action" value="submit"
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_university', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Usulan Perbaikan dari Kepegawaian Universitas
+                            </button>
+
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_penilai', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Perbaikan ke Penilai Universitas
+                            </button>
+
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_tim_sister', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Perbaikan ke Tim Sister
+                            </button>
+                        {{-- Draft Status Buttons --}}
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_DRAFT_USULAN)
+                            <button type="button" onclick="showConfirmationModal('submit_to_fakultas', document.getElementById('usulan-form'))"
                                     class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>
-                                Kirim Usulan
+                                Usulan Dikirim ke Admin Fakultas
+                            </button>
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_fakultas', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Usulan Perbaikan dari Admin Fakultas
+                            </button>
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_university', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Usulan Perbaikan dari Kepegawaian Universitas
+                            </button>
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_penilai', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Perbaikan ke Penilai Universitas
+                            </button>
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_DRAFT_PERBAIKAN_TIM_SISTER)
+                            <button type="button" onclick="showConfirmationModal('submit_perbaikan_tim_sister', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Perbaikan ke Tim Sister
                             </button>
                         @endif
                     </div>
                 </div>
             </div>
-            @endif
 
             </form>
+        @endif
+        @else
+            {{-- Profile Incomplete Message --}}
+            <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                        Profil Tidak Lengkap
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="w-5 h-5 text-red-600 mr-2 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-red-800">Data Profil Wajib Dilengkapi</h4>
+                                <p class="text-sm text-red-700 mt-1">
+                                    Untuk dapat membuat usulan jabatan, Anda harus melengkapi data profil terlebih dahulu. 
+                                    Berikut adalah field yang masih kosong:
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach($missingFields as $field)
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                                <div class="flex items-center">
+                                    <i data-lucide="x-circle" class="w-4 h-4 text-red-500 mr-2"></i>
+                                    <span class="text-sm text-red-800 font-medium">
+                                        @switch($field)
+                                            @case('nama_lengkap')
+                                                Nama Lengkap
+                                                @break
+                                            @case('nip')
+                                                NIP
+                                                @break
+                                            @case('email')
+                                                Email
+                                                @break
+                                            @case('tempat_lahir')
+                                                Tempat Lahir
+                                                @break
+                                            @case('tanggal_lahir')
+                                                Tanggal Lahir
+                                                @break
+                                            @case('jenis_kelamin')
+                                                Jenis Kelamin
+                                                @break
+                                            @case('nomor_handphone')
+                                                Nomor Handphone
+                                                @break
+
+                                            @case('gelar_belakang')
+                                                Gelar Belakang
+                                                @break
+                                            @case('nama_universitas_sekolah')
+                                                Nama Universitas/Sekolah
+                                                @break
+                                            @case('nama_prodi_jurusan')
+                                                Nama Program Studi/Jurusan
+                                                @break
+                                            @case('disertasi_thesis_terakhir')
+                                                Disertasi/Thesis Terakhir
+                                                @break
+                                            @case('ijazah_terakhir')
+                                                Ijazah Terakhir
+                                                @break
+                                            @case('transkrip_nilai_terakhir')
+                                                Transkrip Nilai Terakhir
+                                                @break
+                                            @case('sk_pangkat_terakhir')
+                                                SK Pangkat Terakhir
+                                                @break
+                                            @case('sk_jabatan_terakhir')
+                                                SK Jabatan Terakhir
+                                                @break
+                                            @case('skp_tahun_pertama')
+                                                SKP Tahun {{ date('Y') - 1 }}
+                                                @break
+                                            @case('skp_tahun_kedua')
+                                                SKP Tahun {{ date('Y') - 2 }}
+                                                @break
+                                            @default
+                                                {{ ucwords(str_replace('_', ' ', $field)) }}
+                                        @endswitch
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    <div class="mt-6 flex justify-center">
+                        <a href="{{ route('pegawai-unmul.profile.show') }}" 
+                           class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            My Profil
+                        </a>
+                    </div>
+                </div>
+            </div>
         @endif
     </div>
 </div>
 
+{{-- Include Confirmation Modal --}}
+@include('backend.layouts.views.pegawai-unmul.usul-jabatan.components.confirmation-modal')
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Form validation - SIMPLIFIED
+    // Form validation - FIXED for modal confirmation
     const form = document.getElementById('usulan-form');
     if (form) {
         console.log('Form found, validation active');
@@ -932,12 +1044,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Form action:', form.action);
             console.log('Form method:', form.method);
 
-            // Check if action is selected
-            const actionField = form.querySelector('input[name="action"]:checked, button[name="action"][type="submit"]');
-            if (!actionField) {
+            // Check if action is selected (fixed for modal confirmation)
+            const actionField = form.querySelector('input[name="action"]');
+            if (!actionField || !actionField.value) {
                 e.preventDefault();
                 console.log('No action selected - preventing submission');
-                alert('Mohon pilih aksi (Simpan Usulan, Kirim Usulan, atau Kirim ke Universitas/Fakultas).');
+                alert('Mohon pilih aksi (Simpan Usulan atau aksi pengiriman yang sesuai).');
                 return;
             }
 

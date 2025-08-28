@@ -199,7 +199,7 @@ class PusatUsulanController extends Controller
     public function process(Request $request, Usulan $usulan)
     {
         // 1) Guard status
-        if (!in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas'])) {
+        if (!in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS, \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS])) {
             return redirect()->back()->with('error', 'Aksi tidak dapat dilakukan karena status usulan saat ini adalah: ' . $usulan->status_usulan);
         }
 
@@ -243,7 +243,7 @@ class PusatUsulanController extends Controller
             // 5) Mutasi status berdasarkan action
             switch ($actionType) {
                 case 'return_to_pegawai':
-                    $usulan->status_usulan = 'Dikembalikan ke Pegawai';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
                     // Pastikan kolom ini ada; jika tidak, pindahkan ke log/validasi
                     $usulan->catatan_verifikator = $request->catatan_umum;
                     $logMessage = 'Usulan dikembalikan ke Pegawai untuk perbaikan oleh Admin Universitas.';
@@ -251,21 +251,21 @@ class PusatUsulanController extends Controller
 
                 case 'return_for_revision':
                     // Langsung ke employee tanpa melalui Faculty Admin
-                    $usulan->status_usulan = 'Perlu Perbaikan';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
                     $usulan->catatan_verifikator = $request->catatan_umum;
                     $logMessage = 'Usulan dikembalikan langsung ke Pegawai untuk perbaikan oleh Admin Universitas.';
                     break;
 
                 case 'not_recommended':
                     // Return ke employee dan tidak bisa submit lagi di periode tersebut
-                    $usulan->status_usulan = 'Tidak Direkomendasikan';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
                     $usulan->catatan_verifikator = $request->catatan_umum;
                     $logMessage = 'Usulan tidak direkomendasikan oleh Admin Universitas. Pegawai tidak dapat submit lagi di periode ini.';
                     break;
 
                 case 'send_to_assessor_team':
                     // Kirim ke tim penilai
-                    $usulan->status_usulan = 'Sedang Dinilai';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
 
                     // Hapus penilai lama jika ada
                     $usulan->penilais()->detach();
@@ -290,31 +290,31 @@ class PusatUsulanController extends Controller
                         return back()->with('error', 'Belum dapat dikirim ke Tim Senat: menunggu rekomendasi dari Tim Penilai.');
                     }
 
-                    $usulan->status_usulan = 'Sedang Direview Senat';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT;
                     $logMessage = 'Usulan dikirim ke Tim Senat untuk review.';
                     break;
 
                 case 'reject_proposal':
-                    $usulan->status_usulan = 'Ditolak Universitas';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
                     $logMessage = 'Usulan ditolak oleh Admin Universitas. Proses dihentikan.';
                     break;
 
                 case 'approve_proposal':
-                    $usulan->status_usulan = 'Direkomendasikan'; // atau 'Disetujui Universitas' sesuai kebijakanmu
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN; // atau 'Disetujui Universitas' sesuai kebijakanmu
                     $logMessage = 'Usulan disetujui dan direkomendasikan oleh Admin Universitas.';
                     break;
 
                 case 'save_only':
                     // Jika masih awal, ubah ke "Sedang Direview Universitas" sesuai komentarmu
                     if ($statusLama === 'Usulan Disetujui Admin Fakultas') {
-                        $usulan->status_usulan = 'Usulan Disetujui Kepegawaian Universitas';
+                        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS;
                     }
                     $logMessage = 'Validasi dari Admin Universitas disimpan.';
                     break;
 
                 case 'recommend_proposal':
                     // Sudah lulus prasyarat di atas
-                    $usulan->status_usulan = 'Direkomendasikan';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
                     $logMessage = 'Usulan direkomendasikan oleh Admin Universitas.';
                     break;
             }

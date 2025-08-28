@@ -34,7 +34,7 @@ class ProfileController extends Controller
 
         // 4. Ambil data untuk dropdown HANYA JIKA sedang mode edit
         $pangkats = $isEditing ? \App\Models\KepegawaianUniversitas\Pangkat::orderByHierarchy('asc')->get() : [];
-        $jabatans = $isEditing ? \App\Models\KepegawaianUniversitas\Jabatan::orderBy('jabatan')->get() : [];
+        $jabatans = $isEditing ? \App\Models\KepegawaianUniversitas\Jabatan::forJenisPegawai($pegawai->jenis_pegawai)->orderBy('jabatan')->get() : [];
         $unitKerjas = $isEditing ? \App\Models\KepegawaianUniversitas\SubSubUnitKerja::with('subUnitKerja.unitKerja')->orderBy('nama')->get() : [];
 
         // 5. Kirim SEMUA variabel ke view di akhir metode

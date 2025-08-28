@@ -131,31 +131,42 @@ class AdminFakultasController extends Controller
                     });
                 },
                 'usulans as menunggu_validasi' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Diajukan', 'Draft', 'Menunggu Verifikasi'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as dikirim_universitas' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Diusulkan ke Universitas', 'Sedang Direview'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as perbaikan' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as disetujui' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Disetujui', 'Direkomendasikan'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as ditolak' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Ditolak', 'Tidak Disetujui'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
@@ -265,31 +276,42 @@ class AdminFakultasController extends Controller
                     });
                 },
                 'usulans as menunggu_validasi' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Diajukan', 'Draft', 'Menunggu Verifikasi'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as dikirim_universitas' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Diusulkan ke Universitas', 'Sedang Direview'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as perbaikan' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as disetujui' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Disetujui', 'Direkomendasikan'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
                 },
                 'usulans as ditolak' => function ($query) use ($unitKerjaId) {
-                    $query->whereIn('status_usulan', ['Ditolak', 'Tidak Disetujui'])
+                    $query->whereIn('status_usulan', [
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+                    ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
                         });
@@ -392,8 +414,8 @@ class AdminFakultasController extends Controller
             })->orderBy('nama_lengkap')->get();
 
             // Determine action permissions based on status
-            $canReturn = $usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas';
-            $canForward = $usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas';
+            $canReturn = $usulan->status_usulan === Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS;
+            $canForward = $usulan->status_usulan === Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS;
 
             return view('backend.layouts.views.admin-fakultas.usulan.detail', [
                 'usulan' => $usulan,
@@ -407,17 +429,17 @@ class AdminFakultasController extends Controller
                 'formAction' => route('admin-fakultas.usulan.save-validation', $usulan->id),
                 'backUrl' => route('admin-fakultas.periode.pendaftar', $usulan->periode_usulan_id),
                 'backText' => 'Kembali ke Daftar Pengusul',
-                'canEdit' => in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
+                'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]),
                 'config' => [
                     'canReturn' => $canReturn,
                     'canForward' => $canForward,
                     'routePrefix' => 'admin-fakultas',
-                    'canEdit' => in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
+                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]),
                     'canView' => true, // Always allow viewing data
                     'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
                 ],
                 'roleConfig' => [
-                    'canEdit' => in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
+                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]),
                     'canView' => true, // Always allow viewing data
                     'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
                 ]
@@ -471,7 +493,7 @@ class AdminFakultasController extends Controller
 
             // Update status based on action
             if ($action === 'submit') {
-                $usulan->status_usulan = 'Usulan Disetujui Admin Fakultas';
+                $usulan->status_usulan = Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS;
                 $logMessage = 'Usulan diteruskan ke universitas';
             } else {
                 $logMessage = 'Draft validasi disimpan';
@@ -537,7 +559,7 @@ class AdminFakultasController extends Controller
                     $catatanLengkap = implode("\n", $catatanDetail);
 
                     // Update usulan
-                    $usulan->status_usulan = 'Perbaikan Usulan';
+                    $usulan->status_usulan = Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
                     $usulan->catatan_verifikator = $catatanLengkap;
                     $logMessage = 'Usulan dikembalikan ke Pegawai untuk perbaikan.';
                     break;
@@ -561,7 +583,7 @@ class AdminFakultasController extends Controller
                     $catatanLengkap = implode("\n", $catatanDetail);
 
                     // Update usulan - mencegah submit di periode ini
-                    $usulan->status_usulan = 'Ditolak';
+                    $usulan->status_usulan = Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
                     $usulan->catatan_verifikator = $catatanLengkap;
                     $logMessage = 'Usulan ditandai belum direkomendasikan oleh Admin Fakultas.';
                     break;
@@ -660,7 +682,7 @@ class AdminFakultasController extends Controller
                     }
 
                     // Update status usulan
-                    $usulan->status_usulan = 'Diusulkan ke Universitas';
+                    $usulan->status_usulan = Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS;
                     $logMessage = 'Usulan divalidasi dan diteruskan ke Universitas.';
                     break;
 
@@ -770,7 +792,7 @@ class AdminFakultasController extends Controller
                     $usulan->validasi_data = $currentValidasi;
 
                     // Update status usulan
-                    $usulan->status_usulan = 'Diusulkan ke Universitas';
+                    $usulan->status_usulan = Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS;
 
                     $logMessage = 'Usulan berhasil diperbaiki dan dikirim kembali ke Universitas.';
                     break;
@@ -801,7 +823,7 @@ class AdminFakultasController extends Controller
                     $catatanLengkap = implode("\n", $catatanDetail);
 
                     // Update usulan
-                    $usulan->status_usulan = 'Perbaikan Usulan';
+                    $usulan->status_usulan = Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
                     $usulan->catatan_verifikator = $catatanLengkap;
                     $logMessage = 'Usulan dikembalikan ke Pegawai untuk perbaikan.';
                     break;
@@ -832,7 +854,7 @@ class AdminFakultasController extends Controller
                     $catatanLengkap = implode("\n", $catatanDetail);
 
                     // Update usulan
-                    $usulan->status_usulan = 'Perbaikan Usulan';
+                    $usulan->status_usulan = Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS;
                     $usulan->catatan_verifikator = $catatanLengkap;
                     $logMessage = 'Usulan dikembalikan ke Pegawai untuk perbaikan.';
                     break;
@@ -914,7 +936,7 @@ class AdminFakultasController extends Controller
                     $usulan->validasi_data = $currentValidasi;
 
                     // Update status usulan
-                    $usulan->status_usulan = 'Diusulkan ke Universitas';
+                    $usulan->status_usulan = Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS;
                     $logMessage = 'Usulan divalidasi dan diteruskan ke Universitas.';
                     break;
 
@@ -1210,13 +1232,18 @@ class AdminFakultasController extends Controller
             return \App\Models\KepegawaianUniversitas\PeriodeUsulan::where('status', 'Buka') // Hanya periode yang aktif
                 ->withCount([
                     'usulans as jumlah_pengusul' => function ($query) use ($unitKerja) {
-                        $query->whereIn('status_usulan', ['Diajukan', 'Sedang Direview'])
+                        $query->whereIn('status_usulan', [
+                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
+                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS
+                        ])
                             ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
                                 $subQuery->where('id', $unitKerja->id);
                             });
                     },
                     'usulans as perbaikan' => function ($query) use ($unitKerja) {
-                        $query->whereIn('status_usulan', ['Perbaikan Usulan', 'Dikembalikan'])
+                        $query->whereIn('status_usulan', [
+                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                        ])
                             ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
                                 $subQuery->where('id', $unitKerja->id);
                             });

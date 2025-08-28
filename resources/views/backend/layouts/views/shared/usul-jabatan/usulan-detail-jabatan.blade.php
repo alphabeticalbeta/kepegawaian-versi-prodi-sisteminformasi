@@ -314,6 +314,9 @@
         {{-- Include Info History Partial --}}
         @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-info-history')
 
+        {{-- Include Hasil Validasi Admin Fakultas Partial --}}
+        @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-hasil-validasi-admin-fakultas')
+
                        {{-- Include Perbaikan dari Admin Universitas Partial --}}
                @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-perbaikan-admin-universitas')
 

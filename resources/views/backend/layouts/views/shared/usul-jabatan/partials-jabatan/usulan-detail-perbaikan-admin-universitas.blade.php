@@ -23,32 +23,35 @@
             <div class="bg-white border border-gray-200 rounded-lg p-4">
                 <h4 class="text-sm font-medium text-gray-900 mb-3">Detail Perbaikan:</h4>
                 <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ $usulan->catatan_verifikator }}</div>
-            </div>
-
-            @if(isset($usulan->validasi_data['admin_universitas']['validation']))
-                <div class="mt-4">
-                    <h4 class="text-sm font-medium text-gray-900 mb-3">Item yang Perlu Diperbaiki:</h4>
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        @php
-                            $adminUnivValidation = $usulan->validasi_data['admin_universitas']['validation'] ?? [];
-                            $invalidFields = [];
-                            foreach ($adminUnivValidation as $groupKey => $groupData) {
-                                if (is_array($groupData)) {
-                                    foreach ($groupData as $fieldKey => $fieldData) {
-                                        if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
-                                            $fieldLabel = $fieldGroups[$groupKey]['fields'][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
-                                            $invalidFields[] = [
-                                                'group' => $fieldGroups[$groupKey]['label'] ?? ucwords(str_replace('_', ' ', $groupKey)),
-                                                'field' => $fieldLabel,
-                                                'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
-                                            ];
-                                        }
+                
+                @if(isset($usulan->validasi_data['admin_universitas']['validation']))
+                    @php
+                        $adminUnivValidation = $usulan->validasi_data['admin_universitas']['validation'] ?? [];
+                        $invalidFields = [];
+                        foreach ($adminUnivValidation as $groupKey => $groupData) {
+                            if (is_array($groupData)) {
+                                foreach ($groupData as $fieldKey => $fieldData) {
+                                    if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                        // Handle fields that might be closures
+                                    $groupFields = $fieldGroups[$groupKey]['fields'] ?? [];
+                                    if (is_callable($groupFields)) {
+                                        $groupFields = $groupFields();
+                                    }
+                                    $fieldLabel = $groupFields[$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey));
+                                        $invalidFields[] = [
+                                            'group' => $fieldGroups[$groupKey]['label'] ?? ucwords(str_replace('_', ' ', $groupKey)),
+                                            'field' => $fieldLabel,
+                                            'keterangan' => $fieldData['keterangan'] ?? 'Tidak ada keterangan'
+                                        ];
                                     }
                                 }
                             }
-                        @endphp
+                        }
+                    @endphp
 
-                        @if(!empty($invalidFields))
+                    @if(!empty($invalidFields))
+                        <div class="mt-4">
+                            <h5 class="text-sm font-medium text-red-800 mb-2">Field yang Tidak Sesuai:</h5>
                             <div class="space-y-2">
                                 @foreach($invalidFields as $field)
                                     <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -60,12 +63,10 @@
                                     </div>
                                 @endforeach
                             </div>
-                        @else
-                            <div class="text-sm text-gray-600">Tidak ada item spesifik yang perlu diperbaiki.</div>
-                        @endif
-                    </div>
-                </div>
-            @endif
+                        </div>
+                    @endif
+                @endif
+            </div>
         </div>
     </div>
 @endif

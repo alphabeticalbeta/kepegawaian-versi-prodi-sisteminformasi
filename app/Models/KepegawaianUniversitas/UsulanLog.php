@@ -126,14 +126,33 @@ class UsulanLog extends Model
         $status = $this->status;
 
         return match($status) {
-            'Draft' => 'bg-gray-100 text-gray-800 border-gray-300',
-            'Diajukan' => 'bg-blue-100 text-blue-800 border-blue-300',
-            'Sedang Direview' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-            'Perlu Perbaikan' => 'bg-orange-100 text-orange-800 border-orange-300',
-            'Dikembalikan' => 'bg-red-100 text-red-800 border-red-300',
-            'Disetujui' => 'bg-green-100 text-green-800 border-green-300',
-            'Direkomendasikan' => 'bg-purple-100 text-purple-800 border-purple-300',
-            'Ditolak' => 'bg-red-100 text-red-800 border-red-300',
+            // Status standar baru
+            Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800 border-blue-300',
+            Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800 border-amber-300',
+            Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800 border-amber-300',
+            Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800 border-green-300',
+            Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800 border-red-300',
+            Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-indigo-100 text-indigo-800 border-indigo-300',
+            Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800 border-orange-300',
+            Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800 border-orange-300',
+            Usulan::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800 border-purple-300',
+            Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800 border-purple-300',
+            Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT => 'bg-purple-100 text-purple-800 border-purple-300',
+            Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER => 'bg-blue-100 text-blue-800 border-blue-300',
+            Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER => 'bg-red-100 text-red-800 border-red-300',
+            
+            // Draft status constants
+            Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800 border-gray-300',
+            Usulan::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800 border-amber-300',
+            Usulan::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800 border-red-300',
+            Usulan::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800 border-orange-300',
+            Usulan::STATUS_DRAFT_PERBAIKAN_TIM_SISTER => 'bg-red-100 text-red-800 border-red-300',
+            
+            // Legacy status constants (fallback)
+            Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI => 'bg-orange-100 text-orange-800 border-orange-300',
+            Usulan::STATUS_DIREKOMENDASIKAN => 'bg-purple-100 text-purple-800 border-purple-300',
+            Usulan::STATUS_TIDAK_DIREKOMENDASIKAN => 'bg-red-100 text-red-800 border-red-300',
+            
             default => 'bg-gray-100 text-gray-800 border-gray-300'
         };
     }

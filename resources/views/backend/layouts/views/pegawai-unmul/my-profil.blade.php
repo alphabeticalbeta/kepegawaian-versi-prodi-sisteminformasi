@@ -103,8 +103,28 @@
                  },
                  get availableStatuses() {
                      return this.statuses[this.jenisPegawai] || []
+                 },
+                 initJabatanFilter() {
+                     // Karena jenis pegawai sudah difilter di controller, 
+                     // kita hanya perlu memastikan jabatan yang ditampilkan sesuai
+                     const jabatanSelect = document.querySelector('select[name=\"jabatan_terakhir_id\"]');
+                     if (jabatanSelect) {
+                         const currentJenisPegawai = '{{ $pegawai->jenis_pegawai }}';
+                         const options = jabatanSelect.querySelectorAll('option');
+                         
+                         options.forEach(option => {
+                             if (option.value === '') return; // Skip placeholder option
+                             
+                             const jabatanJenisPegawai = option.getAttribute('data-jenis-pegawai');
+                             if (jabatanJenisPegawai !== currentJenisPegawai) {
+                                 option.style.display = 'none';
+                                 option.disabled = true;
+                             }
+                         });
+                     }
                  }
-             }">
+             }"
+             x-init="initJabatanFilter()">
 
             {{-- Profile Card --}}
             <div class="bg-white rounded-xl shadow-sm border mb-6 overflow-hidden">
@@ -391,9 +411,16 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
                                 @if($isEditing)
                                     <select name="jabatan_terakhir_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="">-- Pilih Jabatan --</option>
                                         @foreach($jabatans as $jabatan)
-                                            <option value="{{ $jabatan->id }}" {{ old('jabatan_terakhir_id', $pegawai->jabatan_terakhir_id) == $jabatan->id ? 'selected' : '' }}>
+                                            <option value="{{ $jabatan->id }}" 
+                                                    data-jenis-pegawai="{{ $jabatan->jenis_pegawai }}"
+                                                    data-jenis-jabatan="{{ $jabatan->jenis_jabatan }}"
+                                                    {{ old('jabatan_terakhir_id', $pegawai->jabatan_terakhir_id) == $jabatan->id ? 'selected' : '' }}>
                                                 {{ $jabatan->jabatan }}
+                                                @if($jabatan->jenis_jabatan)
+                                                    ({{ $jabatan->jenis_jabatan }})
+                                                @endif
                                             </option>
                                         @endforeach
                                     </select>

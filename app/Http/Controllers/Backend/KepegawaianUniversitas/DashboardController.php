@@ -40,7 +40,7 @@ class DashboardController extends Controller
                 ->get();
 
             // Get recent usulans for validation (status: Diusulkan ke Universitas)
-            $recentUsulans = \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', 'Diusulkan ke Universitas')
+            $recentUsulans = \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS)
                 ->with(['pegawai:id,nama_lengkap,nip', 'periodeUsulan'])
                 ->latest()
                 ->limit(10)
@@ -52,13 +52,12 @@ class DashboardController extends Controller
                 'total_usulans_pending' => $recentUsulans->count(),
                 'total_usulans_all' => \App\Models\KepegawaianUniversitas\Usulan::count(),
                 'usulans_by_status' => [
-                    'Diajukan' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', 'Diajukan')->count(),
-                    'Diusulkan ke Universitas' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', 'Diusulkan ke Universitas')->count(),
-                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI)->count(),
-                    'Sedang Direview' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', 'Sedang Direview')->count(),
-                    'Direkomendasikan' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', 'Direkomendasikan')->count(),
-                    'Disetujui' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', 'Disetujui')->count(),
-                    'Ditolak' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', 'Ditolak')->count(),
+                    'Diajukan' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN)->count(),
+                    'Diusulkan ke Universitas' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS)->count(),
+                    'Sedang Direview' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS)->count(),
+                    'Direkomendasikan' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+                    'Disetujui' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+                    'Ditolak' => \App\Models\KepegawaianUniversitas\Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
                 ]
             ];
 

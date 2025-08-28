@@ -95,24 +95,23 @@ class PenilaiService
             return [
                 'total_assigned' => $usulans->count(),
                 'pending_review' => $usulans->whereIn('status_usulan', [
-                    'Sedang Direview',
-                    'Menunggu Hasil Penilaian Tim Penilai',
-                    'Perbaikan Dari Tim Penilai'
+                    Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                    Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
+                    Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
                 ])->count(),
                 'completed_review' => $usulans->whereIn('status_usulan', [
-                    'Usulan Direkomendasi Tim Penilai',
-                    'Direkomendasikan'
+                    Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+                    Usulan::STATUS_DIREKOMENDASIKAN
                 ])->count(),
                 'by_status' => [
-                    'Diajukan' => $usulans->where('status_usulan', 'Diajukan')->count(),
-                    'Diusulkan ke Universitas' => $usulans->where('status_usulan', 'Diusulkan ke Universitas')->count(),
-                    'Sedang Direview' => $usulans->where('status_usulan', 'Sedang Direview')->count(),
-                    'Menunggu Hasil Penilaian Tim Penilai' => $usulans->where('status_usulan', 'Menunggu Hasil Penilaian Tim Penilai')->count(),
-                    'Perbaikan Dari Tim Penilai' => $usulans->where('status_usulan', 'Perbaikan Dari Tim Penilai')->count(),
-                    'Usulan Direkomendasi Tim Penilai' => $usulans->where('status_usulan', 'Usulan Direkomendasi Tim Penilai')->count(),
-                    'Direkomendasikan' => $usulans->where('status_usulan', 'Direkomendasikan')->count(),
-                    'Disetujui' => $usulans->where('status_usulan', 'Disetujui')->count(),
-                    'Ditolak' => $usulans->where('status_usulan', 'Ditolak')->count(),
+                    'Usulan Dikirim ke Admin Fakultas' => $usulans->where('status_usulan', Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
+                    'Usulan Disetujui Admin Fakultas' => $usulans->where('status_usulan', Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS)->count(),
+                    'Usulan Disetujui Kepegawaian Universitas' => $usulans->where('status_usulan', Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS)->count(),
+                    'Menunggu Hasil Penilaian Tim Penilai' => $usulans->where('status_usulan', Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI)->count(),
+                    'Usulan Perbaikan dari Penilai Universitas' => $usulans->where('status_usulan', Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS)->count(),
+                    'Usulan Direkomendasi Penilai Universitas' => $usulans->where('status_usulan', Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
+                    'Direkomendasikan' => $usulans->where('status_usulan', Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+                    'Tidak Direkomendasikan' => $usulans->where('status_usulan', Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
                 ]
             ];
         });
@@ -231,7 +230,7 @@ class PenilaiService
         ]);
 
         // Update usulan status - KIRIM KE ADMIN UNIV USULAN DULU
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -271,7 +270,7 @@ class PenilaiService
         ]);
 
         // Update usulan status - KIRIM KE ADMIN UNIV USULAN DULU
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
 
         // Save validation data
         $validationData = $request->input('validation');
@@ -352,10 +351,10 @@ class PenilaiService
                         $penilaiQuery->where('penilai_id', $penilaiId);
                     })
                     ->whereIn('status_usulan', [
-                        'Sedang Direview',
-                        'Menunggu Hasil Penilaian Tim Penilai',
-                        'Perbaikan Dari Tim Penilai',
-                        'Usulan Direkomendasi Tim Penilai'
+                        Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                        Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
+                        Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                        Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
                     ]);
                 })
                 ->with(['usulans' => function($query) use ($penilaiId) {
@@ -363,10 +362,10 @@ class PenilaiService
                         $penilaiQuery->where('penilai_id', $penilaiId);
                     })
                     ->whereIn('status_usulan', [
-                        'Sedang Direview',
-                        'Menunggu Hasil Penilaian Tim Penilai',
-                        'Perbaikan Dari Tim Penilai',
-                        'Usulan Direkomendasi Tim Penilai'
+                        Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                        Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
+                        Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                        Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
                     ])
                     ->with(['pegawai:id,nama_lengkap,nip', 'penilais:id,nama_lengkap'])
                     ->latest()
@@ -379,10 +378,10 @@ class PenilaiService
                     $penilaiQuery->where('penilai_id', $penilaiId);
                 })
                 ->whereIn('status_usulan', [
-                    'Sedang Direview',
-                    'Menunggu Hasil Penilaian Tim Penilai',
-                    'Perbaikan Dari Tim Penilai',
-                    'Usulan Direkomendasi Tim Penilai'
+                    Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                    Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
+                    Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                    Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
                 ])
                 ->with(['pegawai:id,nama_lengkap,nip', 'periodeUsulan'])
                 ->latest()
@@ -535,7 +534,7 @@ class PenilaiService
         }
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
 
         // Save validation data
         $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);
@@ -582,7 +581,7 @@ class PenilaiService
         }
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_TIM_PENILAI;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
 
         // Save validation data
         $usulan->setValidasiByRole('tim_penilai', $validationData, $penilaiId);

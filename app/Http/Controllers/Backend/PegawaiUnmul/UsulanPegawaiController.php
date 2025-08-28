@@ -33,10 +33,10 @@ class UsulanPegawaiController extends Controller
         // Statistik usulan
         $statistics = [
             'total_usulan' => $pegawai->usulans()->count(),
-            'usulan_draft' => $pegawai->usulans()->where('status_usulan', 'Draft')->count(),
-            'usulan_diajukan' => $pegawai->usulans()->where('status_usulan', 'Diajukan')->count(),
-            'usulan_disetujui' => $pegawai->usulans()->where('status_usulan', 'Disetujui')->count(),
-            'usulan_ditolak' => $pegawai->usulans()->where('status_usulan', 'Ditolak')->count(),
+            'usulan_draft' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN)->count(),
+            'usulan_diajukan' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
+            'usulan_disetujui' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+            'usulan_ditolak' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
         ];
 
         // Periode usulan yang sedang aktif
@@ -186,7 +186,7 @@ class UsulanPegawaiController extends Controller
         // Cek usulan aktif
         $hasActiveUsulan = $pegawai->usulans()
             ->where('jenis_usulan', $jenisUsulanPeriode)
-            ->whereNotIn('status_usulan', ['Direkomendasikan', 'Ditolak'])
+                            ->whereNotIn('status_usulan', [\App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN, \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN])
             ->exists();
 
         return !$hasActiveUsulan;
@@ -221,12 +221,12 @@ class UsulanPegawaiController extends Controller
 
         $statistics = [
             'usulan_by_status' => [
-                'Draft' => $pegawai->usulans()->where('status_usulan', 'Draft')->count(),
-                'Diajukan' => $pegawai->usulans()->where('status_usulan', 'Diajukan')->count(),
-                'Sedang Direview' => $pegawai->usulans()->where('status_usulan', 'Sedang Direview')->count(),
-                'Perlu Perbaikan' => $pegawai->usulans()->where('status_usulan', 'Perlu Perbaikan')->count(),
-                'Disetujui' => $pegawai->usulans()->where('status_usulan', 'Disetujui')->count(),
-                'Ditolak' => $pegawai->usulans()->where('status_usulan', 'Ditolak')->count(),
+                'Draft' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN)->count(),
+                'Diajukan' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
+                'Sedang Direview' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS)->count(),
+                'Perlu Perbaikan' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)->count(),
+                'Disetujui' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
+                'Ditolak' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
             ],
             'usulan_by_type' => $pegawai->usulans()
                                       ->selectRaw('jenis_usulan, count(*) as total')
