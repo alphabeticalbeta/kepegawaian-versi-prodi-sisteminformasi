@@ -91,7 +91,7 @@
                                                 
                                                 case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS:
                                                     if ($currentRole === 'Pegawai') {
-                                                        return 'Usulan Perbaikan dari Kepegawaian Universitas';
+                                                        return \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS;
                                                     }
                                                     break;
                                                 
@@ -140,7 +140,7 @@
                                             'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
                                             'Permintaan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
 
-                                            'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-orange-100 text-orange-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-orange-100 text-orange-800',
                                             'Permintaan Perbaikan dari Penilai Universitas' => 'bg-red-100 text-red-800',
                                             'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
                                             'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',

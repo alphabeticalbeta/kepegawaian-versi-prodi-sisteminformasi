@@ -24,7 +24,8 @@
     // Get validation data from all roles for edit mode
     $validationData = [];
     if ($isEditMode && $usulan) {
-        $roles = ['admin_fakultas', 'admin_universitas', 'tim_penilai'];
+        // Sertakan kepegawaian_universitas agar catatan perbaikan dari KE terbaca
+        $roles = ['admin_fakultas', 'kepegawaian_universitas', 'tim_penilai'];
 
         foreach ($roles as $role) {
             $roleData = $usulan->getValidasiByRole($role);
@@ -398,8 +399,8 @@
                             'color' => 'amber',
                             'icon' => 'building-2'
                         ],
-                        'admin_universitas' => [
-                            'label' => 'Admin Universitas',
+                        'kepegawaian_universitas' => [
+                            'label' => 'Kepegawaian Universitas',
                             'color' => 'blue',
                             'icon' => 'university'
                         ],

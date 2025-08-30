@@ -140,6 +140,14 @@ class UsulanJabatanController extends BaseUsulanController
             abort(403, 'AKSES DITOLAK');
         }
 
+        // Jika status adalah permintaan perbaikan ke Pegawai dari Kepegawaian Universitas (atau draft-nya), alihkan ke edit mode
+        if (in_array($usulan->status_usulan, [
+            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+            UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS
+        ])) {
+            return redirect()->route('pegawai-unmul.usulan-jabatan.edit', $usulan->id);
+        }
+
         // Load relationships
         $usulan->load([
             'pegawai',
@@ -756,7 +764,7 @@ class UsulanJabatanController extends BaseUsulanController
         $statusUsulan = match($action) {
             'submit_to_fakultas' => UsulanModel::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
             'submit_perbaikan_fakultas' => UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            'submit_perbaikan_university' => UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
+            'submit_perbaikan_university' => UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
             'submit_perbaikan_penilai' => UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
             'submit_perbaikan_tim_sister' => UsulanModel::STATUS_PERBAIKAN_SUDAH_DIKIRIM_KE_SISTER,
             'save_draft' => $this->determineDraftStatus($oldStatus),
@@ -821,13 +829,12 @@ class UsulanJabatanController extends BaseUsulanController
                 // Clear verifikator notes if status changes from perbaikan requests
                 if (in_array($oldStatus, [
                     UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                    UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                    UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
                     UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
                     UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER
                 ]) && in_array($statusUsulan, [
                     UsulanModel::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
                     UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
                     UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
                     UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
                 ])) {
@@ -1479,7 +1486,7 @@ class UsulanJabatanController extends BaseUsulanController
     {
         return match($currentStatus) {
             UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => UsulanModel::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS => UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
+            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS => UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
             UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => UsulanModel::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
             UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER => UsulanModel::STATUS_DRAFT_PERBAIKAN_TIM_SISTER,
             default => UsulanModel::STATUS_DRAFT_USULAN

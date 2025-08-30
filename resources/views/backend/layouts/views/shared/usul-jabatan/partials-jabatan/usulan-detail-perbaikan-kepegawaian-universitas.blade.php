@@ -1,14 +1,21 @@
 {{-- Menampilkan Rangkuman Field Perbaikan untuk Admin Fakultas & Kepegawaian Universitas --}}
 @if(
-    ($currentRole === 'Admin Fakultas' && 
-     in_array($usulan->status_usulan, [
-        'Permintaan Perbaikan dari Admin Fakultas', 
-        'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 
-        'Usulan Perbaikan dari Kepegawaian Universitas'
-     ])) ||
-    ($currentRole === 'Kepegawaian Universitas' && 
-     $usulan->status_usulan === 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas')
-    && isset($usulan->validasi_data['kepegawaian_universitas']['validation'])
+    (
+        $currentRole === 'Admin Fakultas' && 
+        in_array($usulan->status_usulan, [
+            'Permintaan Perbaikan dari Admin Fakultas', 
+            'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 
+            'Usulan Perbaikan dari Kepegawaian Universitas'
+        ])
+    )
+    ||
+    (
+        $currentRole === 'Kepegawaian Universitas' && 
+        in_array($usulan->status_usulan, [
+            'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas',
+            'Permintaan Perbaikan Ke Pegawai Dari Kepegawaian Universitas'
+        ])
+    )
 )
     @php
         // Logika ini sekarang berjalan untuk kedua role, mengambil data dari Kepegawaian Universitas

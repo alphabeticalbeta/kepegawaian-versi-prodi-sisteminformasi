@@ -69,6 +69,13 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
+                @php
+                    // Gunakan validasi dari Kepegawaian Universitas untuk tampilan Pegawai
+                    $displayValidation = $existingValidation;
+                    if ($currentRole === 'Pegawai') {
+                        $displayValidation = $usulan->getValidasiByRole('Kepegawaian Universitas') ?? ['validation' => [], 'keterangan_umum' => ''];
+                    }
+                @endphp
                 @foreach($config['validationFields'] as $groupKey)
                     @if(isset($fieldGroups[$groupKey]))
                         {{-- Skip dokumen_admin_fakultas untuk role yang tidak diizinkan --}}
@@ -82,7 +89,7 @@
                         @endif
                         
                         {{-- Skip dokumen_admin_fakultas untuk Kepegawaian Universitas jika status tidak sesuai --}}
-                        @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Kepegawaian Universitas' && !in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas']))
+                        @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Kepegawaian Universitas' && !in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Permintaan Perbaikan Ke Pegawai Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas']))
                             @continue
                         @endif
                         
@@ -104,11 +111,10 @@
                                 }
                             }
                             
-                            // Pegawai: Hanya tampilkan field Pegawai saat perbaikan dari Kepegawaian Universitas
-                            if ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Permintaan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Kepegawaian Universitas'])) {
-                                if (!in_array($groupKey, $pegawaiFields)) {
-                                    $shouldSkipField = true;
-                                }
+                            // Pegawai: Tampilkan field Pegawai saat perbaikan dari Kepegawaian Universitas (readonly untuk field di luar tanggung jawabnya)
+                            if ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Permintaan Perbaikan Ke Pegawai Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas'])) {
+                                // Jangan skip field; kontrol edit/readonly diatur via canEdit pada input/textarea
+                                $shouldSkipField = false;
                             }
                             
                             // Kepegawaian Universitas: Tampilkan semua field untuk status Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas
@@ -285,7 +291,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        @elseif($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas']))
+                        @elseif($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Permintaan Perbaikan Ke Pegawai Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas']))
                             {{-- Tampilan khusus untuk Kepegawaian Universitas melihat dokumen admin fakultas --}}
                             <tr class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
                                 <td colspan="3" class="px-6 py-4">
@@ -300,7 +306,7 @@
                             </tr>
                             @foreach(is_callable($group['fields']) ? $group['fields']() : $group['fields'] as $fieldKey => $fieldLabel)
                             @php
-                                $fieldValidation = $existingValidation['validation'][$groupKey][$fieldKey] ?? ['status' => 'sesuai', 'keterangan' => ''];
+                                $fieldValidation = $displayValidation['validation'][$groupKey][$fieldKey] ?? ['status' => 'sesuai', 'keterangan' => ''];
                                 $isInvalid = $fieldValidation['status'] === 'tidak_sesuai';
                                 
                                 // Handle dokumen_admin_fakultas fields untuk Kepegawaian Universitas
@@ -707,6 +713,22 @@
                         @endif
                     @endif
                 @endforeach
+                @if($currentRole === 'Kepegawaian Universitas' || $currentRole === 'Pegawai')
+                    @php
+                        $generalNote = $displayValidation['keterangan_umum'] ?? '';
+                    @endphp
+                    <tr class="bg-gray-50">
+                        <td colspan="3" class="px-6 py-4">
+                            <div class="flex items-start">
+                                <i data-lucide="sticky-note" class="w-4 h-4 mr-2 text-gray-600 mt-0.5"></i>
+                                <div>
+                                    <div class="text-sm font-semibold text-gray-800">Keterangan Umum</div>
+                                    <div class="text-sm text-gray-600 mt-1">{{ $generalNote !== '' ? $generalNote : '-' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                @endif
             </tbody>
         </table>
     </div>

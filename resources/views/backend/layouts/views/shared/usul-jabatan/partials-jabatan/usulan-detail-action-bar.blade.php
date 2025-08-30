@@ -28,7 +28,7 @@
                         </div>
                     </div>
                     {{-- No action buttons - view only mode --}}
-                @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS || $usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS)
+                @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS || $usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS || $usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS)
                     {{-- Initial validation buttons - only for new submissions --}}
                     <div class="flex flex-col gap-3 w-full">
                         {{-- Baris 1: Perbaikan ke Pegawai dan Admin Fakultas --}}
@@ -655,6 +655,63 @@
                 </div>
             @endif
         @endif
+        </div>
+    </div>
+</div>
+@else
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mt-6">
+    <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-3 flex-wrap w-full">
+            {{-- When not editable, render disabled buttons for clarity (all roles) --}}
+            @if($currentRole === 'Kepegawaian Universitas')
+                @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS || $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                    {{-- KE: No action buttons shown for Permintaan Perbaikan ke Pegawai/Admin Fakultas --}}
+                @else
+                <div class="flex flex-col gap-3 w-full opacity-60 cursor-not-allowed">
+                    <div class="flex flex-col sm:flex-row gap-3 w-full">
+                        <button type="button" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg" disabled>
+                            <i data-lucide="user-x" class="w-4 h-4"></i>
+                            <span class="font-medium">Permintaan Perbaikan Ke Pegawai</span>
+                        </button>
+                        <button type="button" class="flex-1 px-6 py-3 bg-amber-600 text-white rounded-lg" disabled>
+                            <i data-lucide="building-2" class="w-4 h-4"></i>
+                            <span class="font-medium">Permintaan Perbaikan Ke Admin Fakultas</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full">
+                        <button type="button" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg" disabled>
+                            <i data-lucide="user-check" class="w-4 h-4"></i>
+                            <span class="font-medium">Teruskan ke Penilai</span>
+                        </button>
+                        <button type="button" class="flex-1 px-6 py-3 bg-red-800 text-white rounded-lg" disabled>
+                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            <span class="font-medium">Usulan Tidak Direkomendasikan</span>
+                        </button>
+                    </div>
+                </div>
+                @endif
+            @elseif($currentRole === 'Admin Fakultas')
+                {{-- View-only untuk Admin Fakultas: sembunyikan semua tombol saat tidak bisa edit --}}
+                <div class="w-full">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i data-lucide="eye" class="w-4 h-4 text-gray-600 mr-2"></i>
+                            <span class="text-sm text-gray-800">
+                                <strong>Mode:</strong> View Only
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            @elseif($currentRole === 'Pegawai')
+                <div class="flex flex-col gap-3 w-full opacity-60 cursor-not-allowed">
+                    <div class="flex flex-col sm:flex-row gap-3 w-full">
+                        <button type="button" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg" disabled>
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="font-medium">Kirim Usulan Perbaikan</span>
+                        </button>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

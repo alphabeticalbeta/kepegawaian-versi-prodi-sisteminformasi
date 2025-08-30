@@ -438,17 +438,17 @@ class AdminFakultasController extends Controller
                 'formAction' => route('admin-fakultas.usulan.save-validation', $usulan->id),
                 'backUrl' => route('admin-fakultas.periode.pendaftar', $usulan->periode_usulan_id),
                 'backText' => 'Kembali ke Daftar Pengusul',
-                'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
+                'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
                 'config' => [
                     'canReturn' => $canReturn,
                     'canForward' => $canForward,
                     'routePrefix' => 'admin-fakultas',
-                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
+                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
                     'canView' => true, // Always allow viewing data
                     'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university', 'submit_university']
                 ],
                 'roleConfig' => [
-                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
+                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
                     'canView' => true, // Always allow viewing data
                     'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university', 'submit_university']
                 ]
