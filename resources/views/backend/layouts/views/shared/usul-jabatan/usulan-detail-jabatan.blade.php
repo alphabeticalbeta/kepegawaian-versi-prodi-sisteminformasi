@@ -19,8 +19,8 @@
         $routePrefix = 'admin-fakultas.usulan';
         $documentRoutePrefix = 'admin-fakultas.usulan';
     } elseif ($currentRole === 'Kepegawaian Universitas') {
-        $routePrefix = 'backend.kepegawaian-universitas.pusat-usulan';
-        $documentRoutePrefix = 'backend.kepegawaian-universitas.pusat-usulan';
+        $routePrefix = 'backend.kepegawaian-universitas.usulan';
+        $documentRoutePrefix = 'backend.kepegawaian-universitas.usulan';
     } elseif ($currentRole === 'Penilai Universitas') {
         $routePrefix = 'penilai-universitas.pusat-usulan';
         $documentRoutePrefix = 'penilai-universitas.pusat-usulan';
@@ -223,7 +223,7 @@
         'dokumen_admin_fakultas' => [
             'label' => 'Dokumen yang Dikirim ke Universitas',
             'icon' => 'file-text',
-            'isEditableForm' => $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']),
+            'isEditableForm' => $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan dari Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas']),
             'fields' => [
                 'nomor_surat_usulan' => 'Nomor Surat Usulan',
                 'file_surat_usulan' => 'File Surat Usulan',
@@ -238,15 +238,15 @@
     
     // Determine if user can edit
     $canEdit = false;
-    if ($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas'])) {
+    if ($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])) {
         $canEdit = true;
     } elseif ($currentRole === 'Penilai Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas'])) {
         $canEdit = true;
-    } elseif ($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas'])) {
+    } elseif ($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])) {
         $canEdit = true;
     } elseif ($currentRole === 'Tim Senat' && in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister'])) {
         $canEdit = true;
-    } elseif ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Usulan dari Tim Sister'])) {
+    } elseif ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Permintaan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Usulan dari Tim Sister'])) {
         $canEdit = true;
     }
     
@@ -280,7 +280,12 @@
         if ($usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas') {
             $canReturn = true;
             $canForward = true;
-        } elseif (in_array($usulan->status_usulan, ['Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas'])) {
+        } elseif ($usulan->status_usulan === 'Usulan Disetujui Admin Fakultas') {
+            $canForward = true;
+        } elseif ($usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas') {
+            $canReturn = true;
+            $canForward = true;
+        } elseif (in_array($usulan->status_usulan, ['Permintaan Perbaikan dari Admin Fakultas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])) {
             $canForward = true;
         }
     }
@@ -312,7 +317,7 @@
         @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-tim-penilai-progress')
 
         {{-- Include Info History Partial --}}
-        @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-info-history')
+        {{-- @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-info-history') --}}
 
         {{-- Include Hasil Validasi Admin Fakultas Partial --}}
         @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-hasil-validasi-admin-fakultas')
@@ -331,6 +336,12 @@
 
                {{-- Include Perbaikan dari Kepegawaian Universitas Partial --}}
                @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-perbaikan-kepegawaian-universitas')
+
+                           {{-- Include Perbaikan dari Admin Fakultas untuk Kepegawaian Universitas Partial --}}
+            @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-perbaikan-admin-fakultas-kepegawaian-universitas')
+            
+            {{-- Include Perbaikan dari Kepegawaian Universitas untuk Pegawai Partial --}}
+            @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-perbaikan-kepegawaian-universitas-pegawai')
 
                {{-- Include Hasil Validasi Semua Tim Penilai Partial --}}
                @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-hasil-validasi-tim-penilai')

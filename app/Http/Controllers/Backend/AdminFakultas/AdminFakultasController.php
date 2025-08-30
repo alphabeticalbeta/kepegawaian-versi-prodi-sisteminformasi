@@ -149,7 +149,8 @@ class AdminFakultasController extends Controller
                 },
                 'usulans as perbaikan' => function ($query) use ($unitKerjaId) {
                     $query->whereIn('status_usulan', [
-                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS
                     ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
@@ -294,7 +295,8 @@ class AdminFakultasController extends Controller
                 },
                 'usulans as perbaikan' => function ($query) use ($unitKerjaId) {
                     $query->whereIn('status_usulan', [
-                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS
                     ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
@@ -343,18 +345,18 @@ class AdminFakultasController extends Controller
     public function show(Usulan $usulan)
     {
         try {
-            /** @var \App\Models\KepegawaianUniversitas\Pegawai $admin */
-            $admin = Auth::user();
+            $currentRole = 'Admin Fakultas';
+            $pegawai = $usulan->pegawai;
 
             // Get admin data with null safety check
-            if (!$admin) {
+            if (!$pegawai) {
                 Log::error('Show usulan failed: No authenticated user', [
                     'usulan_id' => $usulan->id
                 ]);
                 return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
             }
 
-            $adminFakultasId = $admin->unit_kerja_id;
+            $adminFakultasId = $pegawai->unit_kerja_id;
 
             // OPTIMASI: Gunakan eager loading yang optimal
             $usulan->load([
@@ -377,8 +379,8 @@ class AdminFakultasController extends Controller
 
             if (!$adminFakultasId || !$usulanPegawaiFakultasId || $adminFakultasId !== $usulanPegawaiFakultasId) {
                 Log::warning('Admin Fakultas mencoba akses usulan dari fakultas lain.', [
-                    'admin_id' => $admin->id,
-                    'admin_name' => $admin->nama_lengkap ?? 'Unknown',
+                    'admin_id' => $pegawai->id,
+                    'admin_name' => $pegawai->nama_lengkap ?? 'Unknown',
                     'admin_fakultas_id' => $adminFakultasId,
                     'usulan_id' => $usulan->id,
                     'usulan_fakultas_id' => $usulanPegawaiFakultasId
@@ -408,6 +410,13 @@ class AdminFakultasController extends Controller
             // Get dokumen data directly (no cache for now to ensure fresh data)
             $dokumenData = $this->processDokumenDataForView($usulan);
 
+            // Tambahkan log ini untuk memeriksa data validasi
+            Log::info('Mengecek data validasi untuk usulan ID: ' . $usulan->id, [
+                'validasi_data' => $usulan->validasi_data,
+                'admin_fakultas_validation' => $usulan->validasi_data['admin_fakultas'] ?? 'Tidak ada data',
+                'dokumen_pendukung' => $usulan->validasi_data['admin_fakultas']['dokumen_pendukung'] ?? 'Tidak ada data'
+            ]);
+
             // Get penilais data for popup
             $penilais = \App\Models\KepegawaianUniversitas\Pegawai::whereHas('roles', function($query) {
                 $query->where('name', 'Penilai Universitas');
@@ -429,19 +438,19 @@ class AdminFakultasController extends Controller
                 'formAction' => route('admin-fakultas.usulan.save-validation', $usulan->id),
                 'backUrl' => route('admin-fakultas.periode.pendaftar', $usulan->periode_usulan_id),
                 'backText' => 'Kembali ke Daftar Pengusul',
-                'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]),
+                'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
                 'config' => [
                     'canReturn' => $canReturn,
                     'canForward' => $canForward,
                     'routePrefix' => 'admin-fakultas',
-                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]),
+                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
                     'canView' => true, // Always allow viewing data
-                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
+                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university', 'submit_university']
                 ],
                 'roleConfig' => [
-                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]),
+                    'canEdit' => in_array($usulan->status_usulan, [Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS, Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS]),
                     'canView' => true, // Always allow viewing data
-                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university']
+                    'submitFunctions' => ['save', 'return_to_pegawai', 'reject_to_pegawai', 'forward_to_university', 'submit_university']
                 ]
             ]);
         } catch (\Exception $e) {
@@ -459,13 +468,18 @@ class AdminFakultasController extends Controller
      */
     public function saveValidation(Request $request, Usulan $usulan)
     {
+        // Block actions if usulan is already approved by Admin Fakultas
+        if ($usulan->status_usulan === Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS) {
+            return redirect()->back()->with('error', 'Usulan sudah disetujui dan tidak dapat diubah lagi.');
+        }
+
         // Dispatcher: prioritise explicit action_type (complex flows)
         if ($request->filled('action_type')) {
             return $this->saveComplexValidation($request, $usulan);
         }
 
         // Fallback to simple validation (legacy submit with 'action')
-        if ($request->has('validation')) {
+        if ($request->has('action')) {
             return $this->saveSimpleValidation($request, $usulan);
         }
 
@@ -477,19 +491,27 @@ class AdminFakultasController extends Controller
      */
     private function saveSimpleValidation(Request $request, Usulan $usulan)
     {
-        $validatedData = $request->validate([
-            'validation' => 'required|array',
-            'action' => 'required|in:save_draft,submit'
-        ]);
+        // Validasi fleksibel - izinkan simpan tanpa data validation jika hanya dokumen pendukung
+        $validationRules = [];
+        
+        if ($request->has('validation')) {
+            $validationRules['validation'] = 'required|array';
+        }
+        
+        $validationRules['action'] = 'required|in:save_draft,submit';
+        
+        $validatedData = $request->validate($validationRules);
 
         $adminId = Auth::id();
         $action = $validatedData['action'];
-        $validationData = $validatedData['validation'];
+        $validationData = $validatedData['validation'] ?? [];
 
         DB::beginTransaction();
         try {
-            // Save validation data
-            $usulan->setValidasiByRole('admin_fakultas', $validationData, $adminId);
+            // Save validation data - fleksibel tanpa pengecekan field invalid
+            if (!empty($validationData)) {
+                $usulan->setValidasiByRole('admin_fakultas', $validationData, $adminId);
+            }
 
             // Update status based on action
             if ($action === 'submit') {
@@ -589,7 +611,8 @@ class AdminFakultasController extends Controller
                     break;
 
                 case 'forward_to_university':
-                    // Validasi khusus untuk aksi 'teruskan ke universitas'
+                case 'submit_university':
+                    // Validasi fleksibel untuk aksi 'teruskan ke universitas'
                     // Check if this is initial submission or resend
                     $currentValidasi = $usulan->validasi_data;
                     $dokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
@@ -606,7 +629,7 @@ class AdminFakultasController extends Controller
                         'dokumen_pendukung.nomor_berita_senat.max' => 'Nomor berita senat maksimal 255 karakter.',
                     ];
 
-                    // Only require files for initial submission if files are provided
+                    // Validasi file fleksibel - tidak wajib untuk initial submission
                     if ($isInitialSubmission) {
                         // Support both bracket and dot notation
                         $rules['dokumen_pendukung.file_surat_usulan'] = 'nullable|file|mimes:pdf|max:2048';
@@ -623,17 +646,16 @@ class AdminFakultasController extends Controller
 
                     $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
 
-                    // Cek lagi setelah data validasi disimpan (warning only, not blocking)
+                    // Log warning jika ada field yang tidak sesuai, tapi tetap lanjutkan proses
                     if ($usulan->hasInvalidFields('admin_fakultas')) {
                         $invalidFields = $usulan->getInvalidFields('admin_fakultas');
-                        Log::warning('Admin Fakultas mengirim usulan dengan field yang tidak sesuai', [
+                        Log::warning('Admin Fakultas mengirim usulan dengan field yang tidak sesuai (dilanjutkan)', [
                             'usulan_id' => $usulan->id,
                             'admin_id' => $adminId,
                             'invalid_fields_count' => count($invalidFields),
                             'invalid_fields' => $invalidFields
                         ]);
-                        // Don't throw exception, just log warning and continue
-                        // This makes the validation more flexible
+                        // Lanjutkan proses meskipun ada field yang tidak sesuai
                     }
 
                                         // Simpan dokumen pendukung fakultas
@@ -666,18 +688,17 @@ class AdminFakultasController extends Controller
                     $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
                     $usulan->validasi_data = $currentValidasi;
 
-                    // Final check untuk memastikan file sudah ada (warning only, not blocking)
+                    // Log warning jika file tidak lengkap, tapi tetap lanjutkan proses
                     if (!empty($currentDokumenPendukung['file_surat_usulan_path']) || !empty($currentDokumenPendukung['file_berita_senat_path'])) {
                         // If one file is uploaded, both should be uploaded
                         if (empty($currentDokumenPendukung['file_surat_usulan_path']) || empty($currentDokumenPendukung['file_berita_senat_path'])) {
-                            Log::warning('Admin Fakultas mengirim usulan dengan file upload tidak lengkap', [
+                            Log::warning('Admin Fakultas mengirim usulan dengan file upload tidak lengkap (dilanjutkan)', [
                                 'usulan_id' => $usulan->id,
                                 'admin_id' => $adminId,
                                 'has_surat_path' => !empty($currentDokumenPendukung['file_surat_usulan_path']),
                                 'has_berita_path' => !empty($currentDokumenPendukung['file_berita_senat_path'])
                             ]);
-                            // Don't throw exception, just log warning and continue
-                            // This makes the validation more flexible
+                            // Lanjutkan proses meskipun file tidak lengkap
                         }
                     }
 
@@ -687,114 +708,95 @@ class AdminFakultasController extends Controller
                     break;
 
                                 case 'resend_to_university':
-                    // Validasi lengkap untuk memastikan semua data valid
-                    $validatedData = $request->validate([
-                        'validation' => 'required|array',
-                        'dokumen_pendukung' => 'nullable|array',
-                        'dokumen_pendukung.nomor_surat_usulan' => 'nullable|string|max:255',
-                        'dokumen_pendukung.nomor_berita_senat' => 'nullable|string|max:255',
-                        'dokumen_pendukung.file_surat_usulan' => 'nullable|file|mimes:pdf|max:2048',
-                        'dokumen_pendukung.file_berita_senat' => 'nullable|file|mimes:pdf|max:2048',
-                        // Support bracket notation for compatibility
-                        'dokumen_pendukung[file_surat_usulan]' => 'nullable|file|mimes:pdf|max:2048',
-                        'dokumen_pendukung[file_berita_senat]' => 'nullable|file|mimes:pdf|max:2048'
+                    // Validasi fleksibel - Admin Fakultas bisa kirim meskipun ada field yang tidak sesuai
+                    Log::info('resend_to_university action triggered', [
+                        'usulan_id' => $usulan->id,
+                        'admin_id' => $adminId,
+                        'request_data' => $request->all()
+                    ]);
+                    
+                    // Validasi fleksibel - izinkan kirim tanpa validation array
+                    $validationRules = [];
+                    
+                    if ($request->has('validation')) {
+                        $validationRules['validation'] = 'required|array';
+                    }
+                    
+                    $validationRules['dokumen_pendukung'] = 'nullable|array';
+                    $validationRules['dokumen_pendukung.nomor_surat_usulan'] = 'nullable|string|max:255';
+                    $validationRules['dokumen_pendukung.nomor_berita_senat'] = 'nullable|string|max:255';
+                    $validationRules['dokumen_pendukung.file_surat_usulan'] = 'nullable|file|mimes:pdf|max:2048';
+                    $validationRules['dokumen_pendukung.file_berita_senat'] = 'nullable|file|mimes:pdf|max:2048';
+                    // Support bracket notation for compatibility
+                    $validationRules['dokumen_pendukung[file_surat_usulan]'] = 'nullable|file|mimes:pdf|max:2048';
+                    $validationRules['dokumen_pendukung[file_berita_senat]'] = 'nullable|file|mimes:pdf|max:2048';
+                    
+                    $validatedData = $request->validate($validationRules);
+
+                    Log::info('resend_to_university validation passed', [
+                        'usulan_id' => $usulan->id,
+                        'validation_data' => $validatedData['validation'] ?? null,
+                        'dokumen_pendukung_data' => $validatedData['dokumen_pendukung'] ?? null
                     ]);
 
-                    // Simpan validasi data
-                    $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+                    // Simpan validation data jika ada
+                    if (isset($validatedData['validation'])) {
+                        $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+                    }
 
-                    // Cek apakah masih ada field yang tidak valid (warning only, not blocking)
-                    if ($usulan->hasInvalidFields('admin_fakultas')) {
+                    // Log warning jika ada field yang tidak sesuai, tapi tetap lanjutkan proses
+                    if (isset($validatedData['validation']) && $usulan->hasInvalidFields('admin_fakultas')) {
                         $invalidFields = $usulan->getInvalidFields('admin_fakultas');
-                        Log::warning('Admin Fakultas mengirim kembali usulan dengan field yang tidak sesuai', [
+                        Log::warning('Admin Fakultas mengirim kembali usulan dengan field yang tidak sesuai (dilanjutkan)', [
                             'usulan_id' => $usulan->id,
                             'admin_id' => $adminId,
                             'invalid_fields_count' => count($invalidFields),
                             'invalid_fields' => $invalidFields
                         ]);
-                        // Don't throw exception, just log warning and continue
-                        // This makes the validation more flexible
+                        // Lanjutkan proses meskipun ada field yang tidak sesuai
                     }
 
-                    // Log request details sebelum validasi
-                    Log::info('Request details before dokumen pendukung validation', [
-                        'usulan_id' => $usulan->id,
-                        'action_type' => $actionType,
-                        'request_method' => $request->method(),
-                        'content_type' => $request->header('Content-Type'),
-                        'all_request_keys' => array_keys($request->all()),
-                        'has_files' => $request->hasFile('dokumen_pendukung'),
-                        'files_data' => $request->allFiles(),
-                        'dokumen_pendukung_data' => $request->input('dokumen_pendukung'),
-                        'raw_files' => $_FILES ?? []
-                    ]);
+                    // Simpan dokumen pendukung jika ada
+                    if (isset($validatedData['dokumen_pendukung'])) {
+                        $currentValidasi = $usulan->validasi_data;
+                        $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
 
-                    // Additional debugging for file detection
-                    Log::info('Request all files', $request->allFiles() ?: []);
-                    Log::info('Request file dokumen_pendukung', $request->file('dokumen_pendukung') ?: []);
+                        // Update text fields jika ada
+                        if (isset($validatedData['dokumen_pendukung']['nomor_surat_usulan'])) {
+                            $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
+                        }
+                        if (isset($validatedData['dokumen_pendukung']['nomor_berita_senat'])) {
+                            $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
+                        }
 
-                    // Validasi dokumen pendukung menggunakan service dengan logging detail
-                    Log::info('Starting dokumen pendukung validation', [
-                        'usulan_id' => $usulan->id,
-                        'action_type' => $actionType,
-                        'request_keys' => array_keys($request->all()),
-                        'has_files' => $request->hasFile('dokumen_pendukung'),
-                        'content_type' => $request->header('Content-Type')
-                    ]);
+                        // Handle file uploads menggunakan FileStorageService
+                        $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
+                            $request,
+                            $usulan,
+                            'file_surat_usulan',
+                            'dokumen-fakultas/surat-usulan'
+                        );
 
-                    $dokumenErrors = $this->validationService->validateDokumenPendukung($request, $usulan, 'admin_fakultas');
+                        $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
+                            $request,
+                            $usulan,
+                            'file_berita_senat',
+                            'dokumen-fakultas/berita-senat'
+                        );
 
-                    Log::info('Dokumen pendukung validation completed', [
-                        'usulan_id' => $usulan->id,
-                        'errors_count' => count($dokumenErrors),
-                        'errors' => $dokumenErrors
-                    ]);
+                        $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
+                        $usulan->validasi_data = $currentValidasi;
 
-                    if (!empty($dokumenErrors)) {
-                        Log::warning('Dokumen pendukung validation failed (warning only)', [
+                        Log::info('Dokumen pendukung saved for resend_to_university', [
                             'usulan_id' => $usulan->id,
-                            'errors' => $dokumenErrors
+                            'dokumen_pendukung' => $currentDokumenPendukung
                         ]);
-                        // Don't throw exception, just log warning and continue
-                        // This makes the validation more flexible
                     }
 
-                    // Update dokumen pendukung menggunakan FileStorageService
-                    // SELALU update dokumen pendukung, tidak peduli apakah ada file baru atau tidak
-                    $currentValidasi = $usulan->validasi_data;
-                    $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
+                    // Update status usulan untuk perbaikan dari Kepegawaian Universitas
+                    $usulan->status_usulan = Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS;
 
-                    // Update text fields jika ada
-                    if (isset($validatedData['dokumen_pendukung']['nomor_surat_usulan'])) {
-                        $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
-                    }
-                    if (isset($validatedData['dokumen_pendukung']['nomor_berita_senat'])) {
-                        $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
-                    }
-
-                    // Handle file uploads menggunakan FileStorageService
-                    // FileStorageService akan mengembalikan file yang sudah ada jika tidak ada file baru
-                    $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
-                        $request,
-                        $usulan,
-                        'file_surat_usulan',
-                        'dokumen-fakultas/surat-usulan'
-                    );
-
-                    $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
-                        $request,
-                        $usulan,
-                        'file_berita_senat',
-                        'dokumen-fakultas/berita-senat'
-                    );
-
-                    $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
-                    $usulan->validasi_data = $currentValidasi;
-
-                    // Update status usulan
-                    $usulan->status_usulan = Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS;
-
-                    $logMessage = 'Usulan berhasil diperbaiki dan dikirim kembali ke Universitas.';
+                    $logMessage = 'Usulan perbaikan berhasil dikirim ke Kepegawaian Universitas.';
                     break;
 
                 case 'kirim_perbaikan':
@@ -941,31 +943,87 @@ class AdminFakultasController extends Controller
                     break;
 
                 default: // save_only
-                    // Validasi khusus untuk aksi 'simpan saja'
+                    // Validasi fleksibel untuk aksi 'simpan saja'
                     Log::info('save_only action triggered', [
                         'usulan_id' => $usulan->id,
                         'admin_id' => $adminId,
                         'request_data' => $request->all()
                     ]);
                     
-                    $validatedData = $request->validate([
-                        'validation' => 'required|array',
-                    ]);
+                    // Validasi fleksibel - izinkan simpan tanpa validation array
+                    $validationRules = [];
+                    
+                    if ($request->has('validation')) {
+                        $validationRules['validation'] = 'required|array';
+                    }
+                    
+                    if ($request->has('dokumen_pendukung')) {
+                        $validationRules['dokumen_pendukung'] = 'nullable|array';
+                        $validationRules['dokumen_pendukung.nomor_surat_usulan'] = 'nullable|string|max:255';
+                        $validationRules['dokumen_pendukung.nomor_berita_senat'] = 'nullable|string|max:255';
+                        $validationRules['dokumen_pendukung.file_surat_usulan'] = 'nullable|file|mimes:pdf|max:2048';
+                        $validationRules['dokumen_pendukung.file_berita_senat'] = 'nullable|file|mimes:pdf|max:2048';
+                        // Support bracket notation for compatibility
+                        $validationRules['dokumen_pendukung[file_surat_usulan]'] = 'nullable|file|mimes:pdf|max:2048';
+                        $validationRules['dokumen_pendukung[file_berita_senat]'] = 'nullable|file|mimes:pdf|max:2048';
+                    }
+                    
+                    $validatedData = $request->validate($validationRules);
 
                     Log::info('Validation passed', [
                         'usulan_id' => $usulan->id,
-                        'validation_data' => $validatedData['validation']
+                        'validation_data' => $validatedData['validation'] ?? null,
+                        'dokumen_pendukung_data' => $validatedData['dokumen_pendukung'] ?? null
                     ]);
 
-                    $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+                    // Simpan validation data jika ada
+                    if (isset($validatedData['validation'])) {
+                        $usulan->setValidasiByRole('admin_fakultas', $validatedData['validation'], $adminId);
+                        Log::info('setValidasiByRole completed', [
+                            'usulan_id' => $usulan->id,
+                            'final_validasi_data' => $usulan->validasi_data
+                        ]);
+                    }
 
-                    Log::info('setValidasiByRole completed', [
-                        'usulan_id' => $usulan->id,
-                        'final_validasi_data' => $usulan->validasi_data
-                    ]);
+                    // Simpan dokumen pendukung jika ada
+                    if (isset($validatedData['dokumen_pendukung'])) {
+                        $currentValidasi = $usulan->validasi_data;
+                        $currentDokumenPendukung = $currentValidasi['admin_fakultas']['dokumen_pendukung'] ?? [];
 
-                    // DON'T change status automatically - keep it as 'Diajukan' until dokumen pendukung is filled
-                    $logMessage = 'Hasil validasi disimpan oleh Admin Fakultas.';
+                        // Update text fields jika ada
+                        if (isset($validatedData['dokumen_pendukung']['nomor_surat_usulan'])) {
+                            $currentDokumenPendukung['nomor_surat_usulan'] = $validatedData['dokumen_pendukung']['nomor_surat_usulan'];
+                        }
+                        if (isset($validatedData['dokumen_pendukung']['nomor_berita_senat'])) {
+                            $currentDokumenPendukung['nomor_berita_senat'] = $validatedData['dokumen_pendukung']['nomor_berita_senat'];
+                        }
+
+                        // Handle file uploads menggunakan FileStorageService
+                        $currentDokumenPendukung['file_surat_usulan_path'] = $this->fileStorage->handleDokumenPendukung(
+                            $request,
+                            $usulan,
+                            'file_surat_usulan',
+                            'dokumen-fakultas/surat-usulan'
+                        );
+
+                        $currentDokumenPendukung['file_berita_senat_path'] = $this->fileStorage->handleDokumenPendukung(
+                            $request,
+                            $usulan,
+                            'file_berita_senat',
+                            'dokumen-fakultas/berita-senat'
+                        );
+
+                        $currentValidasi['admin_fakultas']['dokumen_pendukung'] = $currentDokumenPendukung;
+                        $usulan->validasi_data = $currentValidasi;
+
+                        Log::info('Dokumen pendukung saved', [
+                            'usulan_id' => $usulan->id,
+                            'dokumen_pendukung' => $currentDokumenPendukung
+                        ]);
+                    }
+
+                    // DON'T change status automatically - keep it as current status
+                    $logMessage = 'Data berhasil disimpan oleh Admin Fakultas.';
                     break;
             }
 
@@ -1242,7 +1300,8 @@ class AdminFakultasController extends Controller
                     },
                     'usulans as perbaikan' => function ($query) use ($unitKerja) {
                         $query->whereIn('status_usulan', [
-                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS
                         ])
                             ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerja) {
                                 $subQuery->where('id', $unitKerja->id);
@@ -1306,6 +1365,14 @@ class AdminFakultasController extends Controller
  */
     public function autosaveValidation(Request $request, Usulan $usulan)
     {
+        // Block actions if usulan is already approved by Admin Fakultas
+        if ($usulan->status_usulan === Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usulan sudah disetujui dan tidak dapat diubah lagi.'
+            ], 403);
+        }
+
         try {
             \Log::info('Autosave request received', [
                 'usulan_id' => $usulan->id,

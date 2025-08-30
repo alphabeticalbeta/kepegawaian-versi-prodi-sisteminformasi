@@ -854,33 +854,33 @@
                     </div>
                     <div class="flex items-center gap-3">
                         {{-- Save Draft Button (always available) --}}
-                        <button type="button" onclick="showConfirmationModal('save_draft', document.getElementById('usulan-form'))"
+                        <button type="button" onclick="showConfirmationModal('save_draft', document.getElementById('usulan-form'))" 
                                 class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
                             <i data-lucide="save" class="w-4 h-4"></i>
                             Simpan Usulan
                         </button>
-
+            
                         {{-- Conditional Submit Buttons --}}
                         @if($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)
                             <button type="button" onclick="showConfirmationModal('submit_perbaikan_fakultas', document.getElementById('usulan-form'))"
                                     class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>
-                                Kirim Usulan Perbaikan dari Admin Fakultas
+                                Kirim Permintaan Perbaikan dari Admin Fakultas
                             </button>
-                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS)
                             <button type="button" onclick="showConfirmationModal('submit_perbaikan_university', document.getElementById('usulan-form'))"
                                     class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>
                                 Kirim Usulan Perbaikan dari Kepegawaian Universitas
                             </button>
-
+            
                         @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS)
                             <button type="button" onclick="showConfirmationModal('submit_perbaikan_penilai', document.getElementById('usulan-form'))"
                                     class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>
                                 Kirim Perbaikan ke Penilai Universitas
                             </button>
-
+            
                         @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER)
                             <button type="button" onclick="showConfirmationModal('submit_perbaikan_tim_sister', document.getElementById('usulan-form'))"
                                     class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
@@ -898,7 +898,7 @@
                             <button type="button" onclick="showConfirmationModal('submit_perbaikan_fakultas', document.getElementById('usulan-form'))"
                                     class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>
-                                Kirim Usulan Perbaikan dari Admin Fakultas
+                                Kirim Permintaan Perbaikan dari Admin Fakultas
                             </button>
                         @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS)
                             <button type="button" onclick="showConfirmationModal('submit_perbaikan_university', document.getElementById('usulan-form'))"
@@ -917,6 +917,13 @@
                                     class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>
                                 Kirim Perbaikan ke Tim Sister
+                            </button>
+                        @else
+                            {{-- Default button untuk create new --}}
+                            <button type="button" onclick="showConfirmationModal('submit_to_fakultas', document.getElementById('usulan-form'))"
+                                    class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Kirim Usulan
                             </button>
                         @endif
                     </div>
@@ -1034,32 +1041,84 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Form validation - FIXED for modal confirmation
     const form = document.getElementById('usulan-form');
-    if (form) {
-        console.log('Form found, validation active');
-
-        form.addEventListener('submit', function(e) {
-            console.log('Form submission attempted');
-            console.log('Form action:', form.action);
-            console.log('Form method:', form.method);
-
-            // Check if action is selected (fixed for modal confirmation)
-            const actionField = form.querySelector('input[name="action"]');
-            if (!actionField || !actionField.value) {
-                e.preventDefault();
-                console.log('No action selected - preventing submission');
-                alert('Mohon pilih aksi (Simpan Usulan atau aksi pengiriman yang sesuai).');
-                return;
-            }
-
-            console.log('Action selected:', actionField.value);
-            console.log('Basic validation passed - allowing submission');
+    if (!form) return;
+    
+    // Track which button was clicked
+    let clickedButton = null;
+    
+    // Add click listeners to all submit buttons
+    const submitButtons = form.querySelectorAll('button[type="submit"][name="action"]');
+    submitButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            clickedButton = this;
+            // Don't prevent default here - let form submit naturally
         });
-    } else {
-        console.log('Form not found');
-    }
+    });
+    
+    // Form submit handler
+    form.addEventListener('submit', function(e) {
+        console.log('Form submission attempted');
+        
+        // Check if we have a clicked button
+        if (!clickedButton) {
+            e.preventDefault();
+            alert('Mohon pilih aksi (Simpan Usulan atau Kirim Usulan).');
+            return false;
+        }
+        
+        // Add hidden input for action value
+        let actionInput = form.querySelector('input[name="action"][type="hidden"]');
+        if (!actionInput) {
+            actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            form.appendChild(actionInput);
+        }
+        actionInput.value = clickedButton.value;
+        
+        console.log('Action selected:', clickedButton.value);
+        console.log('Form submitting with action:', actionInput.value);
+        
+        // Reset for next submission
+        clickedButton = null;
+        
+        // Allow form submission
+        return true;
+    });
 });
+function submitForm(action) {
+    const form = document.getElementById('usulan-form');
+    if (!form) {
+        console.error('Form usulan-form not found');
+        return;
+    }
+    
+    // Remove any existing action input
+    const existingAction = form.querySelector('input[name="action"]');
+    if (existingAction) {
+        existingAction.remove();
+    }
+    
+    // Create new hidden input for action
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = action;
+    form.appendChild(actionInput);
+    
+    console.log('Submitting form with action:', action);
+    
+    // Submit form
+    form.submit();
+}
+
+// Optional: Add confirmation modal if needed
+function showConfirmationModal(action, form) {
+    if (confirm('Apakah Anda yakin ingin mengirim usulan ini?')) {
+        submitForm(action);
+    }
+}
 </script>
 @endsection
 

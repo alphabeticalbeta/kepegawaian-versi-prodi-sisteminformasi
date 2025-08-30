@@ -372,13 +372,10 @@
             <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Nama Periode
+                        Nama Periode (Tahun)
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Jenis Usulan
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Tahun
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Mulai
@@ -387,13 +384,13 @@
                         Selesai
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Min Senat
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Status
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Pendaftar
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Lihat Pengusul
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Aksi
@@ -404,7 +401,7 @@
                 @forelse ($periodeUsulans as $periode)
                     <tr class="hover:bg-gray-50 transition-colors duration-200" data-jenis="{{ $periode->jenis_usulan }}">
                         <td class="px-6 py-4 font-medium text-gray-900">
-                            {{ $periode->nama_periode }}
+                            {{ $periode->nama_periode }} ({{ $periode->tahun_periode }})
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs font-semibold rounded-full
@@ -463,16 +460,10 @@
                             </span>
                         </td>
                             <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $periode->tahun_periode }}</div>
-                            </td>
-                            <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->isoFormat('D MMM YYYY') }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($periode->tanggal_selesai)->isoFormat('D MMM YYYY') }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $periode->senat_min_setuju }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 @if($periode->status == 'Buka')
@@ -487,6 +478,17 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 {{ $periode->usulans_count ?? 0 }}
+                            </td>
+                            <td class="px-6 py-4">
+                                @if(($periode->usulans_count ?? 0) > 0)
+                                    <a href="{{ route('backend.kepegawaian-universitas.dashboard-periode.show', $periode) }}"
+                                       class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                        <i class="fas fa-users mr-1"></i>
+                                        Lihat {{ $periode->usulans_count }} Pengusul
+                                    </a>
+                                @else
+                                    <span class="text-xs text-gray-500">Belum ada pengusul</span>
+                                @endif
                             </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center space-x-2 action-buttons">
@@ -524,7 +526,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12">
+                        <td colspan="8" class="px-6 py-12">
                             <div class="text-center">
                                 <div class="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                     <i class="fas fa-calendar-times text-gray-400" style="font-size: 2rem;"></i>

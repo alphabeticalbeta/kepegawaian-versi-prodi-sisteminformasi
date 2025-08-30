@@ -111,13 +111,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeValidationHandlers() {
     console.log('🔧 Initializing validation handlers...');
     
-    // Use a more robust approach with event delegation and retry mechanism
+    // Use a more robust approach with event delegation
     const validationStatusElements = document.querySelectorAll('.validation-status');
     console.log('📊 Found validation status elements:', validationStatusElements.length);
     
     if (validationStatusElements.length === 0) {
-        console.log('⚠️ No validation status elements found, will retry in 500ms...');
-        setTimeout(initializeValidationHandlers, 500);
+        console.log('ℹ️ No validation status elements found - this is normal for document-only forms');
         return;
     }
     
@@ -185,7 +184,6 @@ function initializeButtonHandlers() {
     // Initialize button handlers with retry mechanism
     const buttons = [
         { id: 'btn-perbaikan', handler: () => { console.log('✅ btn-perbaikan clicked'); showPerbaikanModal(); } },
-        { id: 'btn-forward', handler: () => { console.log('✅ Admin Fakultas btn-forward clicked'); showForwardModal(); } },
         { id: 'btn-forward-other', handler: () => { console.log('✅ Other role btn-forward clicked'); showForwardModal(); } },
         { id: 'btn-autosave-admin-fakultas', handler: () => { console.log('✅ btn-autosave-admin-fakultas clicked'); submitAction('save_only', ''); } }
     ];
@@ -222,13 +220,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Additional button handlers for other roles
 const additionalButtons = [
-    { id: 'btn-perbaikan-pegawai', handler: () => showPerbaikanKePegawaiModal() },
-    { id: 'btn-perbaikan-fakultas', handler: () => showPerbaikanKeFakultasModal() },
+    { id: 'btn-perbaikan-universitas-pegawai', handler: () => showPerbaikanKePegawaiModal() },
+    { id: 'btn-perbaikan-universitas-fakultas', handler: () => showPerbaikanKeFakultasModal() },
+    { id: 'btn-perbaikan-penilai-universitas-pegawai', handler: () => showPerbaikanKePegawaiModal() },
+    { id: 'btn-perbaikan-penilai-universitas-fakultas', handler: () => showPerbaikanKeFakultasModal() },
     { id: 'btn-teruskan-penilai', handler: () => showTeruskanKePenilaiModal() },
     { id: 'btn-tambah-penilai', handler: () => showTambahPenilaiModal() },
     { id: 'btn-tugaskan-penilai', handler: () => showTambahPenilaiModal() },
     { id: 'btn-simpan-validasi-top', handler: () => submitAction('save_only', '') },
-    { id: 'btn-simpan-validasi-bottom', handler: () => submitAction('save_only', '') }
+    { id: 'btn-simpan-validasi-bottom', handler: () => submitAction('save_only', '') },
+    { id: 'btn-simpan-validasi-kepegawaian', handler: () => submitAction('save_only', '') }
 ];
 
 // Initialize additional buttons
@@ -240,8 +241,8 @@ additionalButtons.forEach(button => {
     }
 });
 
-if (document.getElementById('btn-teruskan-senat')) {
-    document.getElementById('btn-teruskan-senat').addEventListener('click', function() {
+if (document.getElementById('btn-kirim-sister')) {
+    document.getElementById('btn-kirim-sister').addEventListener('click', function() {
         if (!this.disabled) {
             showTeruskanKeSenaModal();
         }
@@ -255,9 +256,23 @@ if (document.getElementById('btn-kembalikan-dari-penilai')) {
 }
 
 // Admin Fakultas specific button for resending to university
-if (document.getElementById('btn-kirim-ke-universitas')) {
-    document.getElementById('btn-kirim-ke-universitas').addEventListener('click', function() {
-        showKirimKembaliKeUniversitasModal();
+if (document.getElementById('btn-kirim-perbaikan-penilai-ke-universitas')) {
+    document.getElementById('btn-kirim-perbaikan-penilai-ke-universitas').addEventListener('click', function() {
+        showResubmitUniversityModal();
+    });
+}
+
+// Admin Fakultas specific button for submitting to university
+if (document.getElementById('btn-submit-university')) {
+    document.getElementById('btn-submit-university').addEventListener('click', function() {
+        showSubmitUniversityModal();
+    });
+}
+
+// Admin Fakultas specific button for resubmitting to university
+if (document.getElementById('btn-resubmit-university')) {
+    document.getElementById('btn-resubmit-university').addEventListener('click', function() {
+        showResubmitUniversityModal();
     });
 }
 
@@ -399,15 +414,15 @@ function showForwardModal() {
         console.log('Admin Fakultas showForwardModal called');
         
         Swal.fire({
-            title: 'Usulkan ke Universitas',
-            text: 'Usulan akan dikirim ke universitas untuk diproses selanjutnya. Semua data akan diperiksa secara fleksibel.',
+            title: 'Kirim Usulan Ke Kepegawaian Universitas',
+            text: 'Apakah Anda yakin ingin mengirim usulan ke Kepegawaian Universitas?',
             input: 'textarea',
-            inputPlaceholder: 'Catatan untuk universitas (opsional)...',
+            inputPlaceholder: 'Catatan untuk Kepegawaian Universitas (opsional)...',
             inputAttributes: {
-                'aria-label': 'Catatan untuk universitas'
+                'aria-label': 'Catatan untuk Kepegawaian Universitas'
             },
             showCancelButton: true,
-            confirmButtonText: 'Usulkan ke Universitas',
+            confirmButtonText: 'Kirim Ke Kepegawaian Universitas',
             cancelButtonText: 'Batal',
             confirmButtonColor: '#2563eb',
             preConfirm: (catatan) => {
@@ -446,13 +461,261 @@ function showForwardModal() {
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                submitAction('forward_to_university', result.value);
+                submitAction('submit_university', result.value);
             }
         });
     } else {
         console.log('Show forward modal for', currentRole);
     }
 }
+
+function showSubmitUniversityModal() {
+    Swal.fire({
+        title: 'Kirim Usulan Ke Kepegawaian Universitas',
+        text: 'Apakah Anda yakin ingin mengirim usulan ke Kepegawaian Universitas?',
+        input: 'textarea',
+        inputPlaceholder: 'Catatan untuk Kepegawaian Universitas (opsional)...',
+        inputAttributes: {
+            'aria-label': 'Catatan untuk Kepegawaian Universitas'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Kirim Ke Kepegawaian Universitas',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#2563eb'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitAction('submit_university', result.value || '');
+        }
+    });
+}
+
+function showResubmitUniversityModal() {
+    Swal.fire({
+        title: 'Kirim Usulan Perbaikan Ke Kepegawaian Universitas',
+        text: 'Apakah Anda yakin ingin mengirim usulan perbaikan ke Kepegawaian Universitas?',
+        input: 'textarea',
+        inputPlaceholder: 'Catatan untuk Kepegawaian Universitas (opsional)...',
+        inputAttributes: {
+            'aria-label': 'Catatan untuk Kepegawaian Universitas'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Kirim Perbaikan Ke Kepegawaian Universitas',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#2563eb'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitAction('resend_to_university', result.value || '');
+        }
+    });
+}
+
+function showPerbaikanKeFakultasModal() {
+    Swal.fire({
+        title: 'Permintaan Perbaikan Ke Admin Fakultas',
+        html: `
+            <div class="text-left">
+                <div class="mb-4">
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 mr-2"></i>
+                            <span class="text-sm text-amber-800">
+                                <strong>Peringatan:</strong> Usulan akan dikembalikan ke Admin Fakultas untuk perbaikan.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i data-lucide="info" class="w-5 h-5 text-blue-600 mr-2"></i>
+                            <div class="text-sm text-blue-800">
+                                <strong>Informasi:</strong>
+                                <ul class="mt-2 list-disc list-inside space-y-1">
+                                    <li>Admin Fakultas akan menerima notifikasi perbaikan</li>
+                                    <li>Usulan akan kembali ke status "Permintaan Perbaikan dari Admin Fakultas"</li>
+                                    <li>Admin Fakultas dapat memperbaiki dan mengirim kembali</li>
+                                    <li>Proses dapat berulang hingga usulan sesuai standar</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i data-lucide="message-square" class="w-4 h-4 inline mr-1"></i>
+                        Catatan Perbaikan untuk Admin Fakultas:
+                    </label>
+                    <textarea id="catatan-perbaikan-fakultas" 
+                              placeholder="Jelaskan detail perbaikan yang diperlukan oleh Admin Fakultas..." 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none" 
+                              rows="4"></textarea>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Kirim Permintaan Perbaikan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#d97706',
+        width: '600px',
+        preConfirm: () => {
+            const catatan = document.getElementById('catatan-perbaikan-fakultas').value;
+            if (!catatan || catatan.trim() === '') {
+                Swal.showValidationMessage('Catatan perbaikan wajib diisi untuk menjelaskan perbaikan yang diperlukan');
+                return false;
+            }
+            if (catatan.trim().length < 10) {
+                Swal.showValidationMessage('Catatan perbaikan minimal 10 karakter untuk memberikan penjelasan yang jelas');
+                return false;
+            }
+            return catatan.trim();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show confirmation dialog
+            Swal.fire({
+                title: 'Konfirmasi Permintaan Perbaikan',
+                html: `
+                    <div class="text-center">
+                        <div class="mb-4">
+                            <i data-lucide="alert-circle" class="w-16 h-16 text-amber-500 mx-auto mb-4"></i>
+                            <p class="text-lg font-semibold text-gray-800 mb-2">Apakah Anda yakin?</p>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Usulan akan dikirim kembali ke Admin Fakultas dengan status "Permintaan Perbaikan dari Admin Fakultas"
+                            </p>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-left">
+                            <p class="text-sm text-gray-700"><strong>Catatan yang akan dikirim:</strong></p>
+                            <p class="text-sm text-gray-600 mt-1">"${result.value}"</p>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Kirim Permintaan Perbaikan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d97706',
+                width: '500px'
+            }).then((finalResult) => {
+                if (finalResult.isConfirmed) {
+                    // AUTO-SAVE + SEND: Simpan validasi dan kirim perbaikan
+                    const form = document.getElementById('action-form');
+                    
+                    // Set catatan_verifikator
+                    const catatanVerifikatorInput = document.createElement('input');
+                    catatanVerifikatorInput.type = 'hidden';
+                    catatanVerifikatorInput.name = 'catatan_verifikator';
+                    catatanVerifikatorInput.value = result.value;
+                    form.appendChild(catatanVerifikatorInput);
+                    
+                    // Auto-save validasi + send perbaikan
+                    submitAction('perbaikan_ke_fakultas', '');
+                }
+            });
+        }
+    });
+}
+
+function showPerbaikanKePegawaiModal() {
+    Swal.fire({
+        title: 'Permintaan Perbaikan Ke Pegawai',
+        html: `
+            <div class="text-left">
+                <div class="mb-4">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 mr-2"></i>
+                            <span class="text-sm text-red-800">
+                                <strong>Peringatan:</strong> Usulan akan dikembalikan ke Pegawai untuk perbaikan.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i data-lucide="info" class="w-5 h-5 text-blue-600 mr-2"></i>
+                            <div class="text-sm text-blue-800">
+                                <strong>Informasi:</strong>
+                                <ul class="mt-2 list-disc list-inside space-y-1">
+                                    <li>Pegawai akan menerima notifikasi perbaikan</li>
+                                    <li>Usulan akan kembali ke status "Permintaan Perbaikan dari Kepegawaian Universitas"</li>
+                                    <li>Pegawai dapat memperbaiki dan mengirim kembali</li>
+                                    <li>Proses dapat berulang hingga usulan sesuai standar</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i data-lucide="message-square" class="w-4 h-4 inline mr-1"></i>
+                        Catatan Perbaikan untuk Pegawai:
+                    </label>
+                    <textarea id="catatan-perbaikan-pegawai" 
+                              placeholder="Jelaskan detail perbaikan yang diperlukan oleh pegawai..." 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none" 
+                              rows="4"></textarea>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Kirim Permintaan Perbaikan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#dc2626',
+        width: '600px',
+        preConfirm: () => {
+            const catatan = document.getElementById('catatan-perbaikan-pegawai').value;
+            if (!catatan || catatan.trim() === '') {
+                Swal.showValidationMessage('Catatan perbaikan wajib diisi untuk menjelaskan perbaikan yang diperlukan');
+                return false;
+            }
+            if (catatan.trim().length < 10) {
+                Swal.showValidationMessage('Catatan perbaikan minimal 10 karakter untuk memberikan penjelasan yang jelas');
+                return false;
+            }
+            return catatan.trim();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show confirmation dialog
+            Swal.fire({
+                title: 'Konfirmasi Permintaan Perbaikan',
+                html: `
+                    <div class="text-center">
+                        <div class="mb-4">
+                            <i data-lucide="alert-circle" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+                            <p class="text-lg font-semibold text-gray-800 mb-2">Apakah Anda yakin?</p>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Usulan akan dikirim kembali ke Pegawai dengan status "Permintaan Perbaikan dari Kepegawaian Universitas"
+                            </p>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-left">
+                            <p class="text-sm text-gray-700"><strong>Catatan yang akan dikirim:</strong></p>
+                            <p class="text-sm text-gray-600 mt-1">"${result.value}"</p>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Kirim Permintaan Perbaikan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626',
+                width: '500px'
+            }).then((finalResult) => {
+                if (finalResult.isConfirmed) {
+                    // AUTO-SAVE + SEND: Simpan validasi dan kirim perbaikan
+                    const form = document.getElementById('action-form');
+                    
+                    // Set catatan_verifikator
+                    const catatanVerifikatorInput = document.createElement('input');
+                    catatanVerifikatorInput.type = 'hidden';
+                    catatanVerifikatorInput.name = 'catatan_verifikator';
+                    catatanVerifikatorInput.value = result.value;
+                    form.appendChild(catatanVerifikatorInput);
+                    
+                    // Auto-save validasi + send perbaikan
+                    submitAction('perbaikan_ke_pegawai', '');
+                }
+            });
+        }
+    });
+}
+
+
 
 function submitAction(actionType, catatan) {
     console.log('submitAction called with:', { actionType, catatan });
@@ -549,8 +812,13 @@ function submitAction(actionType, catatan) {
                     setTimeout(() => {
                         window.location.reload();
                     }, 1000); // Delay 1 detik untuk user melihat pesan sukses
-                } else if (actionType === 'forward_to_university' || actionType === 'resend_to_university') {
+                } else if (actionType === 'forward_to_university' || actionType === 'resend_to_university' || actionType === 'submit_university') {
                     // Reload halaman setelah Admin Fakultas berhasil mengirim ke universitas
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500); // Delay 1.5 detik untuk user melihat pesan sukses
+                } else if (actionType === 'return_to_pegawai') {
+                    // Reload halaman setelah Admin Fakultas berhasil mengirim Permintaan Perbaikan
                     setTimeout(() => {
                         window.location.reload();
                     }, 1500); // Delay 1.5 detik untuk user melihat pesan sukses

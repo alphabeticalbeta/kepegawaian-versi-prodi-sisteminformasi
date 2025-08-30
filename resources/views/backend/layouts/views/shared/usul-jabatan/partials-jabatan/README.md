@@ -81,7 +81,7 @@ Dokumentasi ini menjelaskan struktur partial views yang telah dibuat untuk memec
 - Warna status yang konsisten dan informatif
 
 #### **Status Mapping Baru:**
-- **Pegawai**: "Usulan Dikirim ke Admin Fakultas", "Usulan Perbaikan dari Admin Fakultas", dll.
+- **Pegawai**: "Usulan Dikirim ke Admin Fakultas", "Permintaan Perbaikan dari Admin Fakultas", dll.
 - **Admin Fakultas**: "Permintaan Perbaikan dari Admin Fakultas", "Usulan Disetujui Admin Fakultas", dll.
 - **Kepegawaian Universitas**: "Usulan Disetujui Kepegawaian Universitas", "Permintaan Perbaikan dari Penilai Universitas", dll.
 - **Penilai Universitas**: "Usulan Perbaikan dari Penilai Universitas", "Usulan Direkomendasi Penilai Universitas", dll.

@@ -258,10 +258,12 @@ class Usulan extends Model
         return match($this->status_usulan) {
             // Status standar baru
             self::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800',
-            self::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800',
             self::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800',
+            self::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
+            self::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
+            self::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-blue-100 text-blue-800',
             self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
-            self::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
+            self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
             self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-indigo-100 text-indigo-800',
             self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800',
             self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800',
@@ -370,9 +372,15 @@ class Usulan extends Model
     /**
      * Get document path for a given document name
      * ENHANCED: Better handling for BKD documents and legacy mapping
+     * ENHANCED: Also check validasi_data for admin_fakultas dokumen_pendukung
      */
     public function getDocumentPath(string $documentName): ?string
     {
+        // Check validasi_data for admin_fakultas dokumen_pendukung first
+        if (!empty($this->validasi_data['admin_fakultas']['dokumen_pendukung'][$documentName])) {
+            return $this->validasi_data['admin_fakultas']['dokumen_pendukung'][$documentName];
+        }
+
         // Check new structure first
         if (!empty($this->data_usulan['dokumen_usulan'][$documentName]['path'])) {
             return $this->data_usulan['dokumen_usulan'][$documentName]['path'];
@@ -1418,9 +1426,11 @@ public function getSenateDecisionCounts(): array
     const STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS = 'Usulan Dikirim ke Admin Fakultas';
     const STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS = 'Usulan Perbaikan dari Admin Fakultas';
     const STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS = 'Permintaan Perbaikan dari Admin Fakultas';
+    const STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas';
+    const STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas';
     const STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS = 'Usulan Disetujui Admin Fakultas';
-    const STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Perbaikan dari Kepegawaian Universitas';
-    const STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Permintaan Perbaikan dari Kepegawaian Universitas';
+    const STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas';
+    const STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Permintaan Perbaikan Ke Pegawai Dari Kepegawaian Universitas';
     const STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Disetujui Kepegawaian Universitas';
     const STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Permintaan Perbaikan dari Penilai Universitas';
     const STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Usulan Perbaikan dari Penilai Universitas';

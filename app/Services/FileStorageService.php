@@ -157,15 +157,39 @@ class FileStorageService
             $debugInfo['upload_success'] = false;
             $debugInfo['upload_error'] = 'No new file provided';
 
+            // Try to get existing file path from validasi_data first
+            $existingPath = null;
+            $dokumenPendukung = $usulan->validasi_data['admin_fakultas']['dokumen_pendukung'] ?? [];
+            $pathKey = $fieldName . '_path';
+
+            // Check for new key format first (e.g., 'file_surat_usulan_path')
+            if (!empty($dokumenPendukung[$pathKey])) {
+                $existingPath = $dokumenPendukung[$pathKey];
+                $debugInfo['existing_path_from_validasi'] = $existingPath;
+                $debugInfo['lookup_key_used'] = $pathKey;
+            } 
+            // Fallback to old key format (e.g., 'file_surat_usulan')
+            elseif (!empty($dokumenPendukung[$fieldName])) {
+                $existingPath = $dokumenPendukung[$fieldName];
+                $debugInfo['existing_path_from_validasi'] = $existingPath;
+                $debugInfo['lookup_key_used'] = $fieldName;
+            }
+
+            // If not found in validasi_data, try getDocumentPath method as a final fallback
+            if (empty($existingPath)) {
+                $existingPath = $usulan->getDocumentPath($fieldName);
+                $debugInfo['existing_path_from_getDocumentPath'] = $existingPath;
+            }
+
             Log::info('Dokumen pendukung - using existing file', [
                 'usulan_id' => $usulan->id,
                 'field_name' => $fieldName,
-                'existing_file_path' => $usulan->getDocumentPath($fieldName),
+                'existing_file_path' => $existingPath,
                 'debug_info' => $debugInfo
             ]);
-        }
 
-        return $usulan->getDocumentPath($fieldName);
+            return $existingPath;
+        }
     }
 
     /**

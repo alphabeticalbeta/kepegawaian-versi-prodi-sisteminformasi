@@ -1,5 +1,5 @@
 {{-- Perbaikan dari Admin Universitas Section --}}
-@if($currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas' && !empty($usulan->catatan_verifikator))
+@if($currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Permintaan Perbaikan dari Admin Fakultas' && !empty($usulan->catatan_verifikator))
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-5">
             <h2 class="text-xl font-bold text-white flex items-center">

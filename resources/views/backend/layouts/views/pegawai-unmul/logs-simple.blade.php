@@ -215,7 +215,7 @@
                                 @elseif($usulan->status_usulan === 'Usulan Disetujui Admin Fakultas') bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300
                                 @elseif($usulan->status_usulan === 'Usulan Tidak Direkomendasi Admin Fakultas') bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300
                                 @elseif($usulan->status_usulan === 'Permintaan Perbaikan dari Admin Fakultas') bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-300
-                                @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas') bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300
+                                @elseif($usulan->status_usulan === 'Permintaan Perbaikan dari Admin Fakultas') bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300
                                 @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas') bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300
                                 @elseif($usulan->status_usulan === 'Usulan Perbaikan dari Penilai Universitas') bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300
                                 @elseif($usulan->status_usulan === 'Usulan Direkomendasikan oleh Tim Senat') bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300

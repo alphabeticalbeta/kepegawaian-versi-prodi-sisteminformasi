@@ -128,10 +128,11 @@ class UsulanLog extends Model
         return match($status) {
             // Status standar baru
             Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800 border-blue-300',
-            Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800 border-amber-300',
-            Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800 border-amber-300',
+                    Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800 border-amber-300',
+        Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800 border-red-300',
+        Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-blue-100 text-blue-800 border-blue-300',
             Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800 border-green-300',
-            Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800 border-red-300',
+            Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800 border-red-300',
             Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-indigo-100 text-indigo-800 border-indigo-300',
             Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800 border-orange-300',
             Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800 border-orange-300',

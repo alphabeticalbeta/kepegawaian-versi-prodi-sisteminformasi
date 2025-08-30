@@ -661,15 +661,16 @@ class UsulanJabatanController extends BaseUsulanController
             UsulanModel::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
             UsulanModel::STATUS_DIREKOMENDASIKAN,
             UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
+            UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
             UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
         ]);
 
         $canEdit = in_array($usulan->status_usulan, [
             UsulanModel::STATUS_DRAFT_USULAN,
             UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
+            UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
             UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+            UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
             UsulanModel::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
             UsulanModel::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
             UsulanModel::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
@@ -825,8 +826,9 @@ class UsulanJabatanController extends BaseUsulanController
                     UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER
                 ]) && in_array($statusUsulan, [
                     UsulanModel::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                    UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
+                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+                    UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
                     UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
                 ])) {
                     $updateData['catatan_verifikator'] = null;

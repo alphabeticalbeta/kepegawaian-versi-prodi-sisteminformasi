@@ -23,6 +23,7 @@ Route::get('/test-document/{pegawai}/{field}', function($pegawai, $field) {
     ]);
 })->name('test.document');
 
+
 // Test route for form submission - bypasses all middleware
 Route::post('/test-usulan-submission', function() {
     try {
@@ -290,8 +291,9 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // DASHBOARD PERIODE USULAN ROUTES (STANDARDIZED)
             // =====================================================
             Route::prefix('dashboard-periode')->name('dashboard-periode.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'index'])
-                    ->name('index');
+                Route::get('/', function() {
+                    return redirect()->route('backend.kepegawaian-universitas.dashboard');
+                })->name('index');
                 Route::get('/{periode}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'show'])
                     ->name('show');
                 

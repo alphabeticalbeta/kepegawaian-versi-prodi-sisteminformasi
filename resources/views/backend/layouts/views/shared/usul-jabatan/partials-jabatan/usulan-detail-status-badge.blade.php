@@ -8,8 +8,8 @@
         $statusColors = [
             // Status standar baru
             'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800 border-blue-300',
-            'Usulan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800 border-amber-300',
             'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800 border-amber-300',
+        'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas' => 'bg-red-100 text-red-800 border-red-300',
             'Usulan Disetujui Admin Fakultas' => 'bg-green-100 text-green-800 border-green-300',
             'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-red-100 text-red-800 border-red-300',
             'Usulan Disetujui Kepegawaian Universitas' => 'bg-indigo-100 text-indigo-800 border-indigo-300',

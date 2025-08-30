@@ -17,20 +17,35 @@
 
                 
                 {{-- ENHANCED: Specific status-based action buttons with improved logic --}}
-                @if($usulan->status_usulan === UsulanModel::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS)
+                                @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                    {{-- Kepegawaian Universitas View Only - Perbaikan sudah dikirim ke Admin Fakultas --}}
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="eye" class="w-4 h-4 text-gray-600 mr-2"></i>
+                            <span class="text-sm text-gray-800">
+                                <strong>Mode:</strong> View Only - Perbaikan telah dikirim ke Admin Fakultas dan sedang menunggu perbaikan.
+                            </span>
+                        </div>
+                    </div>
+                    {{-- No action buttons - view only mode --}}
+                @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS || $usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS)
                     {{-- Initial validation buttons - only for new submissions --}}
                     <div class="flex flex-col gap-3 w-full">
+                        {{-- Baris 1: Perbaikan ke Pegawai dan Admin Fakultas --}}
                         <div class="flex flex-col sm:flex-row gap-3 w-full">
-                            <button type="button" id="btn-perbaikan-pegawai" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <button type="button" id="btn-perbaikan-universitas-pegawai" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                 <i data-lucide="user-x" class="w-4 h-4"></i>
-                                <span class="font-medium">Permintaan Perbaikan dari Kepegawaian Universitas</span>
+                                <span class="font-medium">Permintaan Perbaikan Ke Pegawai dari Kepegawaian Universitas</span>
                             </button>
-
-                            <button type="button" id="btn-perbaikan-fakultas" class="flex-1 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            
+                            <button type="button" id="btn-perbaikan-universitas-fakultas" class="flex-1 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                 <i data-lucide="building-2" class="w-4 h-4"></i>
-                                <span class="font-medium">Permintaan Perbaikan dari Admin Fakultas</span>
+                                <span class="font-medium">Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas</span>
                             </button>
-
+                        </div>
+                        
+                        {{-- Baris 2: Teruskan ke Penilai dan Tidak Direkomendasikan --}}
+                        <div class="flex flex-col sm:flex-row gap-3 w-full">
                             <button type="button" id="btn-teruskan-penilai" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                 <i data-lucide="user-check" class="w-4 h-4"></i>
                                 <span class="font-medium">Teruskan ke Penilai</span>
@@ -41,6 +56,14 @@
                                 <span class="font-medium">Usulan Tidak Direkomendasikan</span>
                             </button>
                         </div>
+
+                        {{-- Baris 3: Simpan Validasi (Draft) - Paling bawah --}}
+                        <div class="flex justify-center">
+                            <button type="button" id="btn-simpan-validasi-kepegawaian" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                <span class="font-medium">Simpan Validasi (Draft)</span>
+                            </button>
+                        </div>
                     </div>
                 @endif
 
@@ -48,7 +71,7 @@
                     {{-- Forward to Senat button - only when recommended --}}
                     <div class="flex flex-col gap-3 w-full">
                         <div class="flex flex-col sm:flex-row gap-3 w-full">
-                            <button type="button" id="btn-teruskan-senat" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <button type="button" id="btn-kirim-sister" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                 <i data-lucide="crown" class="w-4 h-4"></i>
                                 <span class="font-medium">Usulan Sudah Dikirim ke Sister</span>
                             </button>
@@ -198,12 +221,12 @@
                         @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS)
                             {{-- Actions for correction needed --}}
                             <div class="flex flex-wrap gap-2">
-                                <button type="button" id="btn-perbaikan-ke-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                <button type="button" id="btn-perbaikan-penilai-universitas-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
                                     <i data-lucide="user-x" class="w-4 h-4"></i>
                                     Permintaan Perbaikan dari Kepegawaian Universitas
                                 </button>
 
-                                <button type="button" id="btn-perbaikan-ke-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                                <button type="button" id="btn-perbaikan-penilai-universitas-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                                     <i data-lucide="building-2" class="w-4 h-4"></i>
                                     Permintaan Perbaikan dari Admin Fakultas
                                 </button>
@@ -226,12 +249,12 @@
                                     Usulan Direkomendasikan oleh Tim Senat
                                 </button>
 
-                                <button type="button" id="btn-perbaikan-ke-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                <button type="button" id="btn-perbaikan-penilai-universitas-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
                                     <i data-lucide="user-x" class="w-4 h-4"></i>
                                     Permintaan Perbaikan dari Kepegawaian Universitas
                                 </button>
 
-                                <button type="button" id="btn-perbaikan-ke-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                                <button type="button" id="btn-perbaikan-penilai-universitas-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                                     <i data-lucide="building-2" class="w-4 h-4"></i>
                                     Permintaan Perbaikan dari Admin Fakultas
                                 </button>
@@ -244,12 +267,12 @@
                         @else
                             {{-- Default actions for other complete statuses --}}
                             <div class="flex flex-wrap gap-2">
-                                <button type="button" id="btn-perbaikan-ke-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                <button type="button" id="btn-perbaikan-penilai-universitas-pegawai" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
                                     <i data-lucide="user-x" class="w-4 h-4"></i>
                                     Permintaan Perbaikan dari Kepegawaian Universitas
                                 </button>
 
-                                <button type="button" id="btn-perbaikan-ke-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                                <button type="button" id="btn-perbaikan-penilai-universitas-fakultas" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
                                     <i data-lucide="building-2" class="w-4 h-4"></i>
                                     Permintaan Perbaikan dari Admin Fakultas
                                 </button>
@@ -351,9 +374,9 @@
         @elseif($currentRole === 'Admin Fakultas')
             {{-- Admin Fakultas Action Buttons --}}
             
-            @if($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS || $usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS)
+            @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS || $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS || $usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS || $usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS)
                 {{-- Admin Fakultas Action Buttons for Perbaikan --}}
-                @if($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS)
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
                             <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mr-2"></i>
@@ -362,13 +385,33 @@
                             </span>
                         </div>
                     </div>
+                @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS)
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="eye" class="w-4 h-4 text-gray-600 mr-2"></i>
+                            <span class="text-sm text-gray-800">
+                                <strong>Status:</strong> View Only - Usulan perbaikan dari Kepegawaian Universitas (status lama).
+                            </span>
+                        </div>
+                    </div>
+                @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS)
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="check-circle" class="w-4 h-4 text-blue-600 mr-2"></i>
+                            <span class="text-sm text-blue-800">
+                                <strong>Status:</strong> Usulan perbaikan telah dikirim ke Kepegawaian Universitas.
+                            </span>
+                        </div>
+                    </div>
                 @endif
                 <div class="flex flex-col gap-3 w-full">
                     <div class="flex flex-col sm:flex-row gap-3 w-full">
-                        <button type="button" id="btn-kirim-ke-universitas" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                            <i data-lucide="send" class="w-4 h-4"></i>
-                            <span class="font-medium">Kirim ke Universitas</span>
-                        </button>
+                        @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                            <button type="button" id="btn-resubmit-university" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                <span class="font-medium">Kirim Usulan Perbaikan Ke Kepegawaian Universitas</span>
+                            </button>
+                        @endif
                         
                         <button type="button" id="btn-autosave-admin-fakultas" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
                             <i data-lucide="save" class="w-4 h-4"></i>
@@ -388,9 +431,9 @@
                         @endif
 
                         @if(isset($config['canForward']) && $config['canForward'])
-                            <button type="button" id="btn-forward" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <button type="button" id="btn-submit-university" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                 <i data-lucide="send" class="w-4 h-4"></i>
-                                <span class="font-medium">Kirim ke Universitas</span>
+                                <span class="font-medium">Kirim Usulan Ke Kepegawaian Universitas</span>
                             </button>
                         @endif
                         
@@ -400,6 +443,41 @@
                         </button>
                     </div>
                 </div>
+            @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)
+                {{-- Admin Fakultas Action Buttons for Perbaikan from Admin Fakultas --}}
+                <div class="flex flex-col gap-3 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3 w-full">
+                        @if(isset($config['canReturn']) && $config['canReturn'])
+                            <button type="button" id="btn-perbaikan" class="flex-1 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                                <span class="font-medium">Permintaan Perbaikan dari Admin Fakultas</span>
+                            </button>
+                        @endif
+
+                        @if(isset($config['canForward']) && $config['canForward'])
+                            <button type="button" id="btn-submit-university" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                <span class="font-medium">Kirim Usulan Ke Kepegawaian Universitas</span>
+                            </button>
+                        @endif
+                        
+                        <button type="button" id="btn-autosave-admin-fakultas" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="font-medium">Simpan Validasi Admin Fakultas</span>
+                        </button>
+                    </div>
+                </div>
+            @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS)
+                {{-- Admin Fakultas View Only - Usulan sudah disetujui --}}
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-center">
+                        <i data-lucide="eye" class="w-4 h-4 text-gray-600 mr-2"></i>
+                        <span class="text-sm text-gray-800">
+                            <strong>Mode:</strong> View Only - Usulan telah disetujui dan dikirim ke Kepegawaian Universitas.
+                        </span>
+                    </div>
+                </div>
+                {{-- No action buttons - view only mode --}}
             @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS)
                 {{-- Admin Fakultas Action Buttons for Penilai Universitas Correction --}}
                 <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
@@ -412,7 +490,7 @@
                 </div>
                 <div class="flex flex-col gap-3 w-full">
                     <div class="flex flex-col sm:flex-row gap-3 w-full">
-                        <button type="button" id="btn-kirim-ke-universitas" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <button type="button" id="btn-kirim-perbaikan-penilai-ke-universitas" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                             <i data-lucide="send" class="w-4 h-4"></i>
                             <span class="font-medium">Kirim ke Universitas</span>
                         </button>
@@ -455,7 +533,7 @@
             @endif
         @elseif($currentRole === 'Pegawai')
             {{-- Pegawai Action Buttons --}}
-            @if($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)
+                            @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)
                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 mr-2"></i>
@@ -468,11 +546,11 @@
                     <div class="flex flex-col sm:flex-row gap-3 w-full">
                         <button type="button" id="btn-kirim-perbaikan-admin-fakultas" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                             <i data-lucide="send" class="w-4 h-4"></i>
-                            <span class="font-medium">Usulan Perbaikan dari Admin Fakultas</span>
+                            <span class="font-medium">Permintaan Perbaikan dari Admin Fakultas</span>
                         </button>
                     </div>
                 </div>
-            @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS)
+            @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS)
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mr-2"></i>

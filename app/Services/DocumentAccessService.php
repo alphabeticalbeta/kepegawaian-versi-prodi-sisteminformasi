@@ -89,6 +89,12 @@ class DocumentAccessService
             return true;
         }
         
+        // Kepegawaian Universitas: SEMUA dokumen (full access)
+        if ($userRole === 'Kepegawaian Universitas') {
+            Log::info('Kepegawaian Universitas access granted');
+            return true;
+        }
+        
         // Penilai: dokumen yang di-assign
         if ($userRole === 'Penilai Universitas') {
             $canAccess = $usulan->isAssignedToPenilai($user->id);
@@ -150,7 +156,7 @@ class DocumentAccessService
         // Semua role bisa akses BKD
         $bkdFields = ['bkd_semester_1', 'bkd_semester_2', 'bkd_semester_3', 'bkd_semester_4'];
 
-        if (in_array($userRole, ['Admin Universitas', 'Admin Fakultas', 'Penilai Universitas'])) {
+        if (in_array($userRole, ['Admin Universitas', 'Admin Fakultas', 'Kepegawaian Universitas', 'Penilai Universitas'])) {
             // Role ini bisa akses dokumen profil juga
             $profilFields = [
                 'ijazah_terakhir', 'transkrip_nilai_terakhir', 'sk_pangkat_terakhir',
@@ -160,7 +166,7 @@ class DocumentAccessService
             ];
             
             $allowedFields = array_merge($baseFields, $bkdFields, $profilFields);
-            Log::info('Admin role - returning all fields', ['count' => count($allowedFields)]);
+            Log::info('Admin/Kepegawaian role - returning all fields', ['count' => count($allowedFields), 'user_role' => $userRole]);
             return $allowedFields;
         }
 

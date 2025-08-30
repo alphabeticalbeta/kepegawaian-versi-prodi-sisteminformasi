@@ -18,6 +18,29 @@
             </div>
         </div>
     @endif
+    
+    {{-- TAHAP 2: Info filter field berdasarkan role dan status perbaikan --}}
+                    @if($currentRole === 'Admin Fakultas' && ($usulan->status_usulan === 'Permintaan Perbaikan dari Admin Fakultas' || $usulan->status_usulan === 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas' || $usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas'))
+        <div class="bg-blue-50 border-b border-blue-200 px-6 py-3">
+            <div class="flex items-center">
+                <i data-lucide="shield" class="w-4 h-4 text-blue-600 mr-2"></i>
+                <span class="text-sm text-blue-800">
+                    <strong>Keamanan Data:</strong> Hanya menampilkan field yang menjadi tanggung jawab Admin Fakultas. Field data Pegawai disembunyikan untuk keamanan.
+                </span>
+            </div>
+        </div>
+    @endif
+    
+    @if($currentRole === 'Pegawai' && ($usulan->status_usulan === 'Permintaan Perbaikan dari Kepegawaian Universitas' || $usulan->status_usulan === 'Usulan Perbaikan dari Kepegawaian Universitas'))
+        <div class="bg-green-50 border-b border-green-200 px-6 py-3">
+            <div class="flex items-center">
+                <i data-lucide="shield" class="w-4 h-4 text-green-600 mr-2"></i>
+                <span class="text-sm text-green-800">
+                    <strong>Keamanan Data:</strong> Hanya menampilkan field yang menjadi tanggung jawab Pegawai. Field data Admin Fakultas disembunyikan untuk keamanan.
+                </span>
+            </div>
+        </div>
+    @endif
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -54,7 +77,57 @@
                         @endif
                         
                         {{-- Skip dokumen_admin_fakultas untuk Admin Fakultas jika status tidak sesuai --}}
-                        @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Admin Fakultas' && !in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas']))
+                        @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Admin Fakultas' && !in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan dari Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas']))
+                            @continue
+                        @endif
+                        
+                        {{-- Skip dokumen_admin_fakultas untuk Kepegawaian Universitas jika status tidak sesuai --}}
+                        @if($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Kepegawaian Universitas' && !in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas']))
+                            @continue
+                        @endif
+                        
+                        {{-- TAHAP 2: Filter field berdasarkan role dan status perbaikan --}}
+                        @php
+                            // Field yang menjadi tanggung jawab Admin Fakultas
+                            $adminFakultasFields = ['dokumen_admin_fakultas'];
+                            
+                            // Field yang menjadi tanggung jawab Pegawai
+                            $pegawaiFields = ['data_pribadi', 'data_kepegawaian', 'data_pendidikan', 'data_kinerja', 'dokumen_profil', 'bkd', 'karya_ilmiah', 'dokumen_usulan', 'syarat_guru_besar'];
+                            
+                            // Logic untuk menyembunyikan field berdasarkan role dan status perbaikan
+                            $shouldSkipField = false;
+                            
+                            // Admin Fakultas: Hanya tampilkan field dokumen_admin_fakultas saat perbaikan dari Kepegawaian Universitas
+                            if ($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Permintaan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas'])) {
+                                if (!in_array($groupKey, $adminFakultasFields)) {
+                                    $shouldSkipField = true;
+                                }
+                            }
+                            
+                            // Pegawai: Hanya tampilkan field Pegawai saat perbaikan dari Kepegawaian Universitas
+                            if ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Permintaan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Kepegawaian Universitas'])) {
+                                if (!in_array($groupKey, $pegawaiFields)) {
+                                    $shouldSkipField = true;
+                                }
+                            }
+                            
+                            // Kepegawaian Universitas: Tampilkan semua field untuk status Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas
+                            if ($currentRole === 'Kepegawaian Universitas' && $usulan->status_usulan === 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas') {
+                                $shouldSkipField = false;
+                            }
+                            
+                            // Kepegawaian Universitas: Tampilkan semua field untuk status selain Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas
+                            if ($currentRole === 'Kepegawaian Universitas' && $usulan->status_usulan !== 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas') {
+                                $shouldSkipField = false;
+                            }
+                            
+                            // Default: Tampilkan semua field untuk Kepegawaian Universitas
+                            if ($currentRole === 'Kepegawaian Universitas') {
+                                $shouldSkipField = false;
+                            }
+                        @endphp
+                        
+                        @if($shouldSkipField)
                             @continue
                         @endif
                         
@@ -70,7 +143,7 @@
                         @endif
                         @php $group = $fieldGroups[$groupKey]; @endphp
 
-                        @if($groupKey === 'dokumen_admin_fakultas' && isset($group['isEditableForm']) && $group['isEditableForm'])
+                        @if($groupKey === 'dokumen_admin_fakultas' && isset($group['isEditableForm']) && $group['isEditableForm'] && $currentRole === 'Admin Fakultas')
                             {{-- Tampilan khusus untuk form input dokumen admin fakultas --}}
                             <tr class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
                                 <td colspan="3" class="px-6 py-4">
@@ -85,7 +158,7 @@
                             </tr>
                             {{-- Baris pertama: Nomor Surat Usulan dan File Surat Usulan --}}
                             <tr class="hover:bg-blue-50 transition-colors">
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6" colspan="3">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                             <label class="block text-sm font-semibold text-gray-700 mb-3">
@@ -98,8 +171,9 @@
                                             <input type="text"
                                                    name="dokumen_pendukung[nomor_surat_usulan]"
                                                    value="{{ e($currentValue) }}"
-                                                   class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm"
-                                                   placeholder="Contoh: 001/FK-UNMUL/2025 (Opsional)">
+                                                   class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm {{ $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas']) ? 'bg-gray-100' : '' }}"
+                                                   placeholder="Contoh: 001/FK-UNMUL/2025 (Opsional)"
+                                                   {{ $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas']) ? 'readonly' : '' }}>
                                             <small class="text-gray-500 mt-1">Format: Nomor/Fakultas/UNMUL/Tahun (Opsional)</small>
                                         </div>
                                         <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -107,31 +181,49 @@
                                                 File Surat Usulan
                                             </label>
                                             @php
-                                                $currentPath = $dokumenPendukung['file_surat_usulan_path'] ?? null;
+                                                $isViewOnlyStatusForFakultas = $currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas';
+                                                $currentPath = $dokumenPendukung['file_surat_usulan_path']
+                                                    ?? $dokumenPendukung['file_surat_usulan']
+                                                    ?? $usulan->getDocumentPath('file_surat_usulan');
                                             @endphp
-                                            <div class="space-y-3">
-                                                @if($currentPath)
-                                                    <div class="text-sm text-gray-600 bg-green-50 p-2 rounded border border-green-200">
+
+                                            @if($isViewOnlyStatusForFakultas)
+                                                {{-- Mode View-Only untuk status spesifik --}}
+                                                <div class="text-sm text-gray-800 bg-gray-100 p-3 rounded-md border border-gray-200">
+                                                    @if($currentPath)
                                                         <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-green-600"></i>
-                                                        File saat ini:
+                                                        File telah diunggah: 
                                                         <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">Lihat File</a>
-                                                    </div>
-                                                @endif
-                                                <input type="file"
-                                                       name="dokumen_pendukung[file_surat_usulan]"
-                                                       accept=".pdf"
-                                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm">
-                                                <small class="text-gray-500">Upload file baru untuk mengganti file yang ada (Opsional)</small>
-                                            </div>
+                                                    @else
+                                                        <i data-lucide="x-circle" class="w-4 h-4 inline mr-1 text-red-600"></i>
+                                                        <span>File tidak diunggah pada saat pengiriman.</span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                {{-- Mode Editable untuk status lainnya --}}
+                                                <div class="space-y-3">
+                                                    @if($currentPath)
+                                                        <div class="text-sm text-gray-600 bg-green-50 p-2 rounded border border-green-200">
+                                                            <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-green-600"></i>
+                                                            File saat ini:
+                                                            <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">Lihat File</a>
+                                                        </div>
+                                                    @endif
+                                                    <input type="file"
+                                                           name="dokumen_pendukung[file_surat_usulan]"
+                                                           accept=".pdf"
+                                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm {{ $usulan->status_usulan === 'Usulan Disetujui Admin Fakultas' ? 'bg-gray-100' : '' }}"
+                                                       {{ $usulan->status_usulan === 'Usulan Disetujui Admin Fakultas' ? 'disabled' : '' }}>
+                                                    <small class="text-gray-500">Upload file baru untuk mengganti file yang ada (Opsional)</small>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-6"></td>
-                                <td class="px-6 py-6"></td>
                             </tr>
                             {{-- Baris kedua: Nomor Berita Senat dan File Berita Senat --}}
                             <tr class="hover:bg-blue-50 transition-colors">
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6" colspan="3">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                             <label class="block text-sm font-semibold text-gray-700 mb-3">
@@ -143,8 +235,9 @@
                                             <input type="text"
                                                    name="dokumen_pendukung[nomor_berita_senat]"
                                                    value="{{ e($currentValue) }}"
-                                                   class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm"
-                                                   placeholder="Contoh: 001/Berita-Senat/2025 (Opsional)">
+                                               class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm {{ $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas']) ? 'bg-gray-100' : '' }}"
+                                               placeholder="Contoh: 001/Berita-Senat/2025 (Opsional)"
+                                               {{ $currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas']) ? 'readonly' : '' }}>
                                             <small class="text-gray-500 mt-1">Format: Nomor/Berita-Senat/Tahun (Opsional)</small>
                                         </div>
                                         <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -152,28 +245,130 @@
                                                 File Berita Senat
                                             </label>
                                             @php
-                                                $currentPath = $dokumenPendukung['file_berita_senat_path'] ?? null;
+                                                $isViewOnlyStatusForFakultas = $currentRole === 'Admin Fakultas' && $usulan->status_usulan === 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas';
+                                                $currentPath = $dokumenPendukung['file_berita_senat_path']
+                                                    ?? $dokumenPendukung['file_berita_senat']
+                                                    ?? $usulan->getDocumentPath('file_berita_senat');
                                             @endphp
-                                            <div class="space-y-3">
-                                                @if($currentPath)
-                                                    <div class="text-sm text-gray-600 bg-green-50 p-2 rounded border border-green-200">
+
+                                            @if($isViewOnlyStatusForFakultas)
+                                                {{-- Mode View-Only untuk status spesifik --}}
+                                                <div class="text-sm text-gray-800 bg-gray-100 p-3 rounded-md border border-gray-200">
+                                                    @if($currentPath)
                                                         <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-green-600"></i>
-                                                        File saat ini:
+                                                        File telah diunggah: 
                                                         <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">Lihat File</a>
-                                                    </div>
-                                                @endif
-                                                <input type="file"
-                                                       name="dokumen_pendukung[file_berita_senat]"
-                                                       accept=".pdf"
-                                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm">
-                                                <small class="text-gray-500">Upload file baru untuk mengganti file yang ada (Opsional)</small>
-                                            </div>
+                                                    @else
+                                                        <i data-lucide="x-circle" class="w-4 h-4 inline mr-1 text-red-600"></i>
+                                                        <span>File tidak diunggah pada saat pengiriman.</span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                {{-- Mode Editable untuk status lainnya --}}
+                                                <div class="space-y-3">
+                                                    @if($currentPath)
+                                                        <div class="text-sm text-gray-600 bg-green-50 p-2 rounded border border-green-200">
+                                                            <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-green-600"></i>
+                                                            File saat ini:
+                                                            <a href="{{ asset('storage/' . $currentPath) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">Lihat File</a>
+                                                        </div>
+                                                    @endif
+                                                    <input type="file"
+                                                           name="dokumen_pendukung[file_berita_senat]"
+                                                           accept=".pdf"
+                                                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-sm {{ $usulan->status_usulan === 'Usulan Disetujui Admin Fakultas' ? 'bg-gray-100' : '' }}"
+                                                       {{ $usulan->status_usulan === 'Usulan Disetujui Admin Fakultas' ? 'disabled' : '' }}>
+                                                    <small class="text-gray-500">Upload file baru untuk mengganti file yang ada (Opsional)</small>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-6"></td>
-                                <td class="px-6 py-6"></td>
                             </tr>
+                        @elseif($groupKey === 'dokumen_admin_fakultas' && $currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas']))
+                            {{-- Tampilan khusus untuk Kepegawaian Universitas melihat dokumen admin fakultas --}}
+                            <tr class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
+                                <td colspan="3" class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <i data-lucide="{{ $group['icon'] }}" class="w-5 h-5 mr-3 text-blue-600"></i>
+                                        <span class="font-bold text-blue-800 text-lg">{{ $group['label'] }}</span>
+                                    </div>
+                                    <p class="text-sm text-blue-600 mt-1 ml-8">
+                                        ⓘ Dokumen yang dikirim oleh Admin Fakultas ke Universitas
+                                    </p>
+                                </td>
+                            </tr>
+                            @foreach(is_callable($group['fields']) ? $group['fields']() : $group['fields'] as $fieldKey => $fieldLabel)
+                            @php
+                                $fieldValidation = $existingValidation['validation'][$groupKey][$fieldKey] ?? ['status' => 'sesuai', 'keterangan' => ''];
+                                $isInvalid = $fieldValidation['status'] === 'tidak_sesuai';
+                                
+                                // Handle dokumen_admin_fakultas fields untuk Kepegawaian Universitas
+                                $dokumenPendukung = $usulan->validasi_data['admin_fakultas']['dokumen_pendukung'] ?? [];
+                                $value = '';
+                                
+                                if ($fieldKey === 'nomor_surat_usulan' || $fieldKey === 'nomor_berita_senat') {
+                                    $value = $dokumenPendukung[$fieldKey] ?? '-';
+                                } elseif ($fieldKey === 'file_surat_usulan' || $fieldKey === 'file_berita_senat') {
+                                    $pathKey = $fieldKey . '_path';
+                                    $path = $dokumenPendukung[$pathKey]
+                                        ?? $dokumenPendukung[$fieldKey]
+                                        ?? $usulan->getDocumentPath($fieldKey);
+
+                                    if ($path) {
+                                        $value = '<a href="' . asset('storage/' . $path) . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Lihat File</a>';
+                                    } else {
+                                        $value = 'File tidak tersedia';
+                                    }
+                                }
+                            @endphp
+                            <tr class="hover:bg-gray-50 {{ $isInvalid ? 'bg-red-50' : '' }}">
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ $fieldLabel }}</div>
+                                    <div class="text-sm text-gray-500">
+                                        {!! $value !!}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if($canEdit && !($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])))
+                                        <select name="validation[{{ $groupKey }}][{{ $fieldKey }}][status]" 
+                                                class="validation-status block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                data-group="{{ $groupKey }}" 
+                                                data-field="{{ $fieldKey }}">
+                                            <option value="sesuai" {{ $fieldValidation['status'] === 'sesuai' ? 'selected' : '' }}>Sesuai</option>
+                                            <option value="tidak_sesuai" {{ $fieldValidation['status'] === 'tidak_sesuai' ? 'selected' : '' }}>Tidak Sesuai</option>
+                                        </select>
+                                    @else
+                                        <div class="flex items-center">
+                                            @if($fieldValidation['status'] === 'sesuai')
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
+                                                    Sesuai
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
+                                                    Tidak Sesuai
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if($canEdit && !($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])))
+                                        <textarea name="validation[{{ $groupKey }}][{{ $fieldKey }}][keterangan]" 
+                                                  class="validation-keterangan block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm {{ $fieldValidation['status'] !== 'tidak_sesuai' ? 'bg-gray-100' : '' }}"
+                                                  rows="2"
+                                                  placeholder="Keterangan (wajib jika tidak sesuai)"
+                                                  {{ $fieldValidation['status'] !== 'tidak_sesuai' ? 'disabled' : '' }}>{{ $fieldValidation['keterangan'] ?? '' }}</textarea>
+                                    @else
+                                        <div class="text-sm text-gray-600">
+                                            {{ $fieldValidation['keterangan'] ?? '-' }}
+                                        </div>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
                         @else
                             {{-- Tampilan normal untuk role lain atau kondisi lain --}}
                             <tr class="bg-gray-50">
@@ -240,11 +435,29 @@
                                                 } else {
                                                     $value = $usulan->pegawai->$fieldKey ?? '-';
                                                 }
+                                            } elseif ($groupKey === 'dokumen_admin_fakultas') {
+                                                // Handle dokumen_admin_fakultas fields untuk Kepegawaian Universitas
+                                                $dokumenPendukung = $usulan->validasi_data['admin_fakultas']['dokumen_pendukung'] ?? [];
+                                                
+                                                if ($fieldKey === 'nomor_surat_usulan' || $fieldKey === 'nomor_berita_senat') {
+                                                    $value = $dokumenPendukung[$fieldKey] ?? '-';
+                                                } elseif ($fieldKey === 'file_surat_usulan' || $fieldKey === 'file_berita_senat') {
+                                                    $pathKey = $fieldKey . '_path';
+                                                    $path = $dokumenPendukung[$pathKey]
+                                                        ?? $dokumenPendukung[$fieldKey]
+                                                        ?? $usulan->getDocumentPath($fieldKey);
+
+                                                    if ($path) {
+                                                        $value = '<a href="' . asset('storage/' . $path) . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Lihat File</a>';
+                                                    } else {
+                                                        $value = 'File tidak tersedia';
+                                                    }
+                                                }
                                             } elseif ($groupKey === 'dokumen_profil') {
                                                 if ($usulan->pegawai->$fieldKey) {
                                                     // Gunakan route yang benar berdasarkan role
                                                     if ($currentRole === 'Kepegawaian Universitas') {
-                                                        $route = route('backend.kepegawaian-universitas.data-pegawai.show-document', [$usulan->id, $fieldKey]);
+                                                        $route = route('backend.kepegawaian-universitas.data-pegawai.show-document', [$usulan->pegawai->id, $fieldKey]);
                                                     } elseif ($currentRole === 'Admin Fakultas') {
                                                         $route = route('admin-fakultas.usulan.show-pegawai-document', [$usulan->id, $fieldKey]);
                                                     } else {
@@ -401,13 +614,31 @@
                                                         $value = 'Bukti tidak tersedia';
                                                     }
                                                 }
+                                            } elseif ($groupKey === 'dokumen_admin_fakultas') {
+                                                // Handle dokumen_admin_fakultas fields
+                                                $dokumenPendukung = $usulan->validasi_data['admin_fakultas']['dokumen_pendukung'] ?? [];
+                                                
+                                                if ($fieldKey === 'nomor_surat_usulan' || $fieldKey === 'nomor_berita_senat') {
+                                                    $value = $dokumenPendukung[$fieldKey] ?? '-';
+                                                } elseif ($fieldKey === 'file_surat_usulan' || $fieldKey === 'file_berita_senat') {
+                                                    $pathKey = $fieldKey . '_path';
+                                                    $path = $dokumenPendukung[$pathKey]
+                                                        ?? $dokumenPendukung[$fieldKey]
+                                                        ?? $usulan->getDocumentPath($fieldKey);
+
+                                                    if ($path) {
+                                                        $value = '<a href="' . asset('storage/' . $path) . '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Lihat File</a>';
+                                                    } else {
+                                                        $value = 'File tidak tersedia';
+                                                    }
+                                                }
                                             }
                                         @endphp
                                         {!! $value !!}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if($canEdit)
+                                    @if($canEdit && !($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])))
                                         <select name="validation[{{ $groupKey }}][{{ $fieldKey }}][status]" 
                                                 class="validation-status block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                                 data-group="{{ $groupKey }}" 
@@ -437,18 +668,11 @@
                                                     Tidak Sesuai
                                                 </span>
                                             @endif
-                                            
-                                            @if($currentRole === 'Kepegawaian Universitas' && $penilaiInvalidStatus)
-                                                <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                                    <i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>
-                                                    Penilai: {{ ucwords(str_replace('_', ' ', $penilaiInvalidStatus)) }}
-                                                </span>
-                                            @endif
                                         </div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if($canEdit)
+                                    @if($canEdit && !($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])))
                                         <textarea name="validation[{{ $groupKey }}][{{ $fieldKey }}][keterangan]" 
                                                   class="validation-keterangan block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm {{ $fieldValidation['status'] !== 'tidak_sesuai' ? 'bg-gray-100' : '' }}"
                                                   rows="2"
@@ -456,24 +680,26 @@
                                                   {{ $fieldValidation['status'] !== 'tidak_sesuai' ? 'disabled' : '' }}>{{ $fieldValidation['keterangan'] ?? '' }}</textarea>
                                         
                                         @if($currentRole === 'Kepegawaian Universitas' && $penilaiInvalidKeterangan)
-                                            <div class="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
-                                                <strong>Keterangan Penilai:</strong> {{ $penilaiInvalidKeterangan }}
+                                            <div class="mt-2">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                    <i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>
+                                                    Penilai: {{ $penilaiInvalidKeterangan }}
+                                                </span>
                                             </div>
                                         @endif
                                     @else
-                                        @if($fieldValidation['status'] === 'tidak_sesuai' && !empty($fieldValidation['keterangan']))
-                                            <div class="text-sm text-red-700 bg-red-50 p-2 rounded border border-red-200">
-                                                {{ $fieldValidation['keterangan'] }}
-                                            </div>
-                                        @else
-                                            <span class="text-gray-500 text-sm">-</span>
-                                        @endif
-                                        
-                                        @if($currentRole === 'Kepegawaian Universitas' && $penilaiInvalidKeterangan)
-                                            <div class="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
-                                                <strong>Keterangan Penilai:</strong> {{ $penilaiInvalidKeterangan }}
-                                            </div>
-                                        @endif
+                                        <div class="text-sm text-gray-600">
+                                            {{ $fieldValidation['keterangan'] ?? '-' }}
+                                            
+                                            @if($currentRole === 'Kepegawaian Universitas' && $penilaiInvalidKeterangan)
+                                                <div class="mt-1">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                        <i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>
+                                                        Penilai: {{ $penilaiInvalidKeterangan }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                             </tr>

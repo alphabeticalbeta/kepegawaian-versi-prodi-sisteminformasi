@@ -81,15 +81,15 @@
                                                     }
                                                     break;
                                                 
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
-                                                    if ($currentRole === 'Pegawai') {
-                                                        return 'Usulan Perbaikan dari Admin Fakultas';
-                                                    }
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
+                                                                                                          if ($currentRole === 'Pegawai') {
+                                                          return 'Permintaan Perbaikan dari Admin Fakultas';
+                                                      }
                                                     break;
                                                 
 
                                                 
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_KEPEGAWAIAN_UNIVERSITAS:
+                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS:
                                                     if ($currentRole === 'Pegawai') {
                                                         return 'Usulan Perbaikan dari Kepegawaian Universitas';
                                                     }
@@ -129,8 +129,8 @@
                                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800',
                                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800',
                                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-yellow-100 text-yellow-800',
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-orange-100 text-orange-800',
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-red-100 text-red-800',
+                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-orange-100 text-orange-800',
+                                
                                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
                                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN => 'bg-purple-100 text-purple-800',
                                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN => 'bg-red-100 text-red-800',
@@ -138,7 +138,7 @@
                                             // Status baru
                                             'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
                                             'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
-                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
+                                            'Permintaan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
 
                                             'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-orange-100 text-orange-800',
                                             'Permintaan Perbaikan dari Penilai Universitas' => 'bg-red-100 text-red-800',

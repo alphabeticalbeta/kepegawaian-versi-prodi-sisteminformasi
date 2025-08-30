@@ -203,40 +203,57 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-50">
+        <div class="table-container">
+            <table class="table-full">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Pegawai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis Pegawai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal Usulan</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
+                        <th>Pegawai</th>
+                        <th>Jenis Pegawai</th>
+                        <th>Unit Kerja</th>
+                        <th>Sub-Sub Unit Kerja</th>
+                        <th>Tujuan Usulan</th>
+                        <th>Tanggal Usulan</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200">
+                <tbody>
                     @forelse($recentUsulans as $usulan)
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                        <tr>
+                            <td>
                                 <div>
                                     <div class="text-sm font-medium text-slate-900">{{ $usulan->pegawai->nama_lengkap }}</div>
                                     <div class="text-sm text-slate-500">NIP: {{ $usulan->pegawai->nip }}</div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                            <td class="text-sm text-slate-500">
                                 {{ $usulan->pegawai->jenis_pegawai }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                            <td class="text-sm text-slate-500">
+                                @php
+                                    $unitKerja = $usulan->pegawai->unitKerja;
+                                    $subUnitKerja = $unitKerja ? $unitKerja->subUnitKerja : null;
+                                    $parentUnitKerja = $subUnitKerja ? $subUnitKerja->unitKerja : null;
+                                @endphp
+                                {{ $parentUnitKerja ? $parentUnitKerja->nama : 'N/A' }}
+                            </td>
+                            <td class="text-sm text-slate-500">
+                                {{ $unitKerja ? $unitKerja->nama : 'N/A' }}
+                            </td>
+                            <td class="text-sm text-slate-500">
+                                {{ $usulan->jabatanTujuan->jabatan ?? 'N/A' }}
+                            </td>
+                            <td class="text-sm text-slate-500">
                                 {{ $usulan->created_at->format('d M Y H:i') }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td>
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
                                     {{ $usulan->status_usulan === 'Disetujui' ? 'bg-green-100 text-green-800' :
                                        ($usulan->status_usulan === 'Ditolak' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                     {{ $usulan->status_usulan }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                            <td class="text-sm text-slate-500">
                                 <a href="{{ route('backend.kepegawaian-universitas.usulan.show', $usulan->id) }}"
                                    class="inline-flex items-center px-3 py-1 border border-transparent text-xs leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +266,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+                            <td colspan="8" class="text-center text-slate-500 py-8">
                                 Belum ada usulan untuk periode ini
                             </td>
                         </tr>
@@ -259,6 +276,44 @@
         </div>
     </div>
 </div>
+
+@push('styles')
+<style>
+    .table-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .table-full {
+        width: 100%;
+        height: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+    
+    .table-full th,
+    .table-full td {
+        border: 1px solid #e2e8f0;
+        padding: 12px;
+        text-align: left;
+        vertical-align: middle;
+    }
+    
+    .table-full th {
+        background-color: #f8fafc;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+    
+    .table-full tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>

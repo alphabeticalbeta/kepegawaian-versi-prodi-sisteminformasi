@@ -25,7 +25,7 @@
                 activeDropdown = 'dropdown-master';
             }
             // Check if we're on dashboard
-            else if (currentUrl.includes('/dashboard-periode') || currentUrl.includes('/dashboard')) {
+            else if (currentUrl.includes('/dashboard')) {
                 activeDropdown = 'dashboard';
             }
             
@@ -88,8 +88,8 @@
 
         {{-- Dashboard Semua Usulan Aktif --}}
         <div class="mb-2 px-2">
-            <a href="{{ route('backend.kepegawaian-universitas.dashboard-periode.index', ['jenis' => 'all']) }}"
-               class="flex items-center px-4 py-3 rounded-lg group transition {{ request()->get('jenis') == 'all' ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+            <a href="{{ route('backend.kepegawaian-universitas.dashboard') }}"
+               class="flex items-center px-4 py-3 rounded-lg group transition {{ request()->routeIs('backend.kepegawaian-universitas.dashboard') ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
                 <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3 flex-shrink-0"></i>
                 <span class="font-medium sidebar-text">Dashboard Semua Usulan</span>
             </a>
@@ -134,7 +134,7 @@
         </div>
 
         {{-- Usulan Dropdown --}}
-        @php $isUsulanActive = request()->is('*/usulan/*') || request()->routeIs('backend.kepegawaian-universitas.usulan.*') || request()->routeIs('backend.kepegawaian-universitas.dashboard-periode.*'); @endphp
+        @php $isUsulanActive = request()->is('*/usulan/*') || request()->routeIs('backend.kepegawaian-universitas.usulan.*'); @endphp
         <div class="mb-2 px-2">
             <button type="button"
                     class="flex items-center justify-between w-full px-4 py-3 rounded-lg group transition {{ $isUsulanActive ? 'bg-gray-100 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}"
@@ -359,7 +359,7 @@
                               href.includes('/jabatan')) {
                         localStorage.setItem('sidebar-active-dropdown', 'dropdown-master');
                         localStorage.removeItem('sidebar-active-nested');
-                    } else if (href.includes('/dashboard-periode') || href.includes('/dashboard')) {
+                    } else if (href.includes('/dashboard')) {
                         localStorage.setItem('sidebar-active-dropdown', 'dashboard');
                         localStorage.removeItem('sidebar-active-nested');
                     }

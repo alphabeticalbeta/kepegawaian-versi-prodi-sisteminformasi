@@ -95,7 +95,7 @@
                                                 
                                                 case 'Perbaikan Usulan':
                                                     if ($currentRole === 'Pegawai') {
-                                                        return 'Usulan Perbaikan dari Admin Fakultas';
+                                                        return 'Permintaan Perbaikan dari Admin Fakultas';
                                                     }
                                                     break;
                                                 
@@ -141,7 +141,7 @@
                                             
                                             // Status baru
                                             'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
-                                            'Usulan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
+                                            'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
                                             'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-red-100 text-red-800',
                                             'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
                                             'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',

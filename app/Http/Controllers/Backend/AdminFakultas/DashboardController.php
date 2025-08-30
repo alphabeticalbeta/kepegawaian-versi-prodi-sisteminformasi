@@ -130,7 +130,7 @@ class DashboardController extends Controller
             'usulans as perbaikan' => function ($query) use ($unitKerjaId) {
                 $query->whereIn('status_usulan', [
                     Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                    Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS
+                    Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_KEPEGAWAIAN_UNIVERSITAS
                 ])
                     ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                         $subQuery->where('id', $unitKerjaId);

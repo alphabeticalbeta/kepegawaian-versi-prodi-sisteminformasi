@@ -98,6 +98,13 @@ class PusatUsulanController extends Controller
 
     public function showUsulanDocument(Usulan $usulan, $field)
     {
+        // Debug logging
+        Log::info('showUsulanDocument called', [
+            'usulan_id' => $usulan->id,
+            'field' => $field,
+            'url' => request()->url()
+        ]);
+
         // 1. Validasi field yang diizinkan
         $allowedFields = [
             'pakta_integritas',
@@ -110,11 +117,19 @@ class PusatUsulanController extends Controller
         // Check if field is BKD document (starts with 'bkd_')
         $isBkdDocument = str_starts_with($field, 'bkd_');
         if (!$isBkdDocument && !in_array($field, $allowedFields, true)) {
+            Log::warning('Invalid field requested', ['field' => $field, 'allowed_fields' => $allowedFields]);
             abort(404, 'Jenis dokumen tidak valid.');
         }
 
         // 2. Get file path from usulan data using model method
         $filePath = $usulan->getDocumentPath($field);
+        
+        Log::info('Document path retrieved', [
+            'usulan_id' => $usulan->id,
+            'field' => $field,
+            'file_path' => $filePath,
+            'is_bkd' => $isBkdDocument
+        ]);
 
         // 3. Fallback: jika field adalah bkd_semester_N tapi path kosong, map ke key legacy & scan
         if (!$filePath && str_starts_with($field, 'bkd_semester_')) {
@@ -159,19 +174,28 @@ class PusatUsulanController extends Controller
             Log::warning('Document path not found in data_usulan', [
                 'usulan_id' => $usulan->id,
                 'field' => $field,
-                'data_usulan_keys' => array_keys($usulan->data_usulan ?? [])
+                'data_usulan_keys' => array_keys($usulan->data_usulan ?? []),
+                'data_usulan_dokumen_usulan_keys' => array_keys($usulan->data_usulan['dokumen_usulan'] ?? []),
+                'validasi_data_keys' => array_keys($usulan->validasi_data ?? [])
             ]);
             abort(404, 'Path dokumen tidak ditemukan dalam data usulan.');
         }
 
-        // 3. Check if file exists in storage using FileStorageService
-        if (!Storage::disk('local')->exists($filePath)) {
-            Log::error('Document file not found in storage', [
-                'usulan_id' => $usulan->id,
-                'field' => $field,
-                'path' => $filePath
-            ]);
-            abort(404, 'File dokumen tidak ditemukan di storage.');
+        // 3. Check if file exists in storage - try both public and local disks
+        $disk = 'public'; // Default to public disk
+        if (!Storage::disk('public')->exists($filePath)) {
+            // Try local disk as fallback
+            if (Storage::disk('local')->exists($filePath)) {
+                $disk = 'local';
+            } else {
+                Log::error('Document file not found in storage', [
+                    'usulan_id' => $usulan->id,
+                    'field' => $field,
+                    'path' => $filePath,
+                    'tried_disks' => ['public', 'local']
+                ]);
+                abort(404, 'File dokumen tidak ditemukan di storage.');
+            }
         }
 
         // 4. Log document access
@@ -184,8 +208,15 @@ class PusatUsulanController extends Controller
         ]);
 
         // 5. Serve file using standard Laravel response
-        $fullPath = Storage::disk('local')->path($filePath);
+        $fullPath = Storage::disk($disk)->path($filePath);
         $mimeType = 'application/pdf'; // Default for PDF
+
+        Log::info('Serving document file', [
+            'usulan_id' => $usulan->id,
+            'field' => $field,
+            'disk' => $disk,
+            'full_path' => $fullPath
+        ]);
 
         return response()->file($fullPath, [
             'Content-Type' => $mimeType,

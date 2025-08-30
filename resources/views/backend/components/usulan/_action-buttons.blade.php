@@ -19,7 +19,7 @@
     ]);
 
     $isCompleted = in_array($usulan->status_usulan, [
-                    'Usulan Perbaikan dari Admin Fakultas',
+                    'Permintaan Perbaikan dari Admin Fakultas',
         'Usulan Perbaikan dari Kepegawaian Universitas',
         'Usulan Perbaikan dari Penilai Universitas',
         'Usulan Sudah Dikirim ke Sister',
@@ -91,7 +91,7 @@
 
             @else
                 {{-- Read-only Status Indicators --}}
-                @if($usulan->status_usulan === 'Usulan Perbaikan dari Admin Fakultas')
+                @if($usulan->status_usulan === 'Permintaan Perbaikan dari Admin Fakultas')
                     <div class="flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-800 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

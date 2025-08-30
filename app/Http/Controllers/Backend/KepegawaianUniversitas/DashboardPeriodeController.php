@@ -218,10 +218,40 @@ class DashboardPeriodeController extends Controller
 
         // Recent usulans for this period
         $recentUsulans = $periode->usulans()
-            ->with(['pegawai:id,nama_lengkap,nip,jenis_pegawai'])
+            ->with([
+                'pegawai:id,nama_lengkap,nip,jenis_pegawai,unit_kerja_id',
+                'pegawai.unitKerja:id,nama,sub_unit_kerja_id',
+                'pegawai.unitKerja.subUnitKerja:id,nama,unit_kerja_id',
+                'pegawai.unitKerja.subUnitKerja.unitKerja:id,nama',
+                'jabatanTujuan:id,jabatan'
+            ])
             ->latest()
             ->take(10)
             ->get();
+
+        // Debug: Log data untuk memeriksa relasi
+        \Log::info('Dashboard Periode Debug', [
+            'total_usulans' => $recentUsulans->count(),
+            'sample_usulan' => $recentUsulans->first() ? [
+                'pegawai_id' => $recentUsulans->first()->pegawai_id,
+                'pegawai_unit_kerja_id' => $recentUsulans->first()->pegawai->unit_kerja_id,
+                'unitKerja' => $recentUsulans->first()->pegawai->unitKerja ? [
+                    'id' => $recentUsulans->first()->pegawai->unitKerja->id,
+                    'nama' => $recentUsulans->first()->pegawai->unitKerja->nama,
+                    'sub_unit_kerja_id' => $recentUsulans->first()->pegawai->unitKerja->sub_unit_kerja_id,
+                ] : null,
+                'subUnitKerja' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja ? [
+                    'id' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->id,
+                    'nama' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->nama,
+                    'unit_kerja_id' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unit_kerja_id,
+                ] : null,
+                'unitKerja_parent' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unitKerja ? [
+                    'id' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unitKerja->id,
+                    'nama' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unitKerja->nama,
+                ] : null,
+            ] : null
+        ]);
+
 
         // Timeline data - usulan per month
         $timelineData = $periode->usulans()
