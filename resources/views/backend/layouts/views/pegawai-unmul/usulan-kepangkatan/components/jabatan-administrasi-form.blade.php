@@ -1,81 +1,56 @@
+@php
+    // Check if usulan is in view-only status
+    $viewOnlyStatuses = [
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+    ];
+    
+    $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);
+@endphp
+
 {{-- Dokumen Pendukung Jabatan Administrasi --}}
 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-    <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-5">
+    <div class="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-5">
         <h2 class="text-xl font-bold text-white flex items-center">
-            <i data-lucide="file-text" class="w-6 h-6 mr-3"></i>
+            <i data-lucide="clipboard" class="w-6 h-6 mr-3"></i>
             Dokumen Pendukung Jabatan Administrasi
+            @if($isViewOnly)
+                <span class="ml-3 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                    <i data-lucide="eye" class="w-3 h-3 mr-1"></i>
+                    View Only
+                </span>
+            @endif
         </h2>
     </div>
     <div class="p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6">
             <div>
-                <label class="block text-sm font-semibold text-gray-800 mb-2">Dokumen Surat Pencantuman Gelar</label>
-                <p class="text-xs text-gray-600 mb-3">Surat pencantuman gelar akademik (Opsional)</p>
-                
-                <div class="relative">
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <div class="relative">
-                                <input type="file" name="surat_pencantuman_gelar" accept=".pdf" 
-                                       class="block w-full text-sm text-gray-900 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 file:cursor-pointer">
-                            </div>
+                <label class="block text-sm font-semibold text-gray-800">Dokumen Pendukung Jabatan Administrasi</label>
+                <p class="text-xs text-gray-600 mb-2">Dokumen pendukung untuk jabatan administrasi (1 File)</p>
+                @if($isViewOnly)
+                    @if(isset($usulan->data_usulan['dokumen_usulan']['dokumen_pendukung_jabatan_administrasi']['path']))
+                        <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <i data-lucide="file-text" class="w-5 h-5 text-green-600"></i>
+                            <span class="text-sm text-green-800">Dokumen Pendukung sudah diupload</span>
                         </div>
-                        
-                        @if(isset($usulan->data_usulan['dokumen_usulan']['surat_pencantuman_gelar']['path']))
-                            <a href="{{ route('pegawai-unmul.usulan-kepangkatan.show-document', ['usulanKepangkatan' => $usulan->id, 'field' => 'surat_pencantuman_gelar']) }}" 
-                               target="_blank" 
-                               class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                                Lihat
-                            </a>
-                        @else
-                            <div class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-500 rounded-lg">
-                                <i data-lucide="file-x" class="w-4 h-4"></i>
-                                Belum ada
-                            </div>
-                        @endif
-                    </div>
-                    
-                    <div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                        <i data-lucide="info" class="w-3 h-3 text-green-500"></i>
-                        <span>Format: PDF (Max: 1MB) - Opsional</span>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-gray-800 mb-2">Surat Tanda Lulus Ujian Dinas / Penyesuaian Ijazah</label>
-                <p class="text-xs text-gray-600 mb-3">Surat tanda lulus ujian dinas atau penyesuaian ijazah (Opsional)</p>
-                
-                <div class="relative">
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <div class="relative">
-                                <input type="file" name="surat_lulus_ujian_dinas" accept=".pdf" 
-                                       class="block w-full text-sm text-gray-900 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 file:cursor-pointer">
-                            </div>
+                    @else
+                        <div class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <i data-lucide="file-x" class="w-5 h-5 text-red-600"></i>
+                            <span class="text-sm text-red-800">Dokumen Pendukung belum diupload</span>
                         </div>
-                        
-                        @if(isset($usulan->data_usulan['dokumen_usulan']['surat_lulus_ujian_dinas']['path']))
-                            <a href="{{ route('pegawai-unmul.usulan-kepangkatan.show-document', ['usulanKepangkatan' => $usulan->id, 'field' => 'surat_lulus_ujian_dinas']) }}" 
-                               target="_blank" 
-                               class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                                Lihat
-                            </a>
-                        @else
-                            <div class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-500 rounded-lg">
-                                <i data-lucide="file-x" class="w-4 h-4"></i>
-                                Belum ada
-                            </div>
-                        @endif
-                    </div>
-                    
-                    <div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                        <i data-lucide="info" class="w-3 h-3 text-green-500"></i>
-                        <span>Format: PDF (Max: 1MB) - Opsional</span>
-                    </div>
-                </div>
+                    @endif
+                @else
+                    <input type="file" name="dokumen_pendukung_jabatan_administrasi" accept=".pdf" required
+                           class="block w-full border-gray-300 rounded-lg shadow-sm bg-white px-4 py-3 text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('dokumen_pendukung_jabatan_administrasi') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                    <p class="mt-1 text-xs text-gray-500">Format: PDF (Max: 1MB) - Wajib</p>
+                    @error('dokumen_pendukung_jabatan_administrasi')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                @endif
             </div>
         </div>
     </div>

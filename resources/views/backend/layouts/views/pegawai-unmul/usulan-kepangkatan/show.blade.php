@@ -3,6 +3,19 @@
 @section('title', 'Detail Usulan Kepangkatan')
 
 @section('content')
+@php
+    // Check if usulan is in view-only status
+    $viewOnlyStatuses = [
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+    ];
+    
+    $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);
+@endphp
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
     {{-- Header Section --}}
     <div class="bg-white border-b">
@@ -120,28 +133,33 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-800">Pangkat Tujuan</label>
                             <p class="text-xs text-gray-600 mb-2">Pangkat yang ingin diajukan</p>
-                            <select name="pangkat_tujuan_id" class="block w-full border-gray-300 rounded-lg shadow-sm bg-white px-4 py-3 text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('pangkat_tujuan_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
-                                @php
-                                    $currentPangkat = $usulan->pegawai->pangkat;
-                                    $availablePangkats = \App\Models\KepegawaianUniversitas\Pangkat::where('hierarchy_level', '>', $currentPangkat->hierarchy_level ?? 0)
-                                        ->where('status_pangkat', $currentPangkat->status_pangkat ?? 'PNS')
-                                        ->orderBy('hierarchy_level', 'asc')
-                                        ->get();
-                                @endphp
-                                
-                                @if($availablePangkats->count() > 0)
-                                    @foreach($availablePangkats as $pangkat)
-                                        <option value="{{ $pangkat->id }}" {{ $usulan->pangkat_tujuan_id == $pangkat->id ? 'selected' : '' }}>
-                                            {{ $pangkat->pangkat }}
-                                        </option>
-                                    @endforeach
-                                @else
-                                    <option value="">Tidak ada pangkat tersedia</option>
-                                @endif
-                            </select>
-                            @error('pangkat_tujuan_id')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                            @if($isViewOnly)
+                                <input type="text" value="{{ $usulan->pangkatTujuan->pangkat ?? '-' }}"
+                                       class="block w-full border-gray-200 rounded-lg shadow-sm bg-gray-100 px-4 py-3 text-gray-800 font-medium cursor-not-allowed" disabled>
+                            @else
+                                <select name="pangkat_tujuan_id" class="block w-full border-gray-300 rounded-lg shadow-sm bg-white px-4 py-3 text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('pangkat_tujuan_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                                    @php
+                                        $currentPangkat = $usulan->pegawai->pangkat;
+                                        $availablePangkats = \App\Models\KepegawaianUniversitas\Pangkat::where('hierarchy_level', '>', $currentPangkat->hierarchy_level ?? 0)
+                                            ->where('status_pangkat', $currentPangkat->status_pangkat ?? 'PNS')
+                                            ->orderBy('hierarchy_level', 'asc')
+                                            ->get();
+                                    @endphp
+                                    
+                                    @if($availablePangkats->count() > 0)
+                                        @foreach($availablePangkats as $pangkat)
+                                            <option value="{{ $pangkat->id }}" {{ $usulan->pangkat_tujuan_id == $pangkat->id ? 'selected' : '' }}>
+                                                {{ $pangkat->pangkat }}
+                                            </option>
+                                        @endforeach
+                                    @else
+                                        <option value="">Tidak ada pangkat tersedia</option>
+                                    @endif
+                                </select>
+                                @error('pangkat_tujuan_id')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -558,40 +576,6 @@
             @include('backend.layouts.views.pegawai-unmul.usulan-kepangkatan.components.jabatan-struktural-form')
         @endif
 
-        {{-- Dokumen Usulan --}}
-        @if(isset($usulan->data_usulan['dokumen_usulan']) && !empty($usulan->data_usulan['dokumen_usulan']))
-        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5">
-                <h2 class="text-xl font-bold text-white flex items-center">
-                    <i data-lucide="file-text" class="w-6 h-6 mr-3"></i>
-                    Dokumen Usulan
-                </h2>
-            </div>
-            <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    @foreach($usulan->data_usulan['dokumen_usulan'] as $docType => $docData)
-                        @if(isset($docData['path']))
-                                <div>
-                            <label class="block text-sm font-semibold text-gray-800 capitalize">{{ str_replace('_', ' ', $docType) }}</label>
-                            <p class="text-xs text-gray-600 mb-2">{{ $docData['original_name'] ?? 'Dokumen' }}</p>
-                            <div class="flex items-center gap-2">
-                                <input type="text" value="Tersedia" 
-                                       class="block w-full border-gray-200 rounded-lg shadow-sm bg-gray-100 px-4 py-3 text-gray-800 font-medium cursor-not-allowed" disabled>
-                                <a href="{{ route('pegawai-unmul.usulan-kepangkatan.show-document', ['usulanKepangkatan' => $usulan->id, 'field' => $docType]) }}"
-                                   target="_blank"
-                                   class="inline-flex items-center px-3 py-3 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-                                    <i data-lucide="eye" class="w-4 h-4 mr-1"></i>
-                                    Lihat
-                                </a>
-                            </div>
-                        </div>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-        </div>
-        @endif
-
         {{-- Catatan Pengusul --}}
         @if(isset($usulan->data_usulan['catatan_pengusul']) && $usulan->data_usulan['catatan_pengusul'])
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
@@ -636,16 +620,7 @@
 
         {{-- Action Buttons untuk Pegawai --}}
         @include('backend.layouts.views.pegawai-unmul.usulan-kepangkatan.components.pegawai-action-buttons')
-
-        {{-- Metadata --}}
-        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-            <div class="bg-gradient-to-r from-slate-600 to-gray-700 px-6 py-5">
-                <h2 class="text-xl font-bold text-white flex items-center">
-                    <i data-lucide="info" class="w-6 h-6 mr-3"></i>
-                    Informasi Sistem
-                </h2>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
 @endsection
