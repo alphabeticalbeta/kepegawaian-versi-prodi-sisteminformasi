@@ -83,18 +83,18 @@ class KepegawaianUniversitas {
     // Dropdown sidebar functionality
     initializeDropdowns() {
         console.log('Initializing dropdowns for kepegawaian universitas...');
-        
+
         // Remove any existing event listeners first
         const existingButtons = document.querySelectorAll('button[data-collapse-toggle]');
         existingButtons.forEach(btn => {
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
         });
-        
+
         // Now add new event listeners
         document.querySelectorAll('button[data-collapse-toggle]').forEach(btn => {
             console.log('Setting up dropdown button:', btn.getAttribute('data-collapse-toggle'));
-            
+
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -117,7 +117,7 @@ class KepegawaianUniversitas {
                 if (isNested) {
                     // For nested dropdowns, only toggle this specific dropdown
                     console.log('Handling nested dropdown - only toggle this one');
-                    
+
                     // Toggle only this nested dropdown
                     if (isOpening) {
                         dropdown.classList.remove('hidden');
@@ -133,23 +133,23 @@ class KepegawaianUniversitas {
                 } else {
                     // For parent dropdowns, close other parent dropdowns
                     console.log('Handling parent dropdown - close other parents');
-                    
+
                     document.querySelectorAll('.dropdown-menu').forEach(otherDropdown => {
                         if (otherDropdown.id !== targetId) {
                             // Don't close dropdowns that contain nested dropdowns
                             const containsNested = otherDropdown.querySelector('.nested-dropdown-container') !== null;
-                            
+
                             console.log('Checking dropdown:', {
                                 id: otherDropdown.id,
                                 containsNested: containsNested,
                                 willClose: !containsNested
                             });
-                            
+
                             if (!containsNested) {
                                 otherDropdown.classList.add('hidden');
                                 otherDropdown.style.maxHeight = '0';
                                 otherDropdown.style.opacity = '0';
-                                
+
                                 const otherButton = document.querySelector(`[data-collapse-toggle="${otherDropdown.id}"]`);
                                 if (otherButton) {
                                     otherButton.setAttribute('aria-expanded', 'false');
@@ -164,7 +164,7 @@ class KepegawaianUniversitas {
                             }
                         }
                     });
-                    
+
                     // Toggle the current dropdown
                     if (isOpening) {
                         dropdown.classList.remove('hidden');
@@ -187,7 +187,7 @@ class KepegawaianUniversitas {
 
                 // Update aria-expanded
                 this.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
-                
+
                 console.log('Toggled dropdown:', {
                     id: targetId,
                     isNested: isNested,
@@ -195,7 +195,7 @@ class KepegawaianUniversitas {
                 });
             });
         });
-        
+
         console.log('Dropdown initialization complete for kepegawaian universitas');
     }
 
@@ -571,8 +571,8 @@ class KepegawaianUniversitas {
             const updateSubmitButton = () => {
                 const checkedCount = document.querySelectorAll('input[name="assessor_ids[]"]:checked').length;
                 submitButton.disabled = checkedCount < 1 || checkedCount > 3;
-                submitButton.textContent = checkedCount < 1 ? 'Pilih minimal 1 penilai' : 
-                                          checkedCount > 3 ? 'Pilih maksimal 3 penilai' : 
+                submitButton.textContent = checkedCount < 1 ? 'Pilih minimal 1 penilai' :
+                                          checkedCount > 3 ? 'Pilih maksimal 3 penilai' :
                                           'Kirim ke Tim Penilai';
             };
 
@@ -648,7 +648,7 @@ class KepegawaianUniversitas {
 
         // Create modal content based on action type
         let modalTitle, modalPlaceholder, actionUrl, modalIcon, confirmButtonColor;
-        
+
         switch (actionType) {
             case 'pegawai':
                 modalTitle = 'Teruskan Perbaikan ke Pegawai';
@@ -657,7 +657,7 @@ class KepegawaianUniversitas {
                 modalIcon = 'info';
                 confirmButtonColor = '#3b82f6';
                 break;
-                
+
             case 'fakultas':
                 modalTitle = 'Teruskan Perbaikan ke Fakultas';
                 modalPlaceholder = 'Masukkan catatan perbaikan untuk admin fakultas...';
@@ -665,7 +665,7 @@ class KepegawaianUniversitas {
                 modalIcon = 'info';
                 confirmButtonColor = '#8b5cf6';
                 break;
-                
+
             case 'penilai':
                 modalTitle = 'Kirim Perbaikan ke Tim Penilai';
                 modalPlaceholder = 'Masukkan catatan perbaikan untuk tim penilai...';
@@ -673,7 +673,7 @@ class KepegawaianUniversitas {
                 modalIcon = 'warning';
                 confirmButtonColor = '#f59e0b';
                 break;
-                
+
             case 'tidak_direkomendasikan':
                 modalTitle = 'Tidak Direkomendasikan';
                 modalPlaceholder = 'Masukkan alasan mengapa usulan tidak direkomendasikan...';
@@ -681,7 +681,7 @@ class KepegawaianUniversitas {
                 modalIcon = 'error';
                 confirmButtonColor = '#dc2626';
                 break;
-                
+
             case 'senat':
                 modalTitle = 'Kirim ke Tim Senat';
                 modalPlaceholder = 'Masukkan catatan untuk tim senat...';
@@ -801,7 +801,7 @@ class KepegawaianUniversitas {
             const formData = new FormData();
             formData.append('catatan_verifikator', catatan);
             formData.append('action_type', actionType);
-            
+
             const response = await window.fetchWithCsrf(actionUrl, {
                 method: 'POST',
                 body: formData
@@ -887,7 +887,7 @@ class KepegawaianUniversitas {
     checkAndDisableButtons() {
         // Get usulan data from the page
         const usulanData = this.getUsulanDataFromPage();
-        
+
         if (!usulanData) return;
 
         const validasiData = usulanData.validasi_data || {};
@@ -917,10 +917,10 @@ class KepegawaianUniversitas {
                     button.disabled = true;
                     button.classList.add('opacity-50', 'cursor-not-allowed');
                     button.classList.remove('hover:bg-red-700', 'hover:bg-amber-700');
-                    
+
                     // Add tooltip or visual indicator
                     button.title = 'Button dinonaktifkan karena sudah ada aksi perbaikan yang dikirim';
-                    
+
                     console.log(`Disabled button: ${buttonId}`);
                 }
             });

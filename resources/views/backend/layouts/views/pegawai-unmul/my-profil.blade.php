@@ -20,6 +20,11 @@
         'sk_penyetaraan_ijazah' => ['label' => 'SK Penyetaraan Ijazah', 'icon' => 'scale'],
         'disertasi_thesis_terakhir' => ['label' => 'Disertasi/Thesis', 'icon' => 'book-open'],
     ];
+
+    // Tambahkan PAK Integrasi hanya untuk jabatan tertentu
+    if ($pegawai->jabatan && in_array($pegawai->jabatan->jenis_jabatan, ['Dosen Fungsional', 'Tenaga Kependidikan Fungsional Tertentu'])) {
+        $documentFields['pak_integrasi'] = ['label' => 'PAK Integrasi', 'icon' => 'calculator'];
+    }
 @endphp
 
 @section('content')

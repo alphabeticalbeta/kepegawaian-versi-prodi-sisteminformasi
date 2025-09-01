@@ -208,6 +208,22 @@ function validateAssessorSelection() {
     }
 }
 
+// Filter assessor list by name
+function filterAssessorList() {
+    const input = document.getElementById('assessor-filter');
+    const term = (input?.value || '').toLowerCase();
+    const items = document.querySelectorAll('#assessor-list .assessor-item');
+    let visible = 0;
+    items.forEach(el => {
+        const name = el.getAttribute('data-name') || '';
+        const match = name.includes(term);
+        el.style.display = match ? '' : 'none';
+        if (match) visible++;
+    });
+    const empty = document.getElementById('assessor-empty');
+    if (empty) empty.classList.toggle('hidden', visible !== 0);
+}
+
 // =====================================
 // FORM SUBMISSION HANDLERS
 // =====================================

@@ -87,6 +87,7 @@
                     'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah (Luar Negeri)',
                     'disertasi_thesis_terakhir' => 'Disertasi/Thesis Terakhir',
                     'pak_konversi' => 'PAK Konversi',
+            'pak_integrasi' => 'PAK Integrasi',
                     'skp_tahun_pertama' => 'SKP Tahun Pertama',
                     'skp_tahun_kedua' => 'SKP Tahun Kedua',
                 ];

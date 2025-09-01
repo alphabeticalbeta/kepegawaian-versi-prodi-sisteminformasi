@@ -22,7 +22,7 @@
         text-align: center !important;
         line-height: 16px !important;
     }
-    
+
     /* Fallback untuk icon yang tidak terlihat */
     .fa-toggle-on::before { content: "🔓"; }
     .fa-toggle-off::before { content: "🔒"; }
@@ -34,7 +34,7 @@
     .fa-list::before { content: "📋"; }
     .fa-calendar-times::before { content: "📅"; }
     .fa-spinner::before { content: "⏳"; }
-    
+
     /* Padding hanya untuk main content (card), bukan header */
     .bg-white.rounded-lg.shadow-sm.border.border-gray-200 {
         margin-left: 1.5rem !important;
@@ -42,7 +42,7 @@
         margin-top: 0 !important;
         margin-bottom: 1.5rem !important;
     }
-    
+
     /* Header tidak perlu margin/padding dari sisi */
     .bg-white.border-b.border-gray-200 {
         margin-left: 0 !important;
@@ -50,7 +50,7 @@
         margin-top: 0 !important;
         margin-bottom: 1.5rem !important;
     }
-    
+
     /* Memastikan icon terlihat dengan baik */
     .action-button i {
         font-size: 14px !important;
@@ -60,7 +60,7 @@
         text-align: center !important;
         line-height: 16px !important;
     }
-    
+
     /* Memastikan button aktif dan terlihat */
     .action-button {
         cursor: pointer !important;
@@ -68,52 +68,52 @@
         border: none !important;
         outline: none !important;
     }
-    
+
     .action-button:hover {
         transform: translateY(-1px) !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
-    
+
     .action-button:disabled {
         cursor: not-allowed !important;
         opacity: 0.5 !important;
     }
-    
+
     /* Memastikan semua button terlihat dan berfungsi */
     button, a {
         cursor: pointer !important;
         transition: all 0.2s ease !important;
     }
-    
+
     button:hover, a:hover {
         transform: translateY(-1px) !important;
     }
-    
+
     button:disabled {
         cursor: not-allowed !important;
         opacity: 0.5 !important;
     }
-    
+
     /* Debug styling untuk memastikan button terlihat */
     #tambahPeriodeBtn, #tambahPeriodeEmptyBtn {
         position: relative !important;
         z-index: 10 !important;
         pointer-events: auto !important;
     }
-    
+
     /* Memastikan form delete sejajar dengan button lainnya */
     .action-buttons form {
         display: inline-block !important;
         margin: 0 !important;
         padding: 0 !important;
     }
-    
+
     .action-buttons form button {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
-    
+
     /* Modal Styles */
     .modal-overlay {
         position: fixed;
@@ -130,12 +130,12 @@
         visibility: hidden;
         transition: all 0.3s ease;
     }
-    
+
     .modal-overlay.show {
         opacity: 1;
         visibility: visible;
     }
-    
+
     .modal-content {
         background: white;
         border-radius: 12px;
@@ -148,40 +148,40 @@
         transition: all 0.3s ease;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
-    
+
     .modal-overlay.show .modal-content {
         transform: scale(1);
     }
-    
+
     .modal-header {
         padding: 1.5rem 1.5rem 0.5rem 1.5rem;
         border-bottom: 1px solid #e5e7eb;
     }
-    
+
     .modal-body {
         padding: 1rem 1.5rem;
     }
-    
+
     .modal-footer {
         padding: 0.5rem 1.5rem 1.5rem 1.5rem;
         display: flex;
         gap: 0.75rem;
         justify-content: flex-end;
     }
-    
+
     .modal-title {
         font-size: 1.125rem;
         font-weight: 600;
         color: #111827;
         margin: 0;
     }
-    
+
     .modal-message {
         color: #6b7280;
         line-height: 1.5;
         margin: 0;
     }
-    
+
     .btn {
         padding: 0.5rem 1rem;
         border-radius: 0.5rem;
@@ -192,36 +192,36 @@
         border: none;
         outline: none;
     }
-    
+
     .btn-secondary {
         background-color: #f3f4f6;
         color: #374151;
         border: 1px solid #d1d5db;
     }
-    
+
     .btn-secondary:hover {
         background-color: #e5e7eb;
         border-color: #9ca3af;
     }
-    
+
     .btn-danger {
         background-color: #dc2626;
         color: white;
     }
-    
+
     .btn-danger:hover {
         background-color: #b91c1c;
     }
-    
+
     .btn-success {
         background-color: #059669;
         color: white;
     }
-    
+
     .btn-success:hover {
         background-color: #047857;
     }
-    
+
     /* Notification Styles */
     .notification {
         position: fixed;
@@ -236,30 +236,30 @@
         transform: translateX(100%);
         transition: transform 0.3s ease;
     }
-    
+
     .notification.show {
         transform: translateX(0);
     }
-    
+
     .notification.success {
         border-left-color: #059669;
     }
-    
+
     .notification.error {
         border-left-color: #dc2626;
     }
-    
+
     .notification.info {
         border-left-color: #3b82f6;
     }
-    
+
     .notification-content {
         padding: 1rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
     }
-    
+
     .notification-icon {
         flex-shrink: 0;
         width: 20px;
@@ -268,13 +268,13 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .notification-message {
         flex: 1;
         color: #374151;
         font-size: 0.875rem;
     }
-    
+
     .notification-close {
         flex-shrink: 0;
         background: none;
@@ -285,7 +285,7 @@
         border-radius: 0.25rem;
         transition: color 0.2s ease;
     }
-    
+
     .notification-close:hover {
         color: #6b7280;
     }
@@ -311,7 +311,7 @@
             </p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.create') }}" 
+            <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.create') }}"
                class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 border border-transparent rounded-lg text-sm font-medium text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-sm">
                 <i class="fas fa-plus" style="font-size: 14px;"></i>
                 Tambah Periode
@@ -351,9 +351,9 @@
                     <option value="pencantuman-gelar" {{ $jenisUsulan == 'pencantuman-gelar' ? 'selected' : '' }}>Usulan Pencantuman Gelar</option>
                 </select>
             </div>
-            
+
             @if($jenisUsulan && $jenisUsulan !== 'all')
-                <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index') }}" 
+                <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
                     <i class="fas fa-times" style="font-size: 12px;"></i>
                     Tampilkan Semua
@@ -378,10 +378,7 @@
                         Jenis Usulan
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Mulai
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Selesai
+                        Periode Usulan
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Status
@@ -460,10 +457,14 @@
                             </span>
                         </td>
                             <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->isoFormat('D MMM YYYY') }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($periode->tanggal_selesai)->isoFormat('D MMM YYYY') }}</div>
+                                <div class="flex flex-col">
+                                    <div class="font-medium text-slate-800">
+                                        {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                    <div class="font-medium text-slate-800">
+                                        s/d {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 @if($periode->status == 'Buka')
@@ -493,28 +494,28 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center space-x-2 action-buttons">
                                 <!-- Toggle Status Button -->
-                                <button onclick="toggleStatus({{ $periode->id }}, '{{ $periode->status }}', event)" 
+                                <button onclick="toggleStatus({{ $periode->id }}, '{{ $periode->status }}', event)"
                                         class="action-button p-2 rounded-lg transition-colors duration-200 {{ $periode->status == 'Buka' ? 'text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100' : 'text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100' }}"
                                         title="{{ $periode->status == 'Buka' ? 'Tutup Periode' : 'Buka Periode' }}">
                                     <i class="fas {{ $periode->status == 'Buka' ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
                                 </button>
-                                
+
                                 <!-- Edit Button -->
-                                <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.edit', $periode->id) }}" 
+                                <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.edit', $periode->id) }}"
                                    class="action-button p-2 rounded-lg text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
                                    title="Edit Periode">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                
+
                                 <!-- Delete Button - Disabled if has usulans -->
                                 @if(($periode->usulans_count ?? 0) > 0)
-                                    <button disabled 
+                                    <button disabled
                                             class="action-button p-2 rounded-lg text-gray-400 bg-gray-50 cursor-not-allowed"
                                             title="Tidak dapat dihapus karena ada {{ $periode->usulans_count }} usulan yang masuk">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 @else
-                                    <button type="button" 
+                                    <button type="button"
                                             onclick="confirmDelete({{ $periode->id }}, '{{ $periode->nama_periode }}', event)"
                                             class="action-button p-2 rounded-lg text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 transition-colors duration-200"
                                             title="Hapus Periode">
@@ -526,7 +527,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12">
+                        <td colspan="7" class="px-6 py-12">
                             <div class="text-center">
                                 <div class="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                     <i class="fas fa-calendar-times text-gray-400" style="font-size: 2rem;"></i>
@@ -546,13 +547,13 @@
                                     @endif
                                 </p>
                                 <div class="flex justify-center gap-3">
-                                    <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.create') }}" 
+                                    <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.create') }}"
                                        class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
                                         <i class="fas fa-plus" style="font-size: 14px; margin-right: 0.5rem;"></i>
                                         Tambah Periode Pertama
                                     </a>
                                     @if($jenisUsulan && $jenisUsulan !== 'all')
-                                        <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index') }}" 
+                                        <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index') }}"
                                            class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200">
                                             <i class="fas fa-list" style="font-size: 14px; margin-right: 0.5rem;"></i>
                                             Lihat Semua Periode
@@ -566,7 +567,7 @@
             </tbody>
         </table>
     </div>
-    
+
     <!-- Pagination Section -->
     @if($periodeUsulans->hasPages())
         <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
@@ -608,18 +609,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Handle filter berdasarkan jenis usulan
     const filterJenis = document.getElementById('filterJenis');
-    
+
     if (filterJenis) {
         filterJenis.addEventListener('change', function() {
             const selectedValue = this.value;
             const currentUrl = new URL(window.location);
-            
+
             if (selectedValue && selectedValue !== '') {
                 currentUrl.searchParams.set('jenis', selectedValue);
             } else {
                 currentUrl.searchParams.delete('jenis');
             }
-            
+
             window.location.href = currentUrl.toString();
         });
     }
@@ -637,53 +638,53 @@ function showModal(title, message, confirmText = 'Ya, Lanjutkan', cancelText = '
         const modalMessage = document.getElementById('modalMessage');
         const modalConfirm = document.getElementById('modalConfirm');
         const modalCancel = document.getElementById('modalCancel');
-        
+
         modalTitle.textContent = title;
         modalMessage.textContent = message;
         modalConfirm.textContent = confirmText;
         modalCancel.textContent = cancelText;
-        
+
         // Set button type
         modalConfirm.className = `btn btn-${type}`;
-        
+
         // Show modal
         modal.classList.add('show');
-        
+
         // Handle confirm
         const handleConfirm = () => {
             modal.classList.remove('show');
             cleanup();
             resolve(true);
         };
-        
+
         // Handle cancel
         const handleCancel = () => {
             modal.classList.remove('show');
             cleanup();
             resolve(false);
         };
-        
+
         // Handle escape key
         const handleEscape = (e) => {
             if (e.key === 'Escape') {
                 handleCancel();
             }
         };
-        
+
         // Handle click outside
         const handleOutsideClick = (e) => {
             if (e.target === modal) {
                 handleCancel();
             }
         };
-        
+
         const cleanup = () => {
             modalConfirm.removeEventListener('click', handleConfirm);
             modalCancel.removeEventListener('click', handleCancel);
             document.removeEventListener('keydown', handleEscape);
             modal.removeEventListener('click', handleOutsideClick);
         };
-        
+
         modalConfirm.addEventListener('click', handleConfirm);
         modalCancel.addEventListener('click', handleCancel);
         document.addEventListener('keydown', handleEscape);
@@ -695,11 +696,11 @@ function showNotification(message, type = 'info', duration = 5000) {
     const container = document.getElementById('notificationContainer');
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    
-    const icon = type === 'success' ? 'fa-check-circle' : 
-                 type === 'error' ? 'fa-exclamation-circle' : 
+
+    const icon = type === 'success' ? 'fa-check-circle' :
+                 type === 'error' ? 'fa-exclamation-circle' :
                  'fa-info-circle';
-    
+
     notification.innerHTML = `
         <div class="notification-content">
             <div class="notification-icon">
@@ -711,14 +712,14 @@ function showNotification(message, type = 'info', duration = 5000) {
             </button>
         </div>
     `;
-    
+
     container.appendChild(notification);
-    
+
     // Trigger animation
     setTimeout(() => {
         notification.classList.add('show');
     }, 100);
-    
+
     // Auto remove
     if (duration > 0) {
         setTimeout(() => {
@@ -736,7 +737,7 @@ function showNotification(message, type = 'info', duration = 5000) {
 window.toggleStatus = function(periodeId, currentStatus, event) {
     const newStatus = currentStatus === 'Buka' ? 'Tutup' : 'Buka';
     const actionText = currentStatus === 'Buka' ? 'menutup' : 'membuka';
-    
+
     showModal(
         'Konfirmasi Perubahan Status',
         `Anda yakin ingin ${actionText} periode ini?`,
@@ -750,12 +751,12 @@ window.toggleStatus = function(periodeId, currentStatus, event) {
             const originalHTML = button.innerHTML;
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             button.disabled = true;
-            
+
             // Create form data
             const formData = new FormData();
             formData.append('_token', '{{ csrf_token() }}');
             formData.append('periode_id', periodeId);
-            
+
             // Send request
             fetch('{{ route('backend.kepegawaian-universitas.usulan.toggle-periode') }}', {
                 method: 'POST',
@@ -777,9 +778,9 @@ window.toggleStatus = function(periodeId, currentStatus, event) {
                         button.innerHTML = '<i class="fas fa-toggle-off"></i>';
                         button.title = 'Buka Periode';
                     }
-                    
+
                     // Update status cell
-                    const statusCell = button.closest('tr').querySelector('td:nth-child(7)'); // Status column
+                    const statusCell = button.closest('tr').querySelector('td:nth-child(6)'); // Status column
                     if (statusCell) {
                         if (newStatus === 'Buka') {
                             statusCell.innerHTML = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Buka</span>';
@@ -787,7 +788,7 @@ window.toggleStatus = function(periodeId, currentStatus, event) {
                             statusCell.innerHTML = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Tutup</span>';
                         }
                     }
-                    
+
                     // Show success notification
                     showNotification(`Status periode berhasil diubah menjadi ${newStatus}`, 'success');
                 } else {
@@ -822,12 +823,12 @@ window.confirmDelete = function(periodeId, periodeName, event) {
             const originalHTML = button.innerHTML;
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             button.disabled = true;
-            
+
             // Create form data
             const formData = new FormData();
             formData.append('_token', '{{ csrf_token() }}');
             formData.append('_method', 'DELETE');
-            
+
             // Send request
             fetch(`{{ route('backend.kepegawaian-universitas.periode-usulan.destroy', ':id') }}`.replace(':id', periodeId), {
                 method: 'POST',
@@ -843,11 +844,11 @@ window.confirmDelete = function(periodeId, periodeName, event) {
                     const row = button.closest('tr');
                     row.style.backgroundColor = '#fef2f2';
                     row.style.transition = 'background-color 0.5s ease';
-                    
+
                     setTimeout(() => {
                         row.remove();
                         showNotification('Periode berhasil dihapus', 'success');
-                        
+
                         // Check if table is empty
                         const tbody = document.querySelector('tbody');
                         if (tbody.children.length === 0) {

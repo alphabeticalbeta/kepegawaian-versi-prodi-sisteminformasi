@@ -27,7 +27,7 @@ class ProfileController extends Controller
                         ->find($pegawai->id);
 
         // 2. Ambil daftar field dokumen
-        $documentFields = $this->getDocumentFields();
+        $documentFields = $this->getDocumentFields($pegawai);
 
         // 3. Tentukan apakah sedang dalam mode edit atau tidak
         $isEditing = $request->has('edit') && $request->get('edit') == '1';
@@ -125,7 +125,7 @@ class ProfileController extends Controller
         $pegawai = Auth::guard('pegawai')->user();
 
         // 1. Validasi field yang diizinkan
-        $allowedFields = array_keys($this->getDocumentFields());
+        $allowedFields = array_keys($this->getDocumentFields($pegawai));
         if (!in_array($field, $allowedFields)) {
             abort(404, 'Jenis dokumen tidak valid.');
         }
@@ -167,7 +167,7 @@ class ProfileController extends Controller
      */
     private function handleFileUploads(Request $request, &$validatedData, $pegawai)
     {
-        $fileColumns = array_keys($this->getDocumentFields());
+        $fileColumns = array_keys($this->getDocumentFields($pegawai));
 
         foreach ($fileColumns as $column) {
             if ($request->hasFile($column)) {
@@ -220,6 +220,7 @@ class ProfileController extends Controller
             'sk_penyetaraan_ijazah',
             'disertasi_thesis_terakhir',
             'pak_konversi',
+            'pak_integrasi',
             'skp_tahun_pertama',
             'skp_tahun_kedua',
             'sk_cpns',
@@ -243,7 +244,7 @@ class ProfileController extends Controller
         $sensitiveFiles = [
             'sk_pangkat_terakhir', 'sk_jabatan_terakhir', 'ijazah_terakhir',
             'transkrip_nilai_terakhir', 'sk_penyetaraan_ijazah', 'disertasi_thesis_terakhir',
-            'pak_konversi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
+            'pak_konversi', 'pak_integrasi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
         ];
 
         $disk = in_array($column, $sensitiveFiles) ? 'local' : 'public';
@@ -255,7 +256,7 @@ class ProfileController extends Controller
         $sensitiveFiles = [
             'sk_pangkat_terakhir', 'sk_jabatan_terakhir', 'ijazah_terakhir',
             'transkrip_nilai_terakhir', 'sk_penyetaraan_ijazah', 'disertasi_thesis_terakhir',
-            'pak_konversi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
+            'pak_konversi', 'pak_integrasi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
         ];
 
         return in_array($field, $sensitiveFiles) ? 'local' : 'public';
@@ -264,9 +265,9 @@ class ProfileController extends Controller
     /**
      * Get document fields configuration
      */
-    private function getDocumentFields(): array
+    private function getDocumentFields($pegawai = null): array
     {
-        return [
+        $documentFields = [
             'sk_pangkat_terakhir' => [
                 'label' => 'SK Pangkat Terakhir',
                 'icon' => 'file-text'
@@ -316,5 +317,39 @@ class ProfileController extends Controller
                 'icon' => 'user'
             ]
         ];
+
+        // Tambahkan PAK Integrasi hanya untuk jabatan tertentu
+        if ($pegawai && $this->isPakIntegrasiEligible($pegawai)) {
+            $documentFields['pak_integrasi'] = [
+                'label' => 'PAK Integrasi',
+                'icon' => 'calculator'
+            ];
+        }
+
+        return $documentFields;
+    }
+
+    /**
+     * Check if pegawai is eligible for PAK Integrasi
+     */
+    private function isPakIntegrasiEligible($pegawai): bool
+    {
+        // Load jabatan relationship if not loaded
+        if (!$pegawai->relationLoaded('jabatan')) {
+            $pegawai->load('jabatan');
+        }
+
+        // Check if pegawai has jabatan
+        if (!$pegawai->jabatan) {
+            return false;
+        }
+
+        // PAK Integrasi hanya untuk jabatan fungsional
+        $eligibleJenisJabatan = [
+            'Dosen Fungsional',
+            'Tenaga Kependidikan Fungsional Tertentu'
+        ];
+
+        return in_array($pegawai->jabatan->jenis_jabatan, $eligibleJenisJabatan);
     }
 }

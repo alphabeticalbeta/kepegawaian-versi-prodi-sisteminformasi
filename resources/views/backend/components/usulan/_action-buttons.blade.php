@@ -1,8 +1,8 @@
 {{-- Action Buttons Component --}}
 @php
     $canEdit = $canEdit ?? in_array($usulan->status_usulan, [
-        'Usulan Disetujui Admin Fakultas',
-        'Usulan Disetujui Kepegawaian Universitas',
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
     ]);
     // Baca syarat dari model
     $minSetuju = $usulan->getSenateMinSetuju();
@@ -14,8 +14,8 @@
 
     // Determine if usulan can be edited
      $canEdit = $canEdit ?? in_array($usulan->status_usulan, [
-        'Usulan Disetujui Admin Fakultas',
-        'Usulan Disetujui Kepegawaian Universitas',
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
     ]);
 
     $isCompleted = in_array($usulan->status_usulan, [
@@ -44,51 +44,61 @@
         <div class="flex gap-4">
             @if($canEdit)
                 {{-- Editable Actions --}}
-                <button type="button"
-                        onclick="showReturnForm()"
-                        class="px-6 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 flex items-center gap-2 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
-                    Kembalikan untuk Revisi
-                </button>
+                @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS)
+                    {{-- Hanya tampilkan tombol Kirim Usulan ke Tim Penilai pada status ini --}}
+                    <button type="button"
+                            onclick="showSendToAssessorForm()"
+                            class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                        Kirim Usulan ke Tim Penilai
+                    </button>
+                @else
+                    <button type="button"
+                            onclick="showReturnForm()"
+                            class="px-6 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
+                        Kembalikan untuk Revisi
+                    </button>
 
-                <button type="button"
-                        onclick="showNotRecommendedForm()"
-                        class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Belum Direkomendasikan
-                </button>
+                    <button type="button"
+                            onclick="showNotRecommendedForm()"
+                            class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Belum Direkomendasikan
+                    </button>
 
-                <button type="button"
-                        onclick="showSendToAssessorForm()"
-                        class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8">
-                        </path>
-                    </svg>
-                    Kirim Usulan ke Tim Penilai
-                </button>
+                    <button type="button"
+                            onclick="showSendToAssessorForm()"
+                            class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                        Kirim Usulan ke Tim Penilai
+                    </button>
 
-                <button type="button"
-                        onclick="showSendToSenateForm()"
-                        class="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2 transition-colors
-                               {{ $usulan->isRecommendedByReviewer() ? '' : 'opacity-50 cursor-not-allowed' }}"
-                        {{ $usulan->isRecommendedByReviewer() ? '' : 'disabled' }}
-                        title="{{ $usulan->isRecommendedByReviewer() ? 'Kirim ke Tim Senat' : 'Menunggu rekomendasi dari Tim Penilai' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
-                        </path>
-                    </svg>
-                    Kirim Usulan ke Tim Senat
-                </button>
+                    <button type="button"
+                            onclick="showSendToSenateForm()"
+                            class="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2 transition-colors
+                                   {{ $usulan->isRecommendedByReviewer() ? '' : 'opacity-50 cursor-not-allowed' }}"
+                            {{ $usulan->isRecommendedByReviewer() ? '' : 'disabled' }}
+                            title="{{ $usulan->isRecommendedByReviewer() ? 'Kirim ke Tim Senat' : 'Menunggu rekomendasi dari Tim Penilai' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Kirim Usulan ke Tim Senat
+                    </button>
 
-                @if(!$usulan->isRecommendedByReviewer())
-                    <p class="text-xs text-gray-500 mt-2">
-                        Syarat untuk Kirim ke Tim Senat: Tim Penilai belum memberikan rekomendasi.
-                    </p>
+                    @if(!$usulan->isRecommendedByReviewer())
+                        <p class="text-xs text-gray-500 mt-2">
+                            Syarat untuk Kirim ke Tim Senat: Tim Penilai belum memberikan rekomendasi.
+                        </p>
+                    @endif
                 @endif
-
             @else
                 {{-- Read-only Status Indicators --}}
                 @if($usulan->status_usulan === 'Permintaan Perbaikan dari Admin Fakultas')

@@ -120,7 +120,8 @@
                     <div class="filter-status" id="jabatan-terakhir-filter-status">Filter Active</div>
                     <select name="jabatan_terakhir_id"
                             id="jabatan_terakhir_id"
-                            class="w-full px-3 lg:px-4 py-3 lg:py-4 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200/50 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md appearance-none text-sm lg:text-base">
+                            class="w-full px-3 lg:px-4 py-3 lg:py-4 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200/50 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md appearance-none text-sm lg:text-base"
+                            x-on:change="updateJenisJabatan($event)">
                         <option value="">Pilih Jabatan</option>
                         @foreach($jabatans as $jabatan)
                             <option value="{{ $jabatan->id }}"

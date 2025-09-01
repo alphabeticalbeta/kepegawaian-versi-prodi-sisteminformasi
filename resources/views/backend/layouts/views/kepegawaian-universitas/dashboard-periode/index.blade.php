@@ -22,64 +22,7 @@
         </div>
     </div>
 
-    <!-- Overall Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Total Periode</p>
-                    <p class="text-3xl font-bold text-indigo-600">{{ $overallStats['total_periodes'] }}</p>
-                </div>
-                <div class="p-3 bg-indigo-100 rounded-xl">
-                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
 
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Periode Aktif</p>
-                    <p class="text-3xl font-bold text-green-600">{{ $overallStats['periodes_aktif'] }}</p>
-                </div>
-                <div class="p-3 bg-green-100 rounded-xl">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Total Usulan</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ $overallStats['total_usulan'] }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-xl">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Usulan Disetujui</p>
-                    <p class="text-3xl font-bold text-emerald-600">{{ $overallStats['usulan_disetujui'] }}</p>
-                </div>
-                <div class="p-3 bg-emerald-100 rounded-xl">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Quick Actions -->
     <div class="mb-8">
@@ -173,10 +116,9 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">No</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nama Periode</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal Pembukaan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal Penutup</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal Awal Perbaikan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal Akhir Perbaikan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis Usulan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Periode Usulan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Periode Perbaikan</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jumlah Pelamar</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
@@ -191,25 +133,82 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div>
                                         <div class="text-sm font-medium text-slate-900">{{ $periode->nama_periode }}</div>
-                                        <div class="text-sm text-slate-500">Tahun {{ $periode->tahun_periode }}</div>
+                                        <div class="text-sm font-medium text-slate-900">Tahun {{ $periode->tahun_periode }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                        @if($periode->jenis_usulan == 'jabatan-dosen-regular') bg-indigo-100 text-indigo-800
+                                        @elseif($periode->jenis_usulan == 'jabatan-dosen-pengangkatan') bg-cyan-100 text-cyan-800
+                                        @elseif($periode->jenis_usulan == 'nuptk') bg-green-100 text-green-800
+                                        @elseif($periode->jenis_usulan == 'laporan-lkd') bg-blue-100 text-blue-800
+                                        @elseif($periode->jenis_usulan == 'presensi') bg-pink-100 text-pink-800
+                                        @elseif($periode->jenis_usulan == 'id-sinta-sister') bg-teal-100 text-teal-800
+                                        @elseif($periode->jenis_usulan == 'satyalancana') bg-orange-100 text-orange-800
+                                        @elseif($periode->jenis_usulan == 'tugas-belajar') bg-cyan-100 text-cyan-800
+                                        @elseif($periode->jenis_usulan == 'pengaktifan-kembali') bg-emerald-100 text-emerald-800
+                                        @elseif($periode->jenis_usulan == 'penyesuaian-masa-kerja') bg-amber-100 text-amber-800
+                                        @elseif($periode->jenis_usulan == 'ujian-dinas-ijazah') bg-lime-100 text-lime-800
+                                        @elseif($periode->jenis_usulan == 'laporan-serdos') bg-rose-100 text-rose-800
+                                        @elseif($periode->jenis_usulan == 'pensiun') bg-slate-100 text-slate-800
+                                        @elseif($periode->jenis_usulan == 'kepangkatan') bg-violet-100 text-violet-800
+                                        @elseif($periode->jenis_usulan == 'pencantuman-gelar') bg-fuchsia-100 text-fuchsia-800
+                                        @else bg-gray-100 text-gray-800 @endif">
+                                        @if($periode->jenis_usulan == 'jabatan-dosen-regular')
+                                            Usulan Jabatan Dosen Reguler
+                                        @elseif($periode->jenis_usulan == 'jabatan-dosen-pengangkatan')
+                                            Usulan Jabatan Dosen Pengangkatan Pertama
+                                        @elseif($periode->jenis_usulan == 'nuptk')
+                                            Usulan NUPTK
+                                        @elseif($periode->jenis_usulan == 'laporan-lkd')
+                                            Usulan Laporan LKD
+                                        @elseif($periode->jenis_usulan == 'presensi')
+                                            Usulan Presensi
+                                        @elseif($periode->jenis_usulan == 'id-sinta-sister')
+                                            Usulan ID SINTA ke SISTER
+                                        @elseif($periode->jenis_usulan == 'satyalancana')
+                                            Usulan Satyalancana
+                                        @elseif($periode->jenis_usulan == 'tugas-belajar')
+                                            Usulan Tugas Belajar
+                                        @elseif($periode->jenis_usulan == 'pengaktifan-kembali')
+                                            Usulan Pengaktifan Kembali
+                                        @elseif($periode->jenis_usulan == 'penyesuaian-masa-kerja')
+                                            Usulan Penyesuaian Masa Kerja
+                                        @elseif($periode->jenis_usulan == 'ujian-dinas-ijazah')
+                                            Usulan Ujian Dinas Ijazah
+                                        @elseif($periode->jenis_usulan == 'laporan-serdos')
+                                            Usulan Laporan SERDOS
+                                        @elseif($periode->jenis_usulan == 'pensiun')
+                                            Usulan Pensiun
+                                        @elseif($periode->jenis_usulan == 'kepangkatan')
+                                            Usulan Kepangkatan
+                                        @elseif($periode->jenis_usulan == 'pencantuman-gelar')
+                                            Usulan Pencantuman Gelar
+                                        @else
+                                            {{ ucwords(str_replace('-', ' ', $periode->jenis_usulan)) }}
+                                        @endif
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                                    <div class="flex flex-col">
+                                        <div class="font-medium text-slate-800">
+                                            {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('d M Y') }}
+                                        </div>
+                                        <div class="font-medium text-slate-800">
+                                            s/d {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('d M Y') }}
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                    {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                    {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                    @if($periode->tanggal_mulai_perbaikan)
-                                        {{ \Carbon\Carbon::parse($periode->tanggal_mulai_perbaikan)->format('d M Y') }}
-                                    @else
-                                        <span class="text-slate-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                    @if($periode->tanggal_selesai_perbaikan)
-                                        {{ \Carbon\Carbon::parse($periode->tanggal_selesai_perbaikan)->format('d M Y') }}
+                                    @if($periode->tanggal_mulai_perbaikan && $periode->tanggal_selesai_perbaikan)
+                                        <div class="flex flex-col">
+                                            <div class="font-medium text-slate-800">
+                                                {{ \Carbon\Carbon::parse($periode->tanggal_mulai_perbaikan)->format('d M Y') }}
+                                            </div>
+                                            <div class="font-medium text-slate-800">
+                                                s/d {{ \Carbon\Carbon::parse($periode->tanggal_selesai_perbaikan)->format('d M Y') }}
+                                            </div>
+                                        </div>
                                     @else
                                         <span class="text-slate-400">-</span>
                                     @endif
@@ -311,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tableRows.forEach((row) => {
             const namaPeriode = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            const status = row.querySelector('td:nth-child(8)').textContent.trim();
+            const status = row.querySelector('td:nth-child(7)').textContent.trim();
 
             const matchesSearch = namaPeriode.includes(searchTerm);
             const matchesStatus = !statusTerm || status === statusTerm;

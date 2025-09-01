@@ -1,5 +1,5 @@
 {{-- Tim Penilai Assessment Progress Section --}}
-@if($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas', 'Usulan Direkomendasi dari Penilai Universitas']))
+@if($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS, \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS, \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS]))
     <div class="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-8">
         <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
             <div class="flex items-center justify-between">
@@ -19,7 +19,7 @@
                 </div>
             </div>
         </div>
-        
+
         @php
             // ENHANCED ERROR HANDLING: Use new progress information method
             $progressInfo = $usulan->getPenilaiAssessmentProgress();
@@ -30,14 +30,14 @@
             $progressPercentage = $progressInfo['progress_percentage'];
             $isComplete = $progressInfo['is_complete'];
             $isIntermediate = $progressInfo['is_intermediate'];
-            
+
             // Safe access to validasi_data with multiple fallbacks
             $validasiData = $usulan->validasi_data ?? [];
             $timPenilaiData = $validasiData['tim_penilai'] ?? [];
             $assessmentSummary = $timPenilaiData['assessment_summary'] ?? null;
-            
+
             // Enhanced progress color logic
-            $progressColor = $isComplete ? 'bg-green-600' : 
+            $progressColor = $isComplete ? 'bg-green-600' :
                            ($progressPercentage > 0 ? 'bg-blue-600' : 'bg-gray-400');
         @endphp
 
@@ -53,7 +53,7 @@
                         {{ $completedPenilai }}/{{ $totalPenilai }} Selesai
                     </div>
                 </div>
-                
+
                 {{-- ENHANCED: Animated Progress Bar --}}
                 <div class="w-full bg-gray-200 rounded-full h-3 mb-3 overflow-hidden">
                     @php
@@ -74,13 +74,13 @@
                         @endif
                     </div>
                 </div>
-                
+
                 {{-- ENHANCED: Progress Statistics --}}
                 <div class="grid grid-cols-3 gap-4 text-center">
-                    <div class="bg-blue-50 rounded-lg p-2">
+                    <button type="button" onclick="showAssessorListModal()" class="bg-blue-50 rounded-lg p-2 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors">
                         <div class="text-lg font-bold text-blue-600">{{ $totalPenilai }}</div>
-                        <div class="text-xs text-blue-700">Total Penilai</div>
-                    </div>
+                        <div class="text-xs text-blue-700 underline">Total Penilai</div>
+                    </button>
                     <div class="bg-green-50 rounded-lg p-2">
                         <div class="text-lg font-bold text-green-600">{{ $completedPenilai }}</div>
                         <div class="text-xs text-green-700">Selesai</div>
@@ -122,11 +122,11 @@
                                     </span>
                                 @endif
                             </div>
-                            
+
                             {{-- ENHANCED: Show appropriate message based on completion status --}}
                             @if($penilaiIndividualStatus['is_completed'])
                                 <div class="mt-2 text-sm text-blue-700">
-                                    <strong>Status:</strong> 
+                                    <strong>Status:</strong>
                                     @if($penilaiIndividualStatus['status'] === 'Sesuai')
                                         Penilaian Anda telah dikirim ke Admin Universitas untuk review.
                                     @elseif($penilaiIndividualStatus['status'] === 'Perlu Perbaikan')
@@ -140,7 +140,7 @@
                                     <strong>Status:</strong> Anda belum menyelesaikan penilaian untuk usulan ini.
                                 </div>
                             @endif
-                            
+
                             @if($penilaiIndividualStatus['catatan'])
                                 <div class="mt-2 text-sm text-blue-700">
                                     <strong>Catatan:</strong> {{ $penilaiIndividualStatus['catatan'] }}
@@ -181,7 +181,7 @@
                         <div class="ml-3 flex-1">
                             <h4 class="font-medium text-yellow-800 flex items-center">
                                 <span class="animate-pulse mr-2">⏳</span>
-                                Menunggu Hasil Penilaian Tim Penilai
+                                {{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS }}
                             </h4>
                             <p class="text-sm text-yellow-700 mt-1">
                                 Masih ada <strong>{{ $remainingPenilai }} penilai</strong> yang belum menyelesaikan penilaian.

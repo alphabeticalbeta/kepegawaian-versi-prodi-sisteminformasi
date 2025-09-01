@@ -29,73 +29,7 @@
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Total Usulan</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ $stats['total_usulan'] }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-xl">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
 
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Disetujui</p>
-                    <p class="text-3xl font-bold text-green-600">{{ $stats['usulan_disetujui'] }}</p>
-                    @if($stats['total_usulan'] > 0)
-                        <p class="text-xs text-slate-500">{{ number_format(($stats['usulan_disetujui'] / $stats['total_usulan']) * 100, 1) }}%</p>
-                    @endif
-                </div>
-                <div class="p-3 bg-green-100 rounded-xl">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Ditolak</p>
-                    <p class="text-3xl font-bold text-red-600">{{ $stats['usulan_ditolak'] }}</p>
-                    @if($stats['total_usulan'] > 0)
-                        <p class="text-xs text-slate-500">{{ number_format(($stats['usulan_ditolak'] / $stats['total_usulan']) * 100, 1) }}%</p>
-                    @endif
-                </div>
-                <div class="p-3 bg-red-100 rounded-xl">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-600">Pending</p>
-                    <p class="text-3xl font-bold text-yellow-600">{{ $stats['usulan_pending'] }}</p>
-                    @if($stats['total_usulan'] > 0)
-                        <p class="text-xs text-slate-500">{{ number_format(($stats['usulan_pending'] / $stats['total_usulan']) * 100, 1) }}%</p>
-                    @endif
-                </div>
-                <div class="p-3 bg-yellow-100 rounded-xl">
-                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Charts and Analytics -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -285,14 +219,14 @@
         display: flex;
         flex-direction: column;
     }
-    
+
     .table-full {
         width: 100%;
         height: 100%;
         table-layout: fixed;
         border-collapse: collapse;
     }
-    
+
     .table-full th,
     .table-full td {
         border: 1px solid #e2e8f0;
@@ -300,7 +234,7 @@
         text-align: left;
         vertical-align: middle;
     }
-    
+
     .table-full th {
         background-color: #f8fafc;
         font-weight: 600;
@@ -308,7 +242,7 @@
         font-size: 0.75rem;
         letter-spacing: 0.05em;
     }
-    
+
     .table-full tbody tr:hover {
         background-color: #f1f5f9;
     }

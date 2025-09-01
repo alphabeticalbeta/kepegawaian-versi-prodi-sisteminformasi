@@ -58,6 +58,77 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            // Function to get display status based on current status and role
+                            function getDisplayStatus($usulan, $currentRole) {
+                                $status = $usulan->status_usulan;
+
+                                // Mapping status berdasarkan alur kerja yang diminta
+                                switch ($status) {
+                                    // Status untuk Pegawai
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS:
+                                        return 'Usulan Dikirim ke Admin Fakultas';
+
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
+                                        if ($currentRole === 'Pegawai') {
+                                            return 'Permintaan Perbaikan dari Admin Fakultas';
+                                        }
+                                        break;
+
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS:
+                                        if ($currentRole === 'Pegawai') {
+                                            return \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS;
+                                        }
+                                        break;
+
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
+                                        if ($currentRole === 'Pegawai') {
+                                            return 'Permintaan Perbaikan dari Penilai Universitas';
+                                        }
+                                        break;
+
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
+                                        if ($currentRole === 'Pegawai') {
+                                            return 'Usulan Perbaikan dari Penilai Universitas';
+                                        }
+                                        break;
+
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER:
+                                        return 'Permintaan Perbaikan Usulan dari Tim Sister';
+
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER:
+                                        return 'Usulan Sudah Dikirim ke Sister';
+
+                                    default:
+                                        return $status;
+                                }
+
+                                return $status;
+                            }
+
+                            // Status colors mapping
+                            $statusColors = [
+                                // Status lama (fallback)
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-yellow-100 text-yellow-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-orange-100 text-orange-800',
+
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN => 'bg-purple-100 text-purple-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN => 'bg-red-100 text-red-800',
+
+                                // Status baru
+                                'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
+                                'Permintaan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
+
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-orange-100 text-orange-800',
+                                'Permintaan Perbaikan dari Penilai Universitas' => 'bg-red-100 text-red-800',
+                                'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
+                                'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',
+                                'Usulan Sudah Dikirim ke Sister' => 'bg-blue-100 text-blue-800',
+                            ];
+                        @endphp
                         @forelse ($usulans as $usulan)
                             <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
                                 <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{{ \App\Helpers\UsulanHelper::formatJenisUsulan($usulan->jenis_usulan) }}</td>
@@ -65,88 +136,8 @@
                                 <td class="px-6 py-4">{{ $usulan->created_at->isoFormat('D MMMM YYYY') }}</td>
                                 <td class="px-6 py-4 text-center">
                                     @php
-                                        // Function to get display status based on current status and role
-                                        function getDisplayStatus($usulan, $currentRole) {
-                                            $status = $usulan->status_usulan;
-                                            
-                                            // Mapping status berdasarkan alur kerja yang diminta
-                                            switch ($status) {
-                                                // Status untuk Pegawai
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS:
-                                                    return 'Usulan Dikirim ke Admin Fakultas';
-                                                
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
-                                                    if ($currentRole === 'Pegawai') {
-                                                        return 'Permintaan Perbaikan dari Admin Fakultas';
-                                                    }
-                                                    break;
-                                                
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
-                                                                                                          if ($currentRole === 'Pegawai') {
-                                                          return 'Permintaan Perbaikan dari Admin Fakultas';
-                                                      }
-                                                    break;
-                                                
-
-                                                
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS:
-                                                    if ($currentRole === 'Pegawai') {
-                                                        return \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS;
-                                                    }
-                                                    break;
-                                                
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
-                                                    if ($currentRole === 'Pegawai') {
-                                                        return 'Permintaan Perbaikan dari Penilai Universitas';
-                                                    }
-                                                    break;
-                                                
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
-                                                    if ($currentRole === 'Pegawai') {
-                                                        return 'Usulan Perbaikan dari Penilai Universitas';
-                                                    }
-                                                    break;
-                                                
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER:
-                                                    return 'Permintaan Perbaikan Usulan dari Tim Sister';
-                                                
-                                                case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER:
-                                                    return 'Usulan Sudah Dikirim ke Sister';
-                                                
-                                                default:
-                                                    return $status;
-                                            }
-                                            
-                                            return $status;
-                                        }
-                                        
                                         // Get display status
                                         $displayStatus = getDisplayStatus($usulan, 'Pegawai');
-                                        
-                                        // Status colors mapping
-                                        $statusColors = [
-                                            // Status lama (fallback)
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800',
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800',
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-yellow-100 text-yellow-800',
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-orange-100 text-orange-800',
-                                
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN => 'bg-purple-100 text-purple-800',
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN => 'bg-red-100 text-red-800',
-                                            
-                                            // Status baru
-                                            'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
-                                            'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
-                                            'Permintaan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
-
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-orange-100 text-orange-800',
-                                            'Permintaan Perbaikan dari Penilai Universitas' => 'bg-red-100 text-red-800',
-                                            'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
-                                            'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',
-                                            'Usulan Sudah Dikirim ke Sister' => 'bg-blue-100 text-blue-800',
-                                        ];
-                                        
                                         $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
                                     <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColor }}">
@@ -158,20 +149,20 @@
                                         @php
                                             // Tentukan route berdasarkan jenis usulan
                                             $routeName = match($usulan->jenis_usulan) {
-                                                'Usulan Jabatan' => 'pegawai-unmul.usulan-jabatan',
-                                                'Usulan Kepangkatan' => 'pegawai-unmul.usulan-kepangkatan',
-                                                'Usulan ID SINTA ke SISTER' => 'pegawai-unmul.usulan-id-sinta-sister',
-                                                'Usulan Laporan LKD' => 'pegawai-unmul.usulan-laporan-lkd',
-                                                'Usulan Laporan SERDOS' => 'pegawai-unmul.usulan-laporan-serdos',
-                                                'Usulan NUPTK' => 'pegawai-unmul.usulan-nuptk',
-                                                'Usulan Pencantuman Gelar' => 'pegawai-unmul.usulan-pencantuman-gelar',
-                                                'Usulan Pengaktifan Kembali' => 'pegawai-unmul.usulan-pengaktifan-kembali',
-                                                'Usulan Pensiun' => 'pegawai-unmul.usulan-pensiun',
-                                                'Usulan Penyesuaian Masa Kerja' => 'pegawai-unmul.usulan-penyesuaian-masa-kerja',
-                                                'Usulan Presensi' => 'pegawai-unmul.usulan-presensi',
-                                                'Usulan Satyalancana' => 'pegawai-unmul.usulan-satyalancana',
-                                                'Usulan Tugas Belajar' => 'pegawai-unmul.usulan-tugas-belajar',
-                                                'Usulan Ujian Dinas & Ijazah' => 'pegawai-unmul.usulan-ujian-dinas-ijazah',
+                                                'usulan-jabatan' => 'pegawai-unmul.usulan-jabatan',
+                                                'usulan-kepangkatan' => 'pegawai-unmul.usulan-kepangkatan',
+                                                'usulan-id-sinta-sister' => 'pegawai-unmul.usulan-id-sinta-sister',
+                                                'usulan-laporan-lkd' => 'pegawai-unmul.usulan-laporan-lkd',
+                                                'usulan-laporan-serdos' => 'pegawai-unmul.usulan-laporan-serdos',
+                                                'usulan-nuptk' => 'pegawai-unmul.usulan-nuptk',
+                                                'usulan-pencantuman-gelar' => 'pegawai-unmul.usulan-pencantuman-gelar',
+                                                'usulan-pengaktifan-kembali' => 'pegawai-unmul.usulan-pengaktifan-kembali',
+                                                'usulan-pensiun' => 'pegawai-unmul.usulan-pensiun',
+                                                'usulan-penyesuaian-masa-kerja' => 'pegawai-unmul.usulan-penyesuaian-masa-kerja',
+                                                'usulan-presensi' => 'pegawai-unmul.usulan-presensi',
+                                                'usulan-satyalancana' => 'pegawai-unmul.usulan-satyalancana',
+                                                'usulan-tugas-belajar' => 'pegawai-unmul.usulan-tugas-belajar',
+                                                'usulan-ujian-dinas-ijazah' => 'pegawai-unmul.usulan-ujian-dinas-ijazah',
                                                 default => 'pegawai-unmul.usulan-jabatan'
                                             };
 

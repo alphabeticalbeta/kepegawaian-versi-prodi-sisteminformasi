@@ -49,7 +49,7 @@
                 $documentFields = [
                     'ijazah_terakhir', 'transkrip_nilai_terakhir', 'sk_pangkat_terakhir',
                     'sk_jabatan_terakhir', 'skp_tahun_pertama', 'skp_tahun_kedua',
-                    'sk_cpns', 'sk_pns', 'pak_konversi', 'sk_penyetaraan_ijazah',
+                    'sk_cpns', 'sk_pns', 'pak_konversi', 'pak_integrasi', 'sk_penyetaraan_ijazah',
                     'disertasi_thesis_terakhir'
                 ];
                 $uploadedDocs = collect($documentFields)->filter(fn($field) => !empty($user->$field))->count();

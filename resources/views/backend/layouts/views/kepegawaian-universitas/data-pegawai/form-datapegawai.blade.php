@@ -102,8 +102,25 @@
                   isLoading: false,
                   showSuccess: {{ session('success') ? 'true' : 'false' }},
                   formProgress: 0,
-                  jenisPegawai: '{{ old('jenis_pegawai', $pegawai->jenis_pegawai ?? '') }}'
-              }">
+                  jenisPegawai: '{{ old('jenis_pegawai', $pegawai->jenis_pegawai ?? '') }}',
+                  jenisJabatan: '{{ old('jenis_jabatan', $pegawai->jabatan->jenis_jabatan ?? '') }}',
+                  isPakIntegrasiEligible() {
+                      return this.jenisJabatan === 'Dosen Fungsional' || this.jenisJabatan === 'Tenaga Kependidikan Fungsional Tertentu';
+                  },
+                  updateJenisJabatan(event) {
+                      const selectedOption = event.target.options[event.target.selectedIndex];
+                      this.jenisJabatan = selectedOption.getAttribute('data-jenis-jabatan') || '';
+                  },
+                  init() {
+                      // Initialize jenisJabatan from selected option
+                      const jabatanSelect = document.getElementById('jabatan_terakhir_id');
+                      if (jabatanSelect && jabatanSelect.value) {
+                          const selectedOption = jabatanSelect.options[jabatanSelect.selectedIndex];
+                          this.jenisJabatan = selectedOption.getAttribute('data-jenis-jabatan') || '';
+                      }
+                  }
+              }"
+              x-init="init()">
             @csrf
             @if(isset($pegawai))
                 @method('PUT')

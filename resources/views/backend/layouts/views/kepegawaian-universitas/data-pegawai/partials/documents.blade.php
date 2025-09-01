@@ -390,19 +390,50 @@
                     @endif
                 </div>
             </div>
+
+            {{-- PAK Integrasi (Conditional) --}}
+            <div id="field_pak_integrasi" class="hidden group" x-show="isPakIntegrasiEligible()">
+                <label for="pak_integrasi" class="block text-sm lg:text-base font-semibold text-slate-700 mb-3 group-hover:text-indigo-600 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="calculator" class="w-4 h-4"></i>
+                        PAK Integrasi
+                    </div>
+                </label>
+                <div class="relative">
+                    <label class="flex flex-col items-center justify-center w-full h-36 border-2 {{ isset($pegawai) && $pegawai->pak_integrasi ? 'border-green-400 bg-green-50' : 'border-slate-300 bg-slate-50' }} border-dashed rounded-2xl cursor-pointer hover:bg-slate-100 hover:border-indigo-400 transition-all duration-300 group/upload">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center w-full px-2 overflow-hidden">
+                            <i data-lucide="{{ isset($pegawai) && $pegawai->pak_integrasi ? 'file-check' : 'upload-cloud' }}" class="w-10 h-10 mb-3 {{ isset($pegawai) && $pegawai->pak_integrasi ? 'text-green-600' : 'text-slate-500' }} group-hover/upload:scale-110 transition-transform duration-300"></i>
+                            <p class="mb-2 text-sm {{ isset($pegawai) && $pegawai->pak_integrasi ? 'text-green-800' : 'text-slate-500' }} w-full">
+                                <span class="font-semibold file-name-display block truncate">{{ isset($pegawai) && $pegawai->pak_integrasi ? 'File sudah ada' : 'Klik untuk unggah' }}</span>
+                            </p>
+                            <p class="text-xs text-slate-400">PDF, maksimal 2MB</p>
+                        </div>
+                        <input id="pak_integrasi" name="pak_integrasi" type="file" class="hidden" accept=".pdf" data-preview="pak_integrasi_preview" data-max-size="2" onchange="handleFileUpload(this)" />
+                    </label>
+                    @if(isset($pegawai) && $pegawai->pak_integrasi)
+                    <div class="mt-3 text-center">
+                        <a href="{{ route('backend.kepegawaian-universitas.data-pegawai.show-document', ['pegawai' => $pegawai, 'field' => 'pak_integrasi']) }}"
+                           target="_blank"
+                           class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors bg-indigo-50 px-3 py-2 rounded-lg hover:bg-indigo-100">
+                            <i data-lucide="eye" class="w-3 h-3"></i>Lihat File Saat Ini
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Custom animations for document upload areas */
     .group:hover label[for*="_terakhir"],
     .group:hover label[for*="_cpns"],
     .group:hover label[for*="_pns"],
     .group:hover label[for*="_pangkat"],
     .group:hover label[for*="_jabatan"],
     .group:hover label[for*="_tahun"],
-    .group:hover label[for*="_konversi"] {
+    .group:hover label[for*="_konversi"],
+    .group:hover label[for*="_integrasi"] {
         transform: scale(1.02);
         box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
     }
@@ -414,7 +445,8 @@
     label[for*="_pangkat"],
     label[for*="_jabatan"],
     label[for*="_tahun"],
-    label[for*="_konversi"] {
+    label[for*="_konversi"],
+    label[for*="_integrasi"] {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -435,7 +467,8 @@
     }
 
     /* Animation for conditional fields */
-    #field_pak_konversi {
+    #field_pak_konversi,
+    #field_pak_integrasi {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 </style>

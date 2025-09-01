@@ -80,50 +80,50 @@
                                     // Function to get display status based on current status and role
                                     function getDisplayStatus($usulan, $currentRole) {
                                         $status = $usulan->status_usulan;
-                                        
+
                                         // Mapping status berdasarkan alur kerja yang diminta
                                         switch ($status) {
                                             // Status untuk Penilai Universitas
-                                            case 'Menunggu Hasil Penilaian Tim Penilai':
+                                            case 'Usulan Disetujui Kepegawaian Universitas dan Menunggu Penilaian':
                                                 if ($currentRole === 'Penilai Universitas') {
                                                     return 'Usulan Perbaikan dari Penilai Universitas';
                                                 }
                                                 break;
-                                            
+
                                             case 'Perbaikan Dari Tim Penilai':
                                                 if ($currentRole === 'Penilai Universitas') {
                                                     return 'Usulan Perbaikan dari Penilai Universitas';
                                                 }
                                                 break;
-                                            
+
                                             case 'Usulan Direkomendasi Tim Penilai':
                                                 if ($currentRole === 'Penilai Universitas') {
                                                     return 'Usulan Direkomendasi Penilai Universitas';
                                                 }
                                                 break;
-                                            
+
                                             default:
                                                 return $status;
                                         }
-                                        
+
                                         return $status;
                                     }
-                                    
+
                                     // Get display status
                                     $displayStatus = getDisplayStatus($usulan, 'Penilai Universitas');
-                                    
+
                                     // Status colors mapping
                                     $statusColors = [
                                         // Status lama (fallback)
                                         'Disetujui' => 'bg-green-100 text-green-800',
                                         'Ditolak' => 'bg-red-100 text-red-800',
-                                        'Menunggu Hasil Penilaian Tim Penilai' => 'bg-yellow-100 text-yellow-800',
-                                        
+                                        'Usulan Disetujui Kepegawaian Universitas dan Menunggu Penilaian' => 'bg-indigo-100 text-indigo-800',
+
                                         // Status baru
                                         'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
                                         'Usulan Direkomendasi Penilai Universitas' => 'bg-purple-100 text-purple-800',
                                     ];
-                                    
+
                                     $statusColor = $statusColors[$displayStatus] ?? 'bg-yellow-100 text-yellow-800';
                                 @endphp
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusColor }}">

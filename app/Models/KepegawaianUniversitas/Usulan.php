@@ -63,6 +63,7 @@ class Usulan extends Model
         'jenis_usulan',
         'jabatan_lama_id',
         'jabatan_tujuan_id',
+        'pangkat_tujuan_id',
         'status_usulan',
         'status_kepegawaian',
         'data_usulan',
@@ -117,7 +118,7 @@ class Usulan extends Model
 
     /**
      * Check if periode can be accessed by specific role
-     * Periode hanya dapat dilihat oleh Tim Senat dan Penilai Universitas 
+     * Periode hanya dapat dilihat oleh Tim Senat dan Penilai Universitas
      * apabila Admin Univ Usulan sudah mengirimkan usulan ke masing-masing role tersebut.
      */
     public function canAccessPeriode($role): bool
@@ -130,7 +131,15 @@ class Usulan extends Model
         // Tim Senat dapat mengakses periode jika usulan sudah direkomendasikan
         if ($role === 'Tim Senat') {
             return in_array($this->status_usulan, [
-                'Direkomendasikan',
+                self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT,
+                self::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER,
+                self::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER,
+                self::STATUS_PERBAIKAN_SUDAH_DIKIRIM_KE_SISTER,
+                self::STATUS_DIREKOMENDASIKAN,
+                self::STATUS_TIDAK_DIREKOMENDASIKAN,
+                // Legacy status
                 'Disetujui',
                 'Ditolak',
                 'Diusulkan ke Sister',
@@ -141,20 +150,43 @@ class Usulan extends Model
         // Penilai Universitas dapat mengakses periode jika usulan sudah dikirim ke penilai
         if ($role === 'Penilai Universitas') {
             return in_array($this->status_usulan, [
+                self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+                // Status yang memungkinkan penilai mengakses
+                self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                self::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS,
+                self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+                // Legacy status
                 'Sedang Direview',
                 'Direkomendasikan',
                 'Perbaikan Usulan',
-                'Sedang Dinilai'
+                'Sedang Dinilai',
+                'Menunggu Hasil Penilaian Tim Penilai'
             ]);
         }
 
         // Tim Penilai dapat mengakses periode jika usulan sudah dikirim ke penilai
         if ($role === 'Tim Penilai') {
             return in_array($this->status_usulan, [
+                self::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS,
+                self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+                // Status yang memungkinkan penilai mengakses
+                self::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                self::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS,
+                self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+                // Legacy status
                 'Sedang Direview',
                 'Direkomendasikan',
                 'Perbaikan Usulan',
-                'Sedang Dinilai'
+                'Sedang Dinilai',
+                'Menunggu Hasil Penilaian Tim Penilai'
             ]);
         }
 
@@ -200,6 +232,14 @@ class Usulan extends Model
     public function jabatanTujuan(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_tujuan_id');
+    }
+
+    /**
+     * Relasi ke Pangkat (pangkat tujuan).
+     */
+    public function pangkatTujuan(): BelongsTo
+    {
+        return $this->belongsTo(Pangkat::class, 'pangkat_tujuan_id');
     }
 
     /**
@@ -272,17 +312,17 @@ class Usulan extends Model
             self::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT => 'bg-purple-100 text-purple-800',
             self::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER => 'bg-blue-100 text-blue-800',
             self::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER => 'bg-red-100 text-red-800',
-            
+
             // Draft status constants
             self::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800',
             self::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800',
             self::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
             self::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800',
             self::STATUS_DRAFT_PERBAIKAN_TIM_SISTER => 'bg-red-100 text-red-800',
-            
+
             // Legacy status constants (fallback)
             self::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI => 'bg-orange-100 text-orange-800',
-            
+
             default => 'bg-gray-100 text-gray-800'
         };
     }
@@ -893,10 +933,10 @@ class Usulan extends Model
             'Tim Senat' => 'tim_senat',
             'Pegawai' => 'pegawai'
         ];
-        
+
         // Map role name to database key
         $dbRole = $roleMapping[$role] ?? strtolower(str_replace(' ', '_', $role));
-        
+
         $roleData = $this->validasi_data[$dbRole] ?? [];
 
         // FIXED: Ensure consistent structure - always return with validation key
@@ -904,7 +944,7 @@ class Usulan extends Model
             return $roleData;
         }
 
-        // For backward compatibility, if data exists but no 'validation' key, 
+        // For backward compatibility, if data exists but no 'validation' key,
         // wrap it in the new structure
         if (!empty($roleData)) {
             return [
@@ -953,7 +993,7 @@ class Usulan extends Model
         ]);
 
         $this->validasi_data = $currentValidasi;
-        
+
         // FIXED: Add logging for debugging
         \Log::info('setValidasiByRole called', [
             'role' => $role,
@@ -962,6 +1002,130 @@ class Usulan extends Model
             'merged_data' => $existingValidationData,
             'final_structure' => $currentValidasi[$role]
         ]);
+    }
+
+    /**
+     * Set data validasi individual penilai dengan struktur yang terpisah
+     */
+    public function setValidasiIndividualPenilai(int $penilaiId, array $validasiData, string $keteranganUmum = ''): void
+    {
+        $currentValidasi = $this->validasi_data ?? [];
+
+        // Initialize individual_penilai array if not exists
+        if (!isset($currentValidasi['individual_penilai'])) {
+            $currentValidasi['individual_penilai'] = [];
+        }
+
+        // Find existing data for this penilai
+        $existingIndex = null;
+        foreach ($currentValidasi['individual_penilai'] as $index => $penilaiData) {
+            if (isset($penilaiData['penilai_id']) && $penilaiData['penilai_id'] == $penilaiId) {
+                $existingIndex = $index;
+                break;
+            }
+        }
+
+        // Prepare new penilai data
+        $newPenilaiData = [
+            'penilai_id' => $penilaiId,
+            'validated_at' => now()->toISOString(),
+            'keterangan_umum' => $keteranganUmum
+        ];
+
+        // Deep merge validation data
+        foreach ($validasiData as $category => $fields) {
+            if (!isset($newPenilaiData[$category])) {
+                $newPenilaiData[$category] = [];
+            }
+
+            foreach ($fields as $field => $fieldData) {
+                $newPenilaiData[$category][$field] = $fieldData;
+            }
+        }
+
+        // Update or add penilai data
+        if ($existingIndex !== null) {
+            // Update existing penilai data
+            $currentValidasi['individual_penilai'][$existingIndex] = $newPenilaiData;
+        } else {
+            // Add new penilai data
+            $currentValidasi['individual_penilai'][] = $newPenilaiData;
+        }
+
+        $this->validasi_data = $currentValidasi;
+
+
+    }
+
+    /**
+     * Get data validasi individual penilai berdasarkan penilai_id
+     */
+        public function getValidasiIndividualPenilai(int $penilaiId): ?array
+    {
+        $currentValidasi = $this->validasi_data ?? [];
+        $individualPenilai = $currentValidasi['individual_penilai'] ?? [];
+
+
+
+        // Check in new structure first
+        foreach ($individualPenilai as $penilaiData) {
+            if (isset($penilaiData['penilai_id']) && $penilaiData['penilai_id'] == $penilaiId) {
+
+                return $penilaiData;
+            }
+        }
+
+        // MIGRATION LOGIC: Check old structure for backward compatibility
+        if (isset($currentValidasi['penilai_universitas']['validation']) &&
+            isset($currentValidasi['penilai_universitas']['validated_by']) &&
+            $currentValidasi['penilai_universitas']['validated_by'] == $penilaiId) {
+
+
+
+            // Convert old structure to new format
+            $oldData = $currentValidasi['penilai_universitas'];
+            $convertedData = [
+                'penilai_id' => $penilaiId,
+                'validation' => $oldData['validation'],
+                'validated_at' => $oldData['validated_at'] ?? now()->toISOString()
+            ];
+
+            // Add keterangan_umum if exists and is not an error message
+            if (isset($oldData['perbaikan_usulan']['catatan'])) {
+                $catatan = $oldData['perbaikan_usulan']['catatan'];
+
+                // Exclude error messages from display
+                if (!str_contains($catatan, 'SQLSTATE') && !str_contains($catatan, 'Terjadi kesalahan')) {
+                    $convertedData['keterangan_umum'] = $catatan;
+                }
+            }
+
+
+
+            return $convertedData;
+        }
+
+
+
+        return null;
+    }
+
+    /**
+     * Get semua data validasi individual penilai
+     */
+    public function getAllValidasiIndividualPenilai(): array
+    {
+        $currentValidasi = $this->validasi_data ?? [];
+        return $currentValidasi['individual_penilai'] ?? [];
+    }
+
+    /**
+     * Cek apakah penilai tertentu sudah memberikan validasi
+     */
+    public function isPenilaiValidated(int $penilaiId): bool
+    {
+        $penilaiData = $this->getValidasiIndividualPenilai($penilaiId);
+        return $penilaiData !== null && !empty($penilaiData);
     }
 
     /**
@@ -1431,9 +1595,12 @@ public function getSenateDecisionCounts(): array
     const STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS = 'Usulan Disetujui Admin Fakultas';
     const STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas';
     const STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS = 'Permintaan Perbaikan Ke Pegawai Dari Kepegawaian Universitas';
-    const STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Disetujui Kepegawaian Universitas';
+    const STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Disetujui Kepegawaian Universitas dan Menunggu Penilaian';
     const STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Permintaan Perbaikan dari Penilai Universitas';
     const STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS = 'Usulan Perbaikan dari Penilai Universitas';
+    const STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_PENILAI = 'Permintaan Perbaikan Ke Pegawai Dari Penilai';
+    const STATUS_PERMINTAAN_PERBAIKAN_KE_ADMIN_FAKULTAS_DARI_PENILAI = 'Permintaan Perbaikan Ke Admin Fakultas Dari Penilai';
+    const STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS = 'Usulan Perbaikan Ke Penilai Universitas';
     const STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS = 'Usulan Direkomendasi dari Penilai Universitas';
     const STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS = 'Usulan Direkomendasi Penilai Universitas';
     const STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT = 'Usulan Direkomendasikan oleh Tim Senat';
@@ -1442,14 +1609,23 @@ public function getSenateDecisionCounts(): array
     const STATUS_PERBAIKAN_SUDAH_DIKIRIM_KE_SISTER = 'Perbaikan Sudah Dikirim ke Sister';
     const STATUS_DIREKOMENDASIKAN = 'Direkomendasikan';
     const STATUS_TIDAK_DIREKOMENDASIKAN = 'Tidak Direkomendasikan';
-    
+
+    // =====================================================
+    // STATUS CONSTANTS FOR USULAN KEPANGKATAN (PEGAWAI & KEPEGAWAIAN UNIVERSITAS ONLY)
+    // =====================================================
+    const STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Dikirim ke Kepegawaian Universitas';
+    const STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN = 'Usulan Sudah Dikirim ke BKN';
+    const STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN = 'Usulan Perbaikan Dari Pegawai Ke BKN';
+    const STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN = 'Permintaan Perbaikan Ke Pegawai Dari BKN';
+    const STATUS_DIREKOMENDASIKAN_BKN = 'Usulan Direkomendasikan BKN';
+
     // Draft status constants (for Pegawai role)
     const STATUS_DRAFT_USULAN = 'Draft Usulan';
     const STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS = 'Draft Perbaikan Admin Fakultas';
     const STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS = 'Draft Perbaikan Kepegawaian Universitas';
     const STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS = 'Draft Perbaikan Penilai Universitas';
     const STATUS_DRAFT_PERBAIKAN_TIM_SISTER = 'Draft Perbaikan Tim Sister';
-    
+
     // Legacy status constants (for backward compatibility) - HAPUS YANG TIDAK DIGUNAKAN
     const STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI = 'Menunggu Hasil Penilaian Tim Penilai';
 
@@ -1460,42 +1636,42 @@ public function getSenateDecisionCounts(): array
     {
         $penilais = $this->penilais;
         $totalPenilai = $penilais->count();
-        
+
         if ($totalPenilai === 0) {
             return null; // No penilai assigned
         }
-        
+
         // Check if all penilai have completed their assessment
         $completedPenilai = $penilais->whereNotIn('pivot.status_penilaian', ['Belum Dinilai'])->count();
-        
+
         // If not all penilai have completed, return intermediate status
         if ($completedPenilai < $totalPenilai) {
             return self::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
         }
-        
+
         // If any penilai gives 'Perlu Perbaikan', result is perbaikan
         $hasPerbaikan = $penilais->where('pivot.status_penilaian', 'Perlu Perbaikan')->count() > 0;
         if ($hasPerbaikan) {
-            return self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+            return self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
         }
-        
+
         // Count recommendations (Sesuai = rekomendasi)
         $rekomendasiCount = $penilais->where('pivot.status_penilaian', 'Sesuai')->count();
-        
+
         // Logic based on number of penilai
         switch ($totalPenilai) {
             case 1:
-                return $rekomendasiCount > 0 ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
-                
+                return $rekomendasiCount > 0 ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+
             case 2:
-                return ($rekomendasiCount == 2) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
-                
+                return ($rekomendasiCount == 2) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+
             case 3:
-                return ($rekomendasiCount >= 2) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
-                
+                return ($rekomendasiCount >= 2) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+
             default:
                 // For more than 3 penilai, use majority vote
-                return ($rekomendasiCount > ($totalPenilai - $rekomendasiCount)) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+                return ($rekomendasiCount > ($totalPenilai - $rekomendasiCount)) ? self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS : self::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
         }
     }
 
@@ -1509,16 +1685,24 @@ public function getSenateDecisionCounts(): array
         $penilaiAssessmentStatuses = [
             'Usulan Disetujui Kepegawaian Universitas',
             'Permintaan Perbaikan dari Penilai Universitas',
-            'Usulan Direkomendasi dari Penilai Universitas'
+            'Usulan Direkomendasi dari Penilai Universitas',
+            'Usulan Perbaikan Ke Penilai Universitas'
         ];
 
         if (!in_array($this->status_usulan, $penilaiAssessmentStatuses)) {
             return false; // Not in penilai assessment phase
         }
 
+        // Check if Kepegawaian Universitas has set a flag to prevent auto-update
+        $currentValidasi = $this->validasi_data ?? [];
+        if (isset($currentValidasi['kepegawaian_universitas']['kirim_perbaikan_ke_penilai']['prevent_auto_update']) &&
+            $currentValidasi['kepegawaian_universitas']['kirim_perbaikan_ke_penilai']['prevent_auto_update'] === true) {
+            return false; // Prevent auto-update when flag is set
+        }
+
         $penilais = $this->penilais;
         $totalPenilai = $penilais->count();
-        
+
         if ($totalPenilai === 0) {
             return false; // No penilai assigned
         }
@@ -1530,7 +1714,7 @@ public function getSenateDecisionCounts(): array
         if ($newStatus && $newStatus !== $this->status_usulan) {
             $oldStatus = $this->status_usulan;
             $this->status_usulan = $newStatus;
-            
+
             // Log the status transition
             \Log::info('Auto status transition for usulan', [
                 'usulan_id' => $this->id,
@@ -1561,8 +1745,8 @@ public function getSenateDecisionCounts(): array
     public function isInFinalPenilaiStatus()
     {
         return in_array($this->status_usulan, [
-            self::STATUS_PERBAIKAN_DARI_TIM_PENILAI,
-            self::STATUS_USULAN_DIREKOMENDASI_TIM_PENILAI
+            self::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+            self::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
         ]);
     }
 
@@ -1573,20 +1757,20 @@ public function getSenateDecisionCounts(): array
     {
         $penilais = $this->penilais ?? collect();
         $totalPenilai = $penilais->count();
-        
+
         // Count completed penilai based on status_penilaian (not just hasil_penilaian)
         $completedPenilai = $penilais->filter(function($penilai) {
             $status = $penilai->pivot->status_penilaian ?? 'Belum Dinilai';
             $catatan = $penilai->pivot->catatan_penilaian ?? '';
             $hasil = $penilai->pivot->hasil_penilaian ?? '';
-            
+
             // Consider completed if:
             // 1. status_penilaian is not 'Belum Dinilai'
             // 2. OR has catatan_penilaian
             // 3. OR has hasil_penilaian
             return $status !== 'Belum Dinilai' || !empty($catatan) || !empty($hasil);
         })->count();
-        
+
         return [
             'total_penilai' => $totalPenilai,
             'completed_penilai' => $completedPenilai,
@@ -1605,7 +1789,7 @@ public function getSenateDecisionCounts(): array
     {
         $penilais = $this->penilais ?? collect();
         $details = [];
-        
+
         foreach ($penilais as $penilai) {
             $details[] = [
                 'penilai_id' => $penilai->id,
@@ -1616,7 +1800,7 @@ public function getSenateDecisionCounts(): array
                 'is_completed' => !in_array($penilai->pivot->status_penilaian ?? 'Belum Dinilai', ['Belum Dinilai'])
             ];
         }
-        
+
         return $details;
     }
 
@@ -1626,15 +1810,175 @@ public function getSenateDecisionCounts(): array
     public function canBeSubmittedInCurrentPeriod()
     {
         // If usulan was not recommended, it cannot be submitted in current period
-        if ($this->status_usulan === self::STATUS_TIDAK_DIREKOMENDASI) {
+        if ($this->status_usulan === self::STATUS_TIDAK_DIREKOMENDASIKAN) {
             return false;
         }
-        
+
         // Check if current period is still open
         if ($this->periodeUsulan && $this->periodeUsulan->status === 'Buka') {
             return true;
         }
-        
+
         return false;
+    }
+
+    // =====================================================
+    // HELPER METHODS FOR USULAN KEPANGKATAN
+    // =====================================================
+
+    /**
+     * Get valid statuses for usulan kepangkatan (Pegawai & Kepegawaian Universitas only)
+     */
+    public static function getKepangkatanValidStatuses(): array
+    {
+        return [
+            self::STATUS_DRAFT_USULAN,
+            self::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
+            self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+            self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
+            self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN,
+            self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN,
+            self::STATUS_DIREKOMENDASIKAN_BKN
+        ];
+    }
+
+    /**
+     * Check if current status is valid for usulan kepangkatan
+     */
+    public function isKepangkatanValidStatus(): bool
+    {
+        return in_array($this->status_usulan, self::getKepangkatanValidStatuses());
+    }
+
+    /**
+     * Get next possible statuses for usulan kepangkatan based on current status and role
+     */
+    public function getKepangkatanNextStatuses(string $role): array
+    {
+        $currentStatus = $this->status_usulan;
+        $nextStatuses = [];
+
+        switch ($role) {
+            case 'Pegawai':
+                switch ($currentStatus) {
+                    case self::STATUS_DRAFT_USULAN:
+                        $nextStatuses = [self::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS];
+                        break;
+                    case self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS:
+                        $nextStatuses = [self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS];
+                        break;
+                    case self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN:
+                        $nextStatuses = [self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN];
+                        break;
+                }
+                break;
+
+            case 'Kepegawaian Universitas':
+                switch ($currentStatus) {
+                    case self::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS:
+                        $nextStatuses = [
+                            self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN
+                        ];
+                        break;
+                    case self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS:
+                        $nextStatuses = [
+                            self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                            self::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN
+                        ];
+                        break;
+                    case self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN:
+                        $nextStatuses = [self::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN];
+                        break;
+                }
+                break;
+        }
+
+        return $nextStatuses;
+    }
+
+    /**
+     * Check if usulan kepangkatan can be transitioned to a specific status
+     */
+    public function canTransitionToKepangkatanStatus(string $targetStatus, string $role): bool
+    {
+        $nextStatuses = $this->getKepangkatanNextStatuses($role);
+        return in_array($targetStatus, $nextStatuses);
+    }
+
+    /**
+     * Get status badge class for usulan kepangkatan statuses
+     */
+    public function getKepangkatanStatusBadgeClass(): string
+    {
+        switch ($this->status_usulan) {
+            case self::STATUS_DRAFT_USULAN:
+                return 'bg-gray-100 text-gray-800';
+            case self::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS:
+                return 'bg-blue-100 text-blue-800';
+            case self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS:
+                return 'bg-yellow-100 text-yellow-800';
+            case self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS:
+                return 'bg-orange-100 text-orange-800';
+            case self::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN:
+                return 'bg-purple-100 text-purple-800';
+            case self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN:
+                return 'bg-yellow-100 text-yellow-800';
+            case self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN:
+                return 'bg-red-100 text-red-800';
+            case self::STATUS_DIREKOMENDASIKAN_BKN:
+                return 'bg-green-100 text-green-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    /**
+     * Check if usulan kepangkatan is in final status
+     */
+    public function isKepangkatanFinalStatus(): bool
+    {
+        return in_array($this->status_usulan, [
+            self::STATUS_DIREKOMENDASIKAN_BKN
+        ]);
+    }
+
+    /**
+     * Check if usulan kepangkatan requires action from specific role
+     */
+    public function requiresKepangkatanActionFrom(string $role): bool
+    {
+        switch ($role) {
+            case 'Pegawai':
+                return in_array($this->status_usulan, [
+                    self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                    self::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN
+                ]);
+            case 'Kepegawaian Universitas':
+                return in_array($this->status_usulan, [
+                    self::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
+                    self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+                    self::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN
+                ]);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Accessor untuk status (menggunakan status_usulan)
+     */
+    public function getStatusAttribute()
+    {
+        return $this->status_usulan;
+    }
+
+    /**
+     * Mutator untuk status (menggunakan status_usulan)
+     */
+    public function setStatusAttribute($value)
+    {
+        $this->attributes['status_usulan'] = $value;
     }
 }

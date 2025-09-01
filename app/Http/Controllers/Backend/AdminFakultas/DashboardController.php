@@ -27,16 +27,7 @@ class DashboardController extends Controller
                 return view('backend.layouts.views.admin-fakultas.dashboard', [
                     'unitKerja' => null,
                     'periodeUsulans' => collect(),
-                    'user' => null,
-                    'statistics' => [
-                        'total_periode' => 0,
-                        'total_pengusul' => 0,
-                        'total_perbaikan' => 0,
-                        'total_usulan' => 0,
-                        'unit_kerja_name' => 'Tidak diketahui',
-                        'has_pending_review' => false,
-                        'has_perbaikan' => false
-                    ]
+                    'user' => null
                 ]);
             }
 
@@ -46,16 +37,7 @@ class DashboardController extends Controller
                     'unitKerja' => null,
                     'periodeUsulans' => collect(),
                     'user' => $user,
-                    'error' => 'Unit kerja tidak ditemukan. Periksa pengaturan akun Anda.',
-                    'statistics' => [
-                        'total_periode' => 0,
-                        'total_pengusul' => 0,
-                        'total_perbaikan' => 0,
-                        'total_usulan' => 0,
-                        'unit_kerja_name' => 'Tidak diketahui',
-                        'has_pending_review' => false,
-                        'has_perbaikan' => false
-                    ]
+                    'error' => 'Unit kerja tidak ditemukan. Periksa pengaturan akun Anda.'
                 ]);
             }
 
@@ -65,14 +47,10 @@ class DashboardController extends Controller
             // Get periode usulans with statistics
             $periodeUsulans = $this->getPeriodeUsulansWithStats($user);
 
-            // Calculate dashboard statistics
-            $statistics = $this->getDashboardStatistics($periodeUsulans, $unitKerja);
-
             return view('backend.layouts.views.admin-fakultas.dashboard', [
                 'unitKerja' => $unitKerja,
                 'periodeUsulans' => $periodeUsulans,
-                'user' => $user,
-                'statistics' => $statistics
+                'user' => $user
             ]);
         } catch (\Exception $e) {
             // Log error for debugging
@@ -86,16 +64,7 @@ class DashboardController extends Controller
                 'unitKerja' => null,
                 'periodeUsulans' => collect(),
                 'user' => Auth::guard('pegawai')->user(),
-                'error' => 'Terjadi kesalahan saat memuat dashboard. Silakan coba lagi.',
-                'statistics' => [
-                    'total_periode' => 0,
-                    'total_pengusul' => 0,
-                    'total_perbaikan' => 0,
-                    'total_usulan' => 0,
-                    'unit_kerja_name' => 'Tidak diketahui',
-                    'has_pending_review' => false,
-                    'has_perbaikan' => false
-                ]
+                'error' => 'Terjadi kesalahan saat memuat dashboard. Silakan coba lagi.'
             ]);
         }
     }
@@ -146,27 +115,5 @@ class DashboardController extends Controller
         return $periodeUsulans;
     }
 
-    /**
-     * Get dashboard statistics
-     *
-     * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $periodeUsulans
-     * @param \App\Models\KepegawaianUniversitas\UnitKerja|null $unitKerja
-     * @return array
-     */
-    private function getDashboardStatistics($periodeUsulans, $unitKerja)
-    {
-        $totalPengusul = collect($periodeUsulans->items())->sum('jumlah_pengusul');
-        $totalPerbaikan = collect($periodeUsulans->items())->sum('perbaikan');
-        $totalUsulan = collect($periodeUsulans->items())->sum('total_usulan');
 
-        return [
-            'total_periode' => $periodeUsulans->total(),
-            'total_pengusul' => $totalPengusul,
-            'total_perbaikan' => $totalPerbaikan,
-            'total_usulan' => $totalUsulan,
-            'unit_kerja_name' => $unitKerja ? $unitKerja->nama : 'Tidak diketahui',
-            'has_pending_review' => $totalPengusul > 0,
-            'has_perbaikan' => $totalPerbaikan > 0
-        ];
-    }
 }

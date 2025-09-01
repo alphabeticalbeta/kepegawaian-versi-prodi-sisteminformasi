@@ -138,7 +138,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             // Dashboard
             Route::get('/dashboard', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardController::class, 'index'])
                 ->name('dashboard');
-            
+
             // API routes untuk histori periode
             Route::get('/histori-periode/{jenis}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardController::class, 'getHistoriPeriode'])
                 ->name('histori-periode');
@@ -277,14 +277,21 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::prefix('pusat-usulan')->name('pusat-usulan.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'index'])
                     ->name('index');
-                Route::get('/{usulan}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'show'])
-                    ->name('show');
-                Route::post('/{usulan}/process', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'process'])
-                    ->name('process');
 
-                // Document routes (STANDARDIZED)
-                Route::get('/{usulan}/dokumen/{field}', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'showUsulanDocument'])
-                    ->name('show-document');
+                // REDIRECT: Redirect detail usulan to use shared view
+                Route::get('/{usulan}', function($usulan) {
+                    return redirect()->route('backend.kepegawaian-universitas.usulan.show', $usulan);
+                })->name('show');
+
+                // REDIRECT: Redirect process to use consolidated controller
+                Route::post('/{usulan}/process', function($usulan) {
+                    return redirect()->route('backend.kepegawaian-universitas.usulan.show', $usulan);
+                })->name('process');
+
+                // REDIRECT: Redirect document routes
+                Route::get('/{usulan}/dokumen/{field}', function($usulan, $field) {
+                    return redirect()->route('backend.kepegawaian-universitas.usulan.show-document', [$usulan, $field]);
+                })->name('show-document');
             });
 
             // =====================================================
@@ -296,7 +303,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 })->name('index');
                 Route::get('/{periode}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'show'])
                     ->name('show');
-                
+
                 // API routes untuk histori periode
                 Route::get('/histori/{jenis}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getHistoriPeriode'])
                     ->name('histori');
@@ -717,8 +724,6 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::prefix('usulan-kepangkatan')->name('usulan-kepangkatan.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'create'])
-                    ->name('create');
                 Route::post('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'store'])
                     ->name('store');
                 Route::get('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'show'])
@@ -733,6 +738,8 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 // API routes (STANDARDIZED)
                 Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'getLogs'])
                     ->name('logs');
+                Route::get('/{usulanKepangkatan}/dokumen/{field}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'showDocument'])
+                    ->name('show-document');
             });
 
             // =====================================================

@@ -392,6 +392,11 @@
                             'sk_penyetaraan_ijazah'     => ['SK Penyetaraan Ijazah', 'scale'],
                             'disertasi_thesis_terakhir' => ['Disertasi/Thesis Terakhir', 'book-open'],
                         ];
+
+                        // Tambahkan PAK Integrasi hanya untuk jabatan tertentu
+                        if ($pegawai->jabatan && in_array($pegawai->jabatan->jenis_jabatan, ['Dosen Fungsional', 'Tenaga Kependidikan Fungsional Tertentu'])) {
+                            $dokumenProfil['pak_integrasi'] = ['PAK Integrasi', 'calculator'];
+                        }
                     @endphp
 
                     @foreach ($dokumenProfil as $key => [$label, $icon])

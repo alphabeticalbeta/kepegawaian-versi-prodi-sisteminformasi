@@ -70,6 +70,7 @@ class ProcessUsulanDocuments implements ShouldQueue
                 'sk_jabatan_terakhir' => ['max_size' => 2048000, 'type' => 'pdf'],
                 'ijazah_terakhir' => ['max_size' => 2048000, 'type' => 'pdf'],
                 'transkrip_nilai_terakhir' => ['max_size' => 2048000, 'type' => 'pdf'],
+                'pak_integrasi' => ['max_size' => 2048000, 'type' => 'pdf'],
             ];
 
             foreach ($documentFields as $field => $rules) {

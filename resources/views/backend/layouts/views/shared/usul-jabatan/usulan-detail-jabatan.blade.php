@@ -4,16 +4,16 @@
 @php
     // Role detection and configuration
     $currentRole = $role ?? 'Unknown';
-    
+
     // Enhanced error handling for role detection
     if (!in_array($currentRole, ['Admin Fakultas', 'Admin Universitas', 'Penilai Universitas', 'Tim Senat', 'Pegawai', 'Kepegawaian Universitas'])) {
         $currentRole = 'Unknown';
     }
-    
+
     // Configuration based on role
     $routePrefix = 'backend.usulan';
     $documentRoutePrefix = 'backend.usulan';
-    
+
     // Set route prefix based on role
     if ($currentRole === 'Admin Fakultas') {
         $routePrefix = 'admin-fakultas.usulan';
@@ -31,7 +31,7 @@
         $routePrefix = 'pegawai-unmul.usulan-jabatan';
         $documentRoutePrefix = 'pegawai-unmul.usulan-jabatan';
     }
-    
+
     $config = [
         'title' => 'Detail Usulan',
         'description' => 'Informasi lengkap usulan kepegawaian',
@@ -39,7 +39,7 @@
         'documentRoutePrefix' => $documentRoutePrefix,
         'validationFields' => [
             'data_pribadi',
-            'data_kepegawaian', 
+            'data_kepegawaian',
             'data_pendidikan',
             'data_kinerja',
             'dokumen_profil',
@@ -50,7 +50,7 @@
             'dokumen_admin_fakultas'
         ]
     ];
-    
+
     // Field groups configuration
     $fieldGroups = [
         'data_pribadi' => [
@@ -116,6 +116,7 @@
                 'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
                 'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
                 'pak_konversi' => 'PAK Konversi ' . (date('Y') - 1),
+            'pak_integrasi' => 'PAK Integrasi',
                 'sk_cpns' => 'SK CPNS',
                 'sk_pns' => 'SK PNS',
                 'sk_penyetaraan_ijazah' => 'SK Penyetaraan Ijazah',
@@ -232,30 +233,43 @@
             ]
         ]
     ];
-    
+
     // Get existing validation data
     $existingValidation = $usulan->getValidasiByRole($currentRole) ?? ['validation' => [], 'keterangan_umum' => ''];
-    
-    // Determine if user can edit
-    $canEdit = false;
-    if ($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])) {
-        $canEdit = true;
-    } elseif ($currentRole === 'Penilai Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Kepegawaian Universitas', 'Permintaan Perbaikan dari Penilai Universitas'])) {
-        $canEdit = true;
-    } elseif ($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, ['Usulan Disetujui Admin Fakultas', 'Usulan Disetujui Kepegawaian Universitas', 'Usulan Direkomendasi dari Penilai Universitas', 'Usulan Direkomendasi Penilai Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas', 'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas'])) {
-        $canEdit = true;
-    } elseif ($currentRole === 'Tim Senat' && in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister'])) {
-        $canEdit = true;
-    } elseif ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Permintaan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Usulan dari Tim Sister'])) {
-        $canEdit = true;
+
+    // Determine if user can edit (respect passed-in $canEdit from controller)
+    if (!isset($canEdit)) {
+        $canEdit = false;
+        if ($currentRole === 'Admin Fakultas' && in_array($usulan->status_usulan, ['Usulan Dikirim ke Admin Fakultas', 'Usulan Disetujui Admin Fakultas', 'Usulan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas'])) {
+            $canEdit = true;
+        } elseif ($currentRole === 'Penilai Universitas' && in_array($usulan->status_usulan, [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS
+        ])) {
+            $canEdit = true;
+        } elseif ($currentRole === 'Kepegawaian Universitas' && in_array($usulan->status_usulan, [
+            'Usulan Disetujui Admin Fakultas',
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+            'Usulan Direkomendasi dari Penilai Universitas',
+            'Usulan Direkomendasi Penilai Universitas',
+            'Usulan Perbaikan Dari Admin Fakultas Ke Kepegawaian Universitas',
+            'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas'
+        ])) {
+            $canEdit = true;
+        } elseif ($currentRole === 'Tim Senat' && in_array($usulan->status_usulan, ['Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister'])) {
+            $canEdit = true;
+        } elseif ($currentRole === 'Pegawai' && in_array($usulan->status_usulan, ['Permintaan Perbaikan dari Admin Fakultas', 'Usulan Perbaikan dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas', 'Permintaan Perbaikan Usulan dari Tim Sister'])) {
+            $canEdit = true;
+        }
     }
-    
+
     // Get penilai validation data for Kepegawaian Universitas
     $penilaiValidation = null;
     $allPenilaiInvalidFields = [];
     if ($currentRole === 'Kepegawaian Universitas') {
         $penilaiValidation = $usulan->getValidasiByRole('tim_penilai') ?? [];
-        
+
         // Process penilai data for validation table
         if (!empty($penilaiValidation)) {
             if (isset($penilaiValidation['validation'])) {
@@ -271,11 +285,11 @@
             }
         }
     }
-    
+
     // Determine action permissions based on status and role
     $canReturn = false;
     $canForward = false;
-    
+
     if ($currentRole === 'Admin Fakultas') {
         if ($usulan->status_usulan === 'Usulan Dikirim ke Admin Fakultas') {
             $canReturn = true;
@@ -289,7 +303,7 @@
             $canForward = true;
         }
     }
-    
+
     // Create config array for action bar
     $actionConfig = [
         'canReturn' => $canReturn,
@@ -313,8 +327,7 @@
         {{-- Include Status Badge Partial --}}
         @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-status-badge')
 
-        {{-- Include Tim Penilai Progress Partial --}}
-        @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-tim-penilai-progress')
+        {{-- Include Tim Penilai Progress Partial (dipindah ke bawah sesuai urutan UI) --}}
 
         {{-- Include Info History Partial --}}
         {{-- @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-info-history') --}}
@@ -339,9 +352,12 @@
 
                            {{-- Include Perbaikan dari Admin Fakultas untuk Kepegawaian Universitas Partial --}}
             @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-perbaikan-admin-fakultas-kepegawaian-universitas')
-            
+
             {{-- Include Perbaikan dari Kepegawaian Universitas untuk Pegawai Partial --}}
             @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-perbaikan-kepegawaian-universitas-pegawai')
+
+               {{-- Progress Overview (Tim Penilai) moved above Hasil Validasi --}}
+               @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-tim-penilai-progress')
 
                {{-- Include Hasil Validasi Semua Tim Penilai Partial --}}
                @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-hasil-validasi-tim-penilai')
@@ -357,7 +373,7 @@
             <form id="action-form" action="{{ route($routePrefix . '.save-validation', $usulan->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6" autocomplete="off" novalidate>
                 @csrf
                 <meta name="csrf-token" content="{{ csrf_token() }}">
-                
+
                 {{-- Include Validation Table Partial --}}
                 @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-validation-table')
 
@@ -375,6 +391,15 @@
             @include('backend.layouts.views.shared.usul-jabatan.partials-jabatan.usulan-detail-action-bar', [
                 'config' => $actionConfig,
                 'currentRole' => $currentRole
+            ])
+        @endif
+
+        {{-- Include Hidden Forms (Send to Assessor/Senate) only for Kepegawaian Universitas role --}}
+        @if($currentRole === 'Kepegawaian Universitas')
+            @include('backend.components.usulan._hidden-forms', [
+                'usulan' => $usulan,
+                'formAction' => route('backend.kepegawaian-universitas.usulan.save-validation', $usulan->id),
+                'assignedPenilaiIds' => $assignedPenilaiIds ?? []
             ])
         @endif
 

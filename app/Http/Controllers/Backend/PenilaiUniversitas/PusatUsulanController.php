@@ -77,8 +77,18 @@ class PusatUsulanController extends Controller
             // ADDED: Get BKD labels for display
             $bkdLabels = $usulan->getBkdDisplayLabels();
 
-            // Get existing validation data if any
-            $existingValidation = $usulan->getValidasiByRole('penilai_universitas');
+                        // Get existing validation data if any - use individual penilai method for consistency
+            $existingValidation = $usulan->getValidasiIndividualPenilai($currentPenilai->id);
+
+                        // If no individual data found, create empty structure
+            if (!$existingValidation) {
+                $existingValidation = [];
+            }
+
+            // Ensure the structure has 'validation' key for compatibility with view
+            if (isset($existingValidation['validation'])) {
+                $existingValidation = $existingValidation['validation'];
+            }
 
             // ENHANCED: Get validation summary for progress display
             $validationSummary = $this->penilaiService->getValidationSummary($usulan, $currentPenilai->id);
@@ -87,14 +97,55 @@ class PusatUsulanController extends Controller
             $penilaiIndividualStatus = $this->penilaiService->getPenilaiIndividualStatus($usulan, $currentPenilai->id);
 
             // ENHANCED: Determine if can edit based on status AND individual penilai completion
-            $canEdit = in_array($usulan->status_usulan, [
+            $allowedStatuses = [
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
-            ]) && !$penilaiIndividualStatus['is_completed'];
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI
+            ];
+
+            $statusAllowed = in_array($usulan->status_usulan, $allowedStatuses);
+            $penilaiNotCompleted = !$penilaiIndividualStatus['is_completed'];
+
+            // Khusus untuk STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+            // penilai bisa edit meskipun sudah completed sebelumnya
+            $isPerbaikanKePenilai = $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS;
+
+            // Khusus untuk STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+            // penilai selalu bisa edit untuk melakukan validasi perbaikan
+            $isPerbaikanDariPenilai = $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS;
+
+            \Log::info('Penilai canEdit debug', [
+                'usulan_id' => $usulan->id,
+                'penilai_id' => $currentPenilai->id,
+                'status_usulan' => $usulan->status_usulan,
+                'allowed_statuses' => $allowedStatuses,
+                'status_allowed' => $statusAllowed,
+                'penilai_individual_status' => $penilaiIndividualStatus,
+                'penilai_not_completed' => $penilaiNotCompleted,
+                'is_perbaikan_ke_penilai' => $isPerbaikanKePenilai,
+                'is_perbaikan_dari_penilai' => $isPerbaikanDariPenilai,
+                'final_can_edit' => $statusAllowed && ($penilaiNotCompleted || $isPerbaikanKePenilai || $isPerbaikanDariPenilai)
+            ]);
+
+            $canEdit = $statusAllowed && ($penilaiNotCompleted || $isPerbaikanKePenilai || $isPerbaikanDariPenilai);
 
             // Determine action permissions based on status
-            $canReturn = in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS, \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]);
-            $canForward = in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS, \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS]);
+            $canReturn = in_array($usulan->status_usulan, [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI
+            ]);
+            $canForward = in_array($usulan->status_usulan, [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI
+            ]);
 
             return view('backend.layouts.views.penilai-universitas.pusat-usulan.detail', [
                 'usulan' => $usulan,
@@ -160,7 +211,10 @@ class PusatUsulanController extends Controller
             // ENHANCED: Check if usulan is in correct status for Penilai Universitas
             $allowedStatuses = [
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI
             ];
 
             if (!in_array($usulan->status_usulan, $allowedStatuses)) {
@@ -176,16 +230,19 @@ class PusatUsulanController extends Controller
             switch ($actionType) {
                 case 'autosave':
                     return $this->autosaveValidation($request, $usulan, $currentPenilai->id);
-                
+
                 case 'save_only':
                     return $this->saveSimpleValidation($request, $usulan, $currentPenilai->id);
-                
+
                 case 'rekomendasikan':
                     return $this->handleRekomendasi($request, $usulan, $currentPenilai->id);
-                
+
                 case 'perbaikan_usulan':
                     return $this->handlePerbaikanUsulan($request, $usulan, $currentPenilai->id);
-                
+
+                case 'tidak_rekomendasikan':
+                    return $this->handleTidakRekomendasikan($request, $usulan, $currentPenilai->id);
+
                 default:
                     return response()->json([
                         'success' => false,
@@ -243,8 +300,10 @@ class PusatUsulanController extends Controller
             $validationData = json_decode($validationData, true);
         }
 
-        // Save validation data using the model method
-        $usulan->setValidasiByRole('penilai_universitas', $validationData, $penilaiId);
+
+
+        // Save validation data using the new individual penilai method
+        $usulan->setValidasiIndividualPenilai($penilaiId, $validationData);
         $usulan->save();
 
         // Clear related caches
@@ -264,8 +323,10 @@ class PusatUsulanController extends Controller
     {
         $validationData = $request->input('validation');
 
-        // Save validation data using the model method
-        $usulan->setValidasiByRole('penilai_universitas', $validationData, $penilaiId);
+
+
+        // Save validation data using the new individual penilai method
+        $usulan->setValidasiIndividualPenilai($penilaiId, $validationData);
         $usulan->save();
 
         // Clear related caches
@@ -293,11 +354,13 @@ class PusatUsulanController extends Controller
             $validationData = json_decode($validationData, true);
         }
 
-        $usulan->setValidasiByRole('penilai_universitas', $validationData, $penilaiId);
+
+
+        $usulan->setValidasiIndividualPenilai($penilaiId, $validationData, $request->input('catatan_umum'));
 
         // Update penilai individual status in pivot table
         $usulan->penilais()->updateExistingPivot($penilaiId, [
-            'status_penilaian' => 'Sesuai',
+            'status_penilaian' => 'Sesuai', // Use valid ENUM value
             'catatan_penilaian' => $request->input('catatan_umum'),
             'updated_at' => now()
         ]);
@@ -345,11 +408,11 @@ class PusatUsulanController extends Controller
             $validationData = json_decode($validationData, true);
         }
 
-        $usulan->setValidasiByRole('penilai_universitas', $validationData, $penilaiId);
+        $usulan->setValidasiIndividualPenilai($penilaiId, $validationData, $request->input('catatan_umum'));
 
         // Update penilai individual status in pivot table
         $usulan->penilais()->updateExistingPivot($penilaiId, [
-            'status_penilaian' => 'Perlu Perbaikan',
+            'status_penilaian' => 'Perlu Perbaikan', // Use valid ENUM value
             'catatan_penilaian' => $request->input('catatan_umum'),
             'updated_at' => now()
         ]);
@@ -379,6 +442,59 @@ class PusatUsulanController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Usulan berhasil dikirim ke Admin Universitas untuk review.',
+            'redirect' => route('penilai-universitas.pusat-usulan.index')
+        ]);
+    }
+
+    /**
+     * Handle tidak direkomendasikan - enhanced version.
+     */
+    private function handleTidakRekomendasikan(Request $request, Usulan $usulan, $penilaiId)
+    {
+        $request->validate([
+            'catatan_umum' => 'required|string|max:1000'
+        ]);
+
+        // Save validation data
+        $validationData = $request->input('validation');
+        if (is_string($validationData)) {
+            $validationData = json_decode($validationData, true);
+        }
+
+        $usulan->setValidasiIndividualPenilai($penilaiId, $validationData, $request->input('catatan_umum'));
+
+        // Update penilai individual status in pivot table
+        $usulan->penilais()->updateExistingPivot($penilaiId, [
+            'status_penilaian' => 'Perlu Perbaikan', // Use valid ENUM value
+            'catatan_penilaian' => $request->input('catatan_umum'),
+            'updated_at' => now()
+        ]);
+
+        // Add tidak direkomendasikan data with enhanced structure
+        $currentValidasi = $usulan->validasi_data;
+        $currentValidasi['penilai_universitas']['tidak_direkomendasikan'] = [
+            'catatan' => $request->input('catatan_umum'),
+            'tanggal_tidak_direkomendasikan' => now()->toDateTimeString(),
+            'penilai_id' => $penilaiId,
+            'status' => 'menunggu_admin_univ_review'
+        ];
+
+        $usulan->validasi_data = $currentValidasi;
+
+        // Determine and update usulan status based on all penilai progress
+        $newStatus = $usulan->determinePenilaiFinalStatus();
+        if ($newStatus) {
+            $usulan->status_usulan = $newStatus;
+        }
+
+        $usulan->save();
+
+        // Clear cache
+        $this->penilaiService->clearPenilaiCache($penilaiId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Usulan tidak direkomendasikan dan dikirim ke Admin Universitas untuk review.',
             'redirect' => route('penilai-universitas.pusat-usulan.index')
         ]);
     }
@@ -421,7 +537,7 @@ class PusatUsulanController extends Controller
 
         try {
             $currentPenilai = Auth::user();
-            
+
             // Check 1: Penilai Assignment Validation
             if (!$usulan->isAssignedToPenilai($currentPenilai->id)) {
                 $issues[] = "Anda tidak ditugaskan untuk usulan ini";
@@ -429,10 +545,12 @@ class PusatUsulanController extends Controller
 
             // Check 2: Status Validation for Penilai
             $allowedStatuses = [
-                'Sedang Direview',
-                'Menunggu Hasil Penilaian Tim Penilai'
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI
             ];
-            
+
             if (!in_array($usulan->status_usulan, $allowedStatuses)) {
                 $issues[] = "Status usulan tidak sesuai untuk penilaian: '{$usulan->status_usulan}'";
             }
@@ -440,12 +558,12 @@ class PusatUsulanController extends Controller
             // Check 3: Validation Data Integrity
             $validasiData = $usulan->validasi_data ?? [];
             $timPenilaiData = $validasiData['tim_penilai'] ?? [];
-            
+
             // Check if current penilai has existing validation data
             $hasExistingValidation = !empty($timPenilaiData['validation']);
             $hasRecommendation = !empty($timPenilaiData['recommendation']);
             $hasPerbaikan = !empty($timPenilaiData['perbaikan_usulan']);
-            
+
             if ($hasRecommendation && $hasPerbaikan) {
                 $warnings[] = "Usulan memiliki data rekomendasi dan perbaikan sekaligus";
             }
@@ -462,7 +580,7 @@ class PusatUsulanController extends Controller
             $penilais = $usulan->penilais ?? collect();
             $totalPenilai = $penilais->count();
             $completedPenilai = $penilais->whereNotNull('pivot.hasil_penilaian')->count();
-            
+
             if ($totalPenilai === 0) {
                 $warnings[] = "Tidak ada penilai yang ditugaskan untuk usulan ini";
             } elseif ($completedPenilai === $totalPenilai) {
@@ -478,7 +596,7 @@ class PusatUsulanController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             $issues[] = "Error during consistency check: " . $e->getMessage();
         }
 

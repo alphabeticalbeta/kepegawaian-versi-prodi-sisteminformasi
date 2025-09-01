@@ -60,10 +60,7 @@ class AdminFakultasController extends Controller
         // Gunakan helper method untuk mendapatkan periode usulan
         $periodeUsulans = $this->getPeriodeUsulanWithCount($unitKerja);
 
-        // Get dashboard statistics
-        $statistics = $this->getDashboardStatistics($periodeUsulans, $unitKerja);
-
-        return view('backend.layouts.views.admin-fakultas.dashboard', compact('periodeUsulans', 'unitKerja', 'statistics'));
+        return view('backend.layouts.views.admin-fakultas.dashboard', compact('periodeUsulans', 'unitKerja'));
     }
 
     /**
@@ -493,13 +490,13 @@ class AdminFakultasController extends Controller
     {
         // Validasi fleksibel - izinkan simpan tanpa data validation jika hanya dokumen pendukung
         $validationRules = [];
-        
+
         if ($request->has('validation')) {
             $validationRules['validation'] = 'required|array';
         }
-        
+
         $validationRules['action'] = 'required|in:save_draft,submit';
-        
+
         $validatedData = $request->validate($validationRules);
 
         $adminId = Auth::id();
@@ -714,14 +711,14 @@ class AdminFakultasController extends Controller
                         'admin_id' => $adminId,
                         'request_data' => $request->all()
                     ]);
-                    
+
                     // Validasi fleksibel - izinkan kirim tanpa validation array
                     $validationRules = [];
-                    
+
                     if ($request->has('validation')) {
                         $validationRules['validation'] = 'required|array';
                     }
-                    
+
                     $validationRules['dokumen_pendukung'] = 'nullable|array';
                     $validationRules['dokumen_pendukung.nomor_surat_usulan'] = 'nullable|string|max:255';
                     $validationRules['dokumen_pendukung.nomor_berita_senat'] = 'nullable|string|max:255';
@@ -730,7 +727,7 @@ class AdminFakultasController extends Controller
                     // Support bracket notation for compatibility
                     $validationRules['dokumen_pendukung[file_surat_usulan]'] = 'nullable|file|mimes:pdf|max:2048';
                     $validationRules['dokumen_pendukung[file_berita_senat]'] = 'nullable|file|mimes:pdf|max:2048';
-                    
+
                     $validatedData = $request->validate($validationRules);
 
                     Log::info('resend_to_university validation passed', [
@@ -949,14 +946,14 @@ class AdminFakultasController extends Controller
                         'admin_id' => $adminId,
                         'request_data' => $request->all()
                     ]);
-                    
+
                     // Validasi fleksibel - izinkan simpan tanpa validation array
                     $validationRules = [];
-                    
+
                     if ($request->has('validation')) {
                         $validationRules['validation'] = 'required|array';
                     }
-                    
+
                     if ($request->has('dokumen_pendukung')) {
                         $validationRules['dokumen_pendukung'] = 'nullable|array';
                         $validationRules['dokumen_pendukung.nomor_surat_usulan'] = 'nullable|string|max:255';
@@ -967,7 +964,7 @@ class AdminFakultasController extends Controller
                         $validationRules['dokumen_pendukung[file_surat_usulan]'] = 'nullable|file|mimes:pdf|max:2048';
                         $validationRules['dokumen_pendukung[file_berita_senat]'] = 'nullable|file|mimes:pdf|max:2048';
                     }
-                    
+
                     $validatedData = $request->validate($validationRules);
 
                     Log::info('Validation passed', [
@@ -1031,14 +1028,14 @@ class AdminFakultasController extends Controller
                 'usulan_id' => $usulan->id,
                 'validasi_data' => $usulan->validasi_data
             ]);
-            
+
             $usulan->save();
-            
+
             Log::info('After saving usulan', [
                 'usulan_id' => $usulan->id,
                 'saved' => true
             ]);
-            
+
             $usulan->createLog($usulan->status_usulan, $statusLama, $logMessage, $adminId);
 
             // OPTIMASI: Clear cache setelah data berubah
@@ -1319,18 +1316,7 @@ class AdminFakultasController extends Controller
         }
     }
 
-    private function getDashboardStatistics($periodeUsulans, $unitKerja)
-    {
-        return [
-            'total_periode' => $periodeUsulans->total(),
-            'total_pengusul' => $periodeUsulans->sum('jumlah_pengusul'),
-            'total_perbaikan' => $periodeUsulans->sum('perbaikan'),
-            'total_usulan' => $periodeUsulans->sum('total_usulan'),
-            'unit_kerja_name' => $unitKerja ? $unitKerja->nama : 'Tidak diketahui',
-            'has_pending_review' => $periodeUsulans->sum('jumlah_pengusul') > 0,
-            'has_perbaikan' => $periodeUsulans->sum('perbaikan') > 0
-        ];
-    }
+
 
 
 
@@ -1421,7 +1407,7 @@ class AdminFakultasController extends Controller
             // Status should remain 'Diajukan' until Admin Fakultas explicitly submits with dokumen pendukung
 
             $usulan->save();
-            
+
             // Refresh the model to ensure we have the latest data
             $usulan->refresh();
 
@@ -1432,11 +1418,11 @@ class AdminFakultasController extends Controller
             Cache::forget("dokumen_data_{$usulan->id}");
             Cache::forget("usulan_fakultas_{$usulan->id}");
             Cache::forget("admin_fakultas_id_" . Auth::id());
-            
+
             // Clear usulan model cache
             Cache::forget("usulan_{$usulan->id}");
             Cache::forget("usulan_validation_{$usulan->id}_admin_fakultas");
-            
+
             // Log cache clearing
             \Log::info('Cache cleared for usulan', [
                 'usulan_id' => $usulan->id,
@@ -1815,7 +1801,7 @@ class AdminFakultasController extends Controller
         $sensitiveFiles = [
             'sk_pangkat_terakhir', 'sk_jabatan_terakhir', 'ijazah_terakhir',
             'transkrip_nilai_terakhir', 'sk_penyetaraan_ijazah', 'disertasi_thesis_terakhir',
-            'pak_konversi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
+            'pak_konversi', 'pak_integrasi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
         ];
 
         return in_array($field, $sensitiveFiles) ? 'local' : 'public';
@@ -1840,7 +1826,7 @@ class AdminFakultasController extends Controller
         foreach ($cacheKeys as $key) {
             Cache::forget($key);
         }
-        
+
         // Log cache clearing
         \Log::info('Usulan cache cleared', [
             'usulan_id' => $usulan->id,

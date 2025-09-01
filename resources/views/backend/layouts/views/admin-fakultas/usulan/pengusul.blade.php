@@ -40,98 +40,7 @@
             </div>
         @endif
 
-        {{-- Summary Card --}}
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border border-gray-200">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Total Pengusul</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->total() }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border border-gray-200">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Usulan Dikirim ke Admin Fakultas</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->where('status_usulan', 'Diajukan')->count() }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border border-gray-200">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                                            <dt class="text-sm font-medium text-gray-500 truncate">Sedang Direview</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $usulans->where('status_usulan', 'Usulan Disetujui Kepegawaian Universitas')->count() }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border border-gray-200">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Perbaikan</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Permintaan Perbaikan dari Admin Fakultas', 'Permintaan Perbaikan Ke Admin Fakultas Dari Kepegawaian Universitas', 'Usulan Perbaikan dari Penilai Universitas'])->count() }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border border-gray-200">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Selesai</dt>
-                                <dd class="text-lg font-medium text-gray-900">{{ $usulans->whereIn('status_usulan', ['Usulan Disetujui Admin Fakultas', 'Usulan Direkomendasikan oleh Tim Senat', 'Usulan Sudah Dikirim ke Sister'])->count() }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         {{-- Main Table --}}
         <div class="bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden">
@@ -189,47 +98,47 @@
                                         // Function to get display status based on current status and role
                                         function getDisplayStatus($usulan, $currentRole) {
                                             $status = $usulan->status_usulan;
-                                            
+
                                             // Mapping status berdasarkan alur kerja yang diminta
                                             switch ($status) {
                                                 // Status untuk Admin Fakultas
                                                 case 'Diajukan':
                                                     return 'Usulan Dikirim ke Admin Fakultas';
-                                                
+
                                                 case 'Permintaan Perbaikan dari Admin Fakultas':
                                                     if ($currentRole === 'Admin Fakultas') {
                                                         return 'Permintaan Perbaikan dari Admin Fakultas';
                                                     }
                                                     break;
-                                                
+
                                                 case 'Usulan Disetujui Admin Fakultas':
                                                     if ($currentRole === 'Admin Fakultas') {
                                                         return 'Usulan Disetujui Admin Fakultas';
                                                     }
                                                     break;
-                                                
+
                                                 case 'Perbaikan dari Kepegawaian Universitas':
                                                     if ($currentRole === 'Admin Fakultas') {
                                                         return 'Usulan Perbaikan dari Kepegawaian Universitas';
                                                     }
                                                     break;
-                                                
+
                                                 case 'Perbaikan dari Penilai Universitas':
                                                     if ($currentRole === 'Admin Fakultas') {
                                                         return 'Usulan Perbaikan dari Penilai Universitas';
                                                     }
                                                     break;
-                                                
+
                                                 default:
                                                     return $status;
                                             }
-                                            
+
                                             return $status;
                                         }
-                                        
+
                                         // Get display status
                                         $displayStatus = getDisplayStatus($usulan, 'Admin Fakultas');
-                                        
+
                                         // Status colors mapping
                                         $statusColors = [
                                             // Status lama (fallback)
@@ -239,7 +148,7 @@
                                             'Usulan Disetujui Admin Fakultas' => 'bg-purple-100 text-purple-800',
                                             'Direkomendasikan' => 'bg-green-100 text-green-800',
                                             'Ditolak' => 'bg-red-100 text-red-800',
-                                            
+
                                             // Status baru
                                             'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
                                             'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
@@ -247,7 +156,7 @@
                                             'Usulan Perbaikan dari Kepegawaian Universitas' => 'bg-red-100 text-red-800',
                                             'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
                                         ];
-                                        
+
                                         $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
 

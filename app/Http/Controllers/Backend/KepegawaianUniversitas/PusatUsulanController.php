@@ -123,7 +123,7 @@ class PusatUsulanController extends Controller
 
         // 2. Get file path from usulan data using model method
         $filePath = $usulan->getDocumentPath($field);
-        
+
         Log::info('Document path retrieved', [
             'usulan_id' => $usulan->id,
             'field' => $field,
@@ -229,8 +229,21 @@ class PusatUsulanController extends Controller
 
     public function process(Request $request, Usulan $usulan)
     {
-        // 1) Guard status
-        if (!in_array($usulan->status_usulan, [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS, \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS])) {
+        // 1) Guard status (izinkan status tambahan khusus untuk tindakan kirim ke penilai)
+        $actionType = $request->input('action_type');
+        $allowedGeneral = [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+        ];
+        $allowedForAssessor = [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_ADMIN_FAKULTAS_KE_KEPEGAWAIAN_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+        ];
+
+        $allowedStatuses = $actionType === 'send_to_assessor_team' ? $allowedForAssessor : $allowedGeneral;
+        if (!in_array($usulan->status_usulan, $allowedStatuses, true)) {
             return redirect()->back()->with('error', 'Aksi tidak dapat dilakukan karena status usulan saat ini adalah: ' . $usulan->status_usulan);
         }
 
@@ -296,21 +309,25 @@ class PusatUsulanController extends Controller
 
                 case 'send_to_assessor_team':
                     // Kirim ke tim penilai
-                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI;
+                    // Sesuai kebutuhan: setelah memilih penilai, status menjadi
+                    // "Usulan Disetujui Kepegawaian Universitas dan Menunggu Penilaian"
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS;
 
-                    // Hapus penilai lama jika ada
-                    $usulan->penilais()->detach();
-
-                    // Tambah penilai baru
+                    // UPDATED: Sync penilai (tidak hapus semua, tapi update sesuai pilihan)
                     $assessorIds = $request->assessor_ids;
                     $assessorData = [];
+
+                    // Prepare data untuk sync - hanya untuk penilai baru
                     foreach ($assessorIds as $assessorId) {
                         $assessorData[$assessorId] = [
                             'status_penilaian' => 'Belum Dinilai',
                             'catatan_penilaian' => null,
                         ];
                     }
-                    $usulan->penilais()->attach($assessorData);
+
+                    // Sync: akan menambah penilai baru dan menghapus yang tidak dipilih
+                    // Penilai yang sudah ada dan masih dipilih akan dipertahankan
+                    $usulan->penilais()->sync($assessorData);
 
                     $logMessage = 'Usulan dikirim ke Tim Penilai (' . count($assessorIds) . ' penilai).';
                     break;
@@ -357,12 +374,34 @@ class PusatUsulanController extends Controller
 
             DB::commit();
 
+            // Check if this is an AJAX request
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Usulan berhasil diproses.',
+                    'data' => [
+                        'new_status' => $usulan->status_usulan,
+                        'log_message' => $logMessage
+                    ]
+                ]);
+            }
+
             return redirect()
                 ->route('backend.kepegawaian-universitas.pusat-usulan.index')
                 ->with('success', 'Usulan berhasil diproses.');
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Error processing usulan by Admin Universitas: ' . $e->getMessage(), ['usulan_id' => $usulan->id]);
+
+            // Check if this is an AJAX request
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan sistem saat memproses usulan.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
             return redirect()->back()->with('error', 'Terjadi kesalahan sistem saat memproses usulan.');
         }
     }

@@ -55,7 +55,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Periode</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Usulan</th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jadwal Usulan</th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Penilaian</th>
@@ -69,12 +69,13 @@
                                 // tidak hanya yang berstatus 'Sedang Direview'
                                 $currentPenilaiId = Auth::id();
                                 $usulansForAssessment = $periode->usulans->filter(function($usulan) use ($currentPenilaiId) {
-                                    return $usulan->penilais->contains('id', $currentPenilaiId) && 
+                                    return $usulan->penilais->contains('id', $currentPenilaiId) &&
                                            in_array($usulan->status_usulan, [
-                                               'Usulan Disetujui Kepegawaian Universitas',
-                                               'Menunggu Hasil Penilaian Tim Penilai',
-                                               'Perbaikan Dari Tim Penilai',
-                                               'Usulan Direkomendasi Tim Penilai'
+                                               \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                                               \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
+                                               \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
+                                               \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
+                                               \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
                                            ]);
                                 });
                                 $jumlahPenilaian = $usulansForAssessment->count();
@@ -86,7 +87,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        {{ $periode->jenis_usulan }}
+                                        {{ \App\Helpers\UsulanHelper::formatJenisUsulan($periode->jenis_usulan) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">

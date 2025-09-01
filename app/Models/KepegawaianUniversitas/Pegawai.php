@@ -82,6 +82,7 @@ class Pegawai extends Authenticatable
         'skp_tahun_pertama',
         'skp_tahun_kedua',
         'pak_konversi',
+        'pak_integrasi',
     ];
 
     protected $casts = [

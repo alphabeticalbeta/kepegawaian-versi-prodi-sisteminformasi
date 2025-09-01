@@ -716,7 +716,7 @@ class DataPegawaiController extends Controller
         $sensitiveFiles = [
             'sk_pangkat_terakhir', 'sk_jabatan_terakhir', 'ijazah_terakhir',
             'transkrip_nilai_terakhir', 'sk_penyetaraan_ijazah', 'disertasi_thesis_terakhir',
-            'pak_konversi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
+            'pak_konversi', 'pak_integrasi', 'skp_tahun_pertama', 'skp_tahun_kedua', 'sk_cpns', 'sk_pns'
         ];
 
         return in_array($field, $sensitiveFiles) ? 'local' : 'public';
