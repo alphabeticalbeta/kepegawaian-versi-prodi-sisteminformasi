@@ -3,19 +3,30 @@
 @section('title', 'Detail Usulan Kepangkatan')
 
 @section('content')
-@php
-    // Check if usulan is in view-only status
-    $viewOnlyStatuses = [
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN,
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
-    ];
-    
-    $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);
-@endphp
+        @php
+            // Check if usulan is in view-only status
+            $viewOnlyStatuses = [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN
+            ];
+            
+            // Status yang dapat diedit (tidak view-only) - hanya status draft dan permintaan perbaikan
+            $editableStatuses = [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN
+            ];
+            
+            if (in_array($usulan->status_usulan, $editableStatuses)) {
+                $isViewOnly = false;  // Dapat diedit
+            } else {
+                $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);  // View-only berdasarkan array
+            }
+        @endphp
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
     {{-- Header Section --}}
     <div class="bg-white border-b">
@@ -85,6 +96,232 @@
             </div>
         </div>
 
+
+
+        {{-- Field Validation Display --}}
+        @php
+            // Get validation data based on status
+            $validationData = [];
+            $validationSource = '';
+            $hasValidationIssues = false;
+            
+            if ($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS) {
+                $validationData = $usulan->getValidasiByRole('kepegawaian_universitas') ?? [];
+                $validationSource = 'Kepegawaian Universitas';
+            } elseif ($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) {
+                $validationData = $usulan->getValidasiByRole('kepegawaian_universitas') ?? [];
+                $validationSource = 'Kepegawaian Universitas';
+            } elseif ($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) {
+                $validationData = $usulan->getValidasiByRole('kepegawaian_universitas') ?? [];
+                $validationSource = 'Kepegawaian Universitas';
+            }
+            
+            $hasValidationIssues = !empty($validationData) && isset($validationData['validation']);
+
+            // Field labels mapping
+            $fieldLabels = [
+                'data_pribadi' => [
+                    'jenis_pegawai' => 'Jenis Pegawai',
+                    'status_kepegawaian' => 'Status Kepegawaian',
+                    'nip' => 'NIP',
+                    'nuptk' => 'NUPTK',
+                    'gelar_depan' => 'Gelar Depan',
+                    'nama_lengkap' => 'Nama Lengkap',
+                    'gelar_belakang' => 'Gelar Belakang',
+                    'email' => 'Email',
+                    'tempat_lahir' => 'Tempat Lahir',
+                    'tanggal_lahir' => 'Tanggal Lahir',
+                    'jenis_kelamin' => 'Jenis Kelamin',
+                    'nomor_handphone' => 'Nomor Handphone'
+                ],
+                'data_kepegawaian' => [
+                    'pangkat_saat_usul' => 'Pangkat',
+                    'tmt_pangkat' => 'TMT Pangkat',
+                    'jabatan_saat_usul' => 'Jabatan',
+                    'tmt_jabatan' => 'TMT Jabatan',
+                    'tmt_cpns' => 'TMT CPNS',
+                    'tmt_pns' => 'TMT PNS',
+                    'unit_kerja_saat_usul' => 'Unit Kerja'
+                ],
+                'data_pendidikan' => [
+                    'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                    'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                    'nama_prodi_jurusan' => 'Nama Program Studi/Jurusan'
+                ],
+                'data_kinerja' => [
+                    'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                    'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                    'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1)
+                ],
+                'dokumen_profil' => [
+                    'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                    'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                    'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
+                    'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
+                    'pak_konversi' => 'PAK Konversi ' . (date('Y') - 1),
+                    'pak_integrasi' => 'PAK Integrasi',
+                    'sk_cpns' => 'SK CPNS',
+                    'sk_pns' => 'SK PNS',
+                    'ijazah_terakhir' => 'Ijazah Terakhir',
+                    'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir'
+                ]
+            ];
+        @endphp
+
+        @if($hasValidationIssues && ($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS || $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN || $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN))
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+            <div class="@if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-gradient-to-r from-purple-600 to-indigo-600 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-gradient-to-r from-blue-600 to-indigo-600 @else bg-gradient-to-r from-red-600 to-pink-600 @endif px-6 py-5">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN)
+                        <i data-lucide="building" class="w-6 h-6 mr-3"></i>
+                    @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
+                        <i data-lucide="clipboard-check" class="w-6 h-6 mr-3"></i>
+                    @else
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                    @endif
+                    Field-Field Tidak Sesuai
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="mb-4 p-4 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-purple-50 border-purple-200 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-blue-50 border-blue-200 @else bg-red-50 border-red-200 @endif rounded-lg border">
+                    <div class="flex items-center">
+                        <i data-lucide="info" class="w-5 h-5 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-600 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-600 @else text-red-600 @endif mr-3"></i>
+                        <div>
+                            <h4 class="text-sm font-semibold @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-800 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-800 @else text-red-800 @endif mb-1">Informasi Validasi</h4>
+                            <p class="text-sm @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-700 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-700 @else text-red-700 @endif">
+                                Berikut adalah field-field yang tidak sesuai berdasarkan validasi dari {{ $validationSource }}.
+                                Field-field ini harus diperbaiki sebelum usulan dapat diajukan kembali.
+                                @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN)
+                                    <br><br><strong>Note:</strong> Usulan ini dikembalikan dari BKN dan perlu dikirim kembali ke Kepegawaian Universitas setelah perbaikan.
+                                @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
+                                    <br><br><strong>Note:</strong> Usulan ini akan dikirim ke BKN setelah perbaikan.
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach($validationData['validation'] ?? [] as $groupKey => $groupData)
+                        @if(isset($fieldLabels[$groupKey]))
+                            @foreach($groupData as $fieldKey => $fieldData)
+                                @if(isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai')
+                                    <div class="border-l-4 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) border-purple-500 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) border-blue-500 @else border-red-500 @endif pl-4 py-3 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-purple-50 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-blue-50 @else bg-red-50 @endif rounded-r-lg">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center space-x-2 mb-2">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-purple-100 text-purple-800 border-purple-300 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-blue-100 text-blue-800 border-blue-300 @else bg-red-100 text-red-800 border-red-300 @endif border">
+                                                        <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
+                                                        Tidak Sesuai
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">{{ $fieldLabels[$groupKey][$fieldKey] ?? ucwords(str_replace('_', ' ', $fieldKey)) }}</span>
+                                                </div>
+                                                @if(!empty($fieldData['keterangan']))
+                                                    <p class="text-sm @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-700 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-700 @else text-red-700 @endif">{{ $fieldData['keterangan'] }}</p>
+                                                @else
+                                                    <p class="text-sm @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-700 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-700 @else text-red-700 @endif">Tidak ada keterangan spesifik</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        @endif
+                    @endforeach
+
+                    {{-- Field Validation untuk Dokumen Usulan --}}
+                    @if(!empty($validationData) && isset($validationData['validation']['dokumen_usulan']))
+                        @php
+                            $dokumenUsulanFields = [
+                                'dokumen_ukom_sk_jabatan',
+                                'dokumen_pendukung_jabatan_administrasi',
+                                'dokumen_pendukung_jabatan_fungsional_tertentu',
+                                'surat_pelantikan_berita_acara',
+                                'surat_pencantuman_gelar'
+                            ];
+                            $hasInvalidDokumenFields = false;
+                            foreach ($dokumenUsulanFields as $fieldKey) {
+                                if (isset($validationData['validation']['dokumen_usulan'][$fieldKey]['status']) && 
+                                    $validationData['validation']['dokumen_usulan'][$fieldKey]['status'] === 'tidak_sesuai') {
+                                    $hasInvalidDokumenFields = true;
+                                    break;
+                                }
+                            }
+                        @endphp
+                        
+                        @if($hasInvalidDokumenFields)
+                            <div class="border-l-4 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) border-purple-500 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) border-blue-500 @else border-red-500 @endif pl-4 py-3 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-purple-50 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-blue-50 @else bg-red-50 @endif rounded-r-lg">
+                                <div class="flex items-start">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-600 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-600 @else text-red-600 @endif mr-3 mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <div class="text-sm font-semibold @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-800 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-800 @else text-red-800 @endif mb-2">
+                                            Field-Field Dokumen Tidak Sesuai dari {{ $validationSource }}:
+                                        </div>
+                                        <div class="space-y-2">
+                                            @foreach($dokumenUsulanFields as $fieldKey)
+                                                @if(isset($validationData['validation']['dokumen_usulan'][$fieldKey]['status']) && 
+                                                    $validationData['validation']['dokumen_usulan'][$fieldKey]['status'] === 'tidak_sesuai')
+                                                    <div class="bg-white border @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) border-purple-200 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) border-blue-200 @else border-red-200 @endif rounded-lg p-3">
+                                                        <div class="flex items-start justify-between">
+                                                            <div class="flex-1">
+                                                                <div class="text-sm font-medium @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-800 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-800 @else text-red-800 @endif">
+                                                                    @if($fieldKey === 'dokumen_ukom_sk_jabatan')
+                                                                        Dokumen UKOM dan SK Jabatan
+                                                                    @elseif($fieldKey === 'dokumen_pendukung_jabatan_administrasi')
+                                                                        Dokumen Pendukung Jabatan Administrasi
+                                                                    @elseif($fieldKey === 'dokumen_pendukung_jabatan_fungsional_tertentu')
+                                                                        Dokumen Pendukung Jabatan Fungsional Tertentu
+                                                                    @elseif($fieldKey === 'surat_pelantikan_berita_acara')
+                                                                        Surat Pelantikan dan Berita Acara Jabatan Terakhir
+                                                                    @elseif($fieldKey === 'surat_pencantuman_gelar')
+                                                                        Surat Pencantuman Gelar
+                                                                    @else
+                                                                        {{ ucwords(str_replace('_', ' ', $fieldKey)) }}
+                                                                    @endif
+                                                                </div>
+                                                                @if(!empty($validationData['validation']['dokumen_usulan'][$fieldKey]['keterangan']))
+                                                                    <div class="text-sm @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-700 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-700 @else text-red-700 @endif mt-1">
+                                                                        <strong>Keterangan:</strong> {{ $validationData['validation']['dokumen_usulan'][$fieldKey]['keterangan'] }}
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-purple-100 text-purple-800 border-purple-200 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-blue-100 text-blue-800 border-blue-200 @else bg-red-100 text-red-800 border-red-200 @endif border">
+                                                                Tidak Sesuai
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
+                    {{-- Keterangan Umum untuk Semua Status --}}
+                    @if(!empty($validationData['keterangan_umum'] ?? ''))
+                        <div class="border-l-4 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) border-purple-500 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) border-blue-500 @else border-red-500 @endif pl-4 py-3 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-purple-50 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-blue-50 @else bg-red-50 @endif rounded-r-lg">
+                            <div class="flex items-start">
+                                <i data-lucide="sticky-note" class="w-5 h-5 @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-600 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-600 @else text-red-600 @endif mr-3 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-800 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-800 @else text-red-800 @endif mb-2">
+                                        Keterangan Umum dari {{ $validationSource }}:
+                                    </div>
+                                    <div class="bg-white border @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) border-purple-200 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) border-blue-200 @else border-red-200 @endif rounded-lg p-3">
+                                        <div class="text-sm @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-700 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-700 @else text-red-700 @endif">
+                                            {{ $validationData['keterangan_umum'] }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Informasi Periode Usulan --}}
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
@@ -116,12 +353,12 @@
             @csrf
             @method('PUT')
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
-                    <h2 class="text-xl font-bold text-white flex items-center">
-                        <i data-lucide="award" class="w-6 h-6 mr-3"></i>
-                        Informasi Usulan Kepangkatan
-                    </h2>
-                </div>
+                            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i data-lucide="award" class="w-6 h-6 mr-3"></i>
+                    Informasi Usulan Kepangkatan
+                </h2>
+            </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -576,6 +813,63 @@
             @include('backend.layouts.views.pegawai-unmul.usulan-kepangkatan.components.jabatan-struktural-form')
         @endif
 
+        {{-- Field Validation Display --}}
+        @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS)
+        @php
+            // Get validation data from Kepegawaian Universitas
+            $validationData = $usulan->getValidasiByRole('kepegawaian_universitas') ?? [];
+            $hasValidationIssues = !empty($validationData) && isset($validationData['validation']);
+            
+            // Field labels mapping
+            $fieldLabels = [
+                'data_pribadi' => [
+                    'jenis_pegawai' => 'Jenis Pegawai',
+                    'status_kepegawaian' => 'Status Kepegawaian',
+                    'nip' => 'NIP',
+                    'nuptk' => 'NUPTK',
+                    'gelar_depan' => 'Gelar Depan',
+                    'nama_lengkap' => 'Nama Lengkap',
+                    'gelar_belakang' => 'Gelar Belakang',
+                    'email' => 'Email',
+                    'tempat_lahir' => 'Tempat Lahir',
+                    'tanggal_lahir' => 'Tanggal Lahir',
+                    'jenis_kelamin' => 'Jenis Kelamin',
+                    'nomor_handphone' => 'Nomor Handphone'
+                ],
+                'data_kepegawaian' => [
+                    'pangkat_saat_usul' => 'Pangkat',
+                    'tmt_pangkat' => 'TMT Pangkat',
+                    'jabatan_saat_usul' => 'Jabatan',
+                    'tmt_jabatan' => 'TMT Jabatan',
+                    'tmt_cpns' => 'TMT CPNS',
+                    'tmt_pns' => 'TMT PNS',
+                    'unit_kerja_saat_usul' => 'Unit Kerja'
+                ],
+                'data_pendidikan' => [
+                    'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                    'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                    'nama_prodi_jurusan' => 'Nama Program Studi/Jurusan'
+                ],
+                'data_kinerja' => [
+                    'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                    'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                    'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1)
+                ],
+                'dokumen_profil' => [
+                    'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                    'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                    'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
+                    'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
+                    'pak_konversi' => 'PAK Konversi ' . (date('Y') - 1),
+                    'pak_integrasi' => 'PAK Integrasi',
+                    'sk_cpns' => 'SK CPNS',
+                    'sk_pns' => 'SK PNS',
+                    'ijazah_terakhir' => 'Ijazah Terakhir',
+                    'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir'
+                ]
+            ];
+        @endphp
+
         {{-- Catatan Pengusul --}}
         @if(isset($usulan->data_usulan['catatan_pengusul']) && $usulan->data_usulan['catatan_pengusul'])
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
@@ -598,24 +892,58 @@
         @endif
 
         {{-- Catatan Verifikator --}}
-        @if($usulan->catatan_verifikator)
+        @if($usulan->catatan_verifikator || 
+            ($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN && 
+             !empty($validationData['keterangan_umum'] ?? '')) ||
+            ($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS && 
+             !empty($validationData['keterangan_umum'] ?? '')) ||
+            ($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN && 
+             !empty($validationData['keterangan_umum'] ?? '')))
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-            <div class="bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-5">
+            <div class="@if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-gradient-to-r from-purple-600 to-indigo-600 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-gradient-to-r from-blue-600 to-indigo-600 @else bg-gradient-to-r from-amber-600 to-orange-600 @endif px-6 py-5">
                 <h2 class="text-xl font-bold text-white flex items-center">
-                    <i data-lucide="clipboard-check" class="w-6 h-6 mr-3"></i>
-                    Catatan Verifikator
+                    @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                        <i data-lucide="clipboard-check" class="w-6 h-6 mr-3"></i>
+                        Catatan Kepegawaian Universitas
+                    @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN)
+                        <i data-lucide="building" class="w-6 h-6 mr-3"></i>
+                        Catatan BKN
+                    @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
+                        <i data-lucide="clipboard-check" class="w-6 h-6 mr-3"></i>
+                        Catatan Kepegawaian Universitas
+                    @else
+                        <i data-lucide="clipboard-check" class="w-6 h-6 mr-3"></i>
+                        Catatan Verifikator
+                    @endif
+                    @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS || $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN || $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
+                        <span class="ml-3 px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full border border-red-200">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1"></i>
+                            Perlu Perbaikan
+                        </span>
+                    @endif
                 </h2>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 gap-6">
                     <div>
                         <label class="block text-sm font-semibold text-gray-800">Catatan</label>
-                        <p class="text-xs text-gray-600 mb-2">Catatan yang diberikan oleh verifikator</p>
-                        <textarea class="block w-full border-gray-200 rounded-lg shadow-sm bg-amber-50 px-4 py-3 text-amber-800 font-medium cursor-not-allowed" rows="4" disabled>{{ $usulan->catatan_verifikator }}</textarea>
+                        <p class="text-xs text-gray-600 mb-2">
+                            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS)
+                                Catatan yang diberikan oleh Kepegawaian Universitas
+                            @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN)
+                                Catatan yang diberikan oleh BKN
+                            @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
+                                Catatan yang diberikan oleh Kepegawaian Universitas
+                            @else
+                                Catatan yang diberikan oleh verifikator
+                            @endif
+                        </p>
+                        <textarea class="block w-full border-gray-200 rounded-lg shadow-sm @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) bg-purple-50 text-purple-800 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) bg-blue-50 text-blue-800 @else bg-amber-50 text-amber-800 @endif font-medium cursor-not-allowed" rows="4" disabled>@if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN && !empty($validationData['keterangan_umum'] ?? '')){{ $validationData['keterangan_umum'] }}@elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS && !empty($validationData['keterangan_umum'] ?? '')){{ $validationData['keterangan_umum'] }}@elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN && !empty($validationData['keterangan_umum'] ?? '')){{ $validationData['keterangan_umum'] }}@else{{ $usulan->catatan_verifikator }}@endif</textarea>
                     </div>
                 </div>
             </div>
         </div>
+        @endif
         @endif
 
         {{-- Action Buttons untuk Pegawai --}}

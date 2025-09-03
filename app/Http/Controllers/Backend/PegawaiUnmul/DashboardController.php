@@ -63,10 +63,17 @@ class DashboardController extends Controller
         return [
             'total_usulan' => Usulan::where('pegawai_id', $pegawaiId)->count(),
             'usulan_pending' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
-            'usulan_approved' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
-            'usulan_rejected' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
+            'usulan_approved' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
             'usulan_returned' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS)->count(),
             'usulan_draft' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN)->count(),
+            
+            // Tambahan statistik untuk status baru
+            'usulan_direkomendasikan_kepegawaian_universitas' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
+            'usulan_direkomendasikan_bkn' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)->count(),
+            'usulan_direkomendasikan_sister' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER)->count(),
+            'usulan_tidak_direkomendasikan_kepegawaian_universitas' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
+            'usulan_tidak_direkomendasikan_bkn' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN)->count(),
+            'usulan_tidak_direkomendasikan_sister' => Usulan::where('pegawai_id', $pegawaiId)->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER)->count(),
         ];
     }
 

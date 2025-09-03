@@ -46,8 +46,14 @@ class UsulanController extends Controller
         $existingValidation = $usulan->getValidasiByRole('admin_universitas') ?? [];
 
         // Determine action permissions based on status
-        $canReturn = in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview']);
-        $canForward = in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview']);
+        $canReturn = in_array($usulan->status_usulan, [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
+        ]);
+        $canForward = in_array($usulan->status_usulan, [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
+        ]);
 
         return view('backend.layouts.views.kepegawaian-universitas.usulan.detail', [
             'usulan' => $usulan,
@@ -56,7 +62,10 @@ class UsulanController extends Controller
                 'canReturn' => $canReturn,
                 'canForward' => $canForward,
                 'routePrefix' => 'admin-universitas',
-                'canEdit' => in_array($usulan->status_usulan, ['Diusulkan ke Universitas', 'Sedang Direview']),
+                'canEdit' => in_array($usulan->status_usulan, [
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
+                ]),
                 'canView' => true,
                 'submitFunctions' => ['save', 'return_to_pegawai', 'forward_to_penilai']
             ]
@@ -70,7 +79,7 @@ class UsulanController extends Controller
     {
 
         // Check if usulan is in correct status
-        if ($usulan->status_usulan !== 'Diusulkan ke Universitas') {
+        if ($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS) {
             return response()->json([
                 'success' => false,
                 'message' => 'Usulan tidak dapat divalidasi karena status tidak sesuai.'
@@ -193,7 +202,7 @@ class UsulanController extends Controller
         $beritaPath = $request->file('file_berita_senat')->store('usulan/dokumen/admin-universitas', 'local');
 
         // Update usulan status and data
-        $usulan->status_usulan = 'Sedang Direview';
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS;
         $usulan->data_usulan['dokumen_admin_universitas'] = [
             'nomor_surat_usulan' => $request->input('nomor_surat_usulan'),
             'file_surat_usulan' => $suratPath,

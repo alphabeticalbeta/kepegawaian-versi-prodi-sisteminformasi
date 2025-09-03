@@ -19,13 +19,17 @@ class DashboardUsulanController extends Controller
         $periodes = PeriodeUsulan::withCount([
             'usulans',
             'usulans as usulan_disetujui_count' => function ($query) {
-                $query->where('status_usulan', 'Disetujui');
+                $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS);
             },
             'usulans as usulan_ditolak_count' => function ($query) {
-                $query->where('status_usulan', 'Ditolak');
+                $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS);
             },
             'usulans as usulan_pending_count' => function ($query) {
-                $query->whereIn('status_usulan', ['Menunggu Verifikasi', 'Dalam Proses']);
+                $query->whereIn('status_usulan', [
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
+                ]);
             }
         ])->orderBy('created_at', 'desc')->get();
 
@@ -49,9 +53,13 @@ class DashboardUsulanController extends Controller
         // Detailed statistics for this period
         $stats = [
             'total_usulan' => $periode->usulans()->count(),
-            'usulan_disetujui' => $periode->usulans()->where('status_usulan', 'Disetujui')->count(),
-            'usulan_ditolak' => $periode->usulans()->where('status_usulan', 'Ditolak')->count(),
-            'usulan_pending' => $periode->usulans()->whereIn('status_usulan', ['Menunggu Verifikasi', 'Dalam Proses'])->count(),
+            'usulan_disetujui' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
+            'usulan_ditolak' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
+            'usulan_pending' => $periode->usulans()->whereIn('status_usulan', [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
+            ])->count(),
         ];
 
         // Usulan by status for chart

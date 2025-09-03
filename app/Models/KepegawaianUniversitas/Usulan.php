@@ -965,7 +965,7 @@ class Usulan extends Model
     /**
      * Set data validasi untuk role tertentu
      */
-    public function setValidasiByRole(string $role, array $validasiData, int $validatedBy): void
+    public function setValidasiByRole(string $role, array $validasiData, int $validatedBy, string $keteranganUmum = ''): void
     {
         $currentValidasi = $this->validasi_data ?? [];
 
@@ -988,6 +988,7 @@ class Usulan extends Model
         // Ensure we don't lose existing data that's not in validation
         $currentValidasi[$role] = array_merge($existingValidation, [
             'validation' => $existingValidationData,
+            'keterangan_umum' => $keteranganUmum,
             'validated_by' => $validatedBy,
             'validated_at' => now()->toISOString()
         ]);
@@ -998,6 +999,7 @@ class Usulan extends Model
         \Log::info('setValidasiByRole called', [
             'role' => $role,
             'validated_by' => $validatedBy,
+            'keterangan_umum' => $keteranganUmum,
             'input_data' => $validasiData,
             'merged_data' => $existingValidationData,
             'final_structure' => $currentValidasi[$role]
@@ -1607,8 +1609,12 @@ public function getSenateDecisionCounts(): array
     const STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER = 'Usulan Sudah Dikirim ke Sister';
     const STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER = 'Permintaan Perbaikan Usulan dari Tim Sister';
     const STATUS_PERBAIKAN_SUDAH_DIKIRIM_KE_SISTER = 'Perbaikan Sudah Dikirim ke Sister';
-    const STATUS_DIREKOMENDASIKAN = 'Direkomendasikan';
-    const STATUS_TIDAK_DIREKOMENDASIKAN = 'Tidak Direkomendasikan';
+    const STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Direkomendasikan Kepegawaian Universitas';
+    const STATUS_DIREKOMENDASIKAN_BKN = 'Usulan Direkomendasikan BKN';
+    const STATUS_DIREKOMENDASIKAN_SISTER = 'Usulan Direkomendasikan Sister';
+    const STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS = 'Usulan Belum Direkomendasi Kepegawaian Universitas';
+    const STATUS_TIDAK_DIREKOMENDASIKAN_BKN = 'Usulan Belum Direkomendasi BKN';
+    const STATUS_TIDAK_DIREKOMENDASIKAN_SISTER = 'Usulan Belum Direkomendasi Sister';
 
     // =====================================================
     // STATUS CONSTANTS FOR USULAN KEPANGKATAN (PEGAWAI & KEPEGAWAIAN UNIVERSITAS ONLY)
@@ -1617,7 +1623,6 @@ public function getSenateDecisionCounts(): array
     const STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN = 'Usulan Sudah Dikirim ke BKN';
     const STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN = 'Usulan Perbaikan Dari Pegawai Ke BKN';
     const STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN = 'Permintaan Perbaikan Ke Pegawai Dari BKN';
-    const STATUS_DIREKOMENDASIKAN_BKN = 'Usulan Direkomendasikan BKN';
 
     // Draft status constants (for Pegawai role)
     const STATUS_DRAFT_USULAN = 'Draft Usulan';

@@ -64,10 +64,10 @@ class DashboardPeriodeController extends Controller
             ->withCount([
                 'usulans',
                 'usulans as usulan_disetujui_count' => function ($query) {
-                    $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN);
+                                            $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS);
                 },
                 'usulans as usulan_ditolak_count' => function ($query) {
-                    $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN);
+                                            $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS);
                 },
                 'usulans as usulan_pending_count' => function ($query) {
                     $query->whereIn('status_usulan', [
@@ -181,106 +181,97 @@ class DashboardPeriodeController extends Controller
     }
 
     /**
-     * Menampilkan detail dashboard untuk periode tertentu
+     * Menampilkan detail periode usulan tertentu
      */
-    public function show(PeriodeUsulan $periode)
+    public function show(PeriodeUsulan $periode, Request $request)
     {
-        $user = Auth::guard('pegawai')->user();
-
-        // Detailed statistics for this period
+        // Ambil filter dari request
+        $filter = $request->get('filter');
+        $filterValue = $request->get('value');
+        
+        // Query dasar untuk usulan
+        $usulansQuery = $periode->usulans();
+        
+        // Terapkan filter jika ada
+        if ($filter === 'jenis_usulan_pangkat' && $filterValue) {
+            $usulansQuery->whereJsonContains('data_usulan->jenis_usulan_pangkat', $filterValue);
+        }
+        
+        // Ambil usulan dengan filter
+        $usulans = $usulansQuery->with([
+            'pegawai:id,nama_lengkap,nip,jenis_pegawai,unit_kerja_id',
+            'pegawai.unitKerja:id,nama,sub_unit_kerja_id',
+            'pegawai.unitKerja.subUnitKerja:id,nama,unit_kerja_id',
+            'pegawai.unitKerja.subUnitKerja.unitKerja:id,nama',
+            'jabatanTujuan:id,jabatan'
+        ])->get();
+        
+        // Hitung statistik berdasarkan usulan yang sudah difilter
         $stats = [
-            'total_usulan' => $periode->usulans()->count(),
-            'usulan_disetujui' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
-            'usulan_ditolak' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
-            'usulan_pending' => $periode->usulans()->whereIn('status_usulan', [
+            'total_usulan' => $usulans->count(),
+            'usulan_disetujui' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
+            'usulan_ditolak' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
+            'usulan_pending' => $usulans->whereIn('status_usulan', [
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
             ])->count(),
+            
+            // Tambahan statistik untuk status baru
+            'usulan_direkomendasikan_kepegawaian_universitas' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
+            'usulan_direkomendasikan_bkn' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)->count(),
+            'usulan_direkomendasikan_sister' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER)->count(),
+            'usulan_tidak_direkomendasikan_kepegawaian_universitas' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
+            'usulan_tidak_direkomendasikan_bkn' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN)->count(),
+            'usulan_tidak_direkomendasikan_sister' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER)->count(),
         ];
 
-        // Usulan by status for chart
-        $usulanByStatus = $periode->usulans()
-            ->select('status_usulan', DB::raw('count(*) as count'))
-            ->groupBy('status_usulan')
-            ->get()
-            ->pluck('count', 'status_usulan')
+        // Usulan by status for chart (berdasarkan data yang sudah difilter)
+        $usulanByStatus = $usulans->groupBy('status_usulan')
+            ->map(function ($group) {
+                return $group->count();
+            })
             ->toArray();
 
-        // Usulan by jenis pegawai
-        $usulanByJenisPegawai = $periode->usulans()
-            ->join('pegawais', 'usulans.pegawai_id', '=', 'pegawais.id')
-            ->select('pegawais.jenis_pegawai', DB::raw('count(*) as count'))
-            ->groupBy('pegawais.jenis_pegawai')
-            ->get()
-            ->pluck('count', 'jenis_pegawai')
+        // Usulan by jenis pegawai (berdasarkan data yang sudah difilter)
+        $usulanByJenisPegawai = $usulans->groupBy('pegawai.jenis_pegawai')
+            ->map(function ($group) {
+                return $group->count();
+            })
             ->toArray();
 
-        // Recent usulans for this period
-        $recentUsulans = $periode->usulans()
-            ->with([
-                'pegawai:id,nama_lengkap,nip,jenis_pegawai,unit_kerja_id',
-                'pegawai.unitKerja:id,nama,sub_unit_kerja_id',
-                'pegawai.unitKerja.subUnitKerja:id,nama,unit_kerja_id',
-                'pegawai.unitKerja.subUnitKerja.unitKerja:id,nama',
-                'jabatanTujuan:id,jabatan'
-            ])
-            ->latest()
-            ->take(10)
-            ->get();
+        // Recent usulans (berdasarkan data yang sudah difilter)
+        $recentUsulans = $usulans->take(10);
 
-        // Debug: Log data untuk memeriksa relasi
-        \Log::info('Dashboard Periode Debug', [
-            'total_usulans' => $recentUsulans->count(),
-            'sample_usulan' => $recentUsulans->first() ? [
-                'pegawai_id' => $recentUsulans->first()->pegawai_id,
-                'pegawai_unit_kerja_id' => $recentUsulans->first()->pegawai->unit_kerja_id,
-                'unitKerja' => $recentUsulans->first()->pegawai->unitKerja ? [
-                    'id' => $recentUsulans->first()->pegawai->unitKerja->id,
-                    'nama' => $recentUsulans->first()->pegawai->unitKerja->nama,
-                    'sub_unit_kerja_id' => $recentUsulans->first()->pegawai->unitKerja->sub_unit_kerja_id,
-                ] : null,
-                'subUnitKerja' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja ? [
-                    'id' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->id,
-                    'nama' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->nama,
-                    'unit_kerja_id' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unit_kerja_id,
-                ] : null,
-                'unitKerja_parent' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unitKerja ? [
-                    'id' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unitKerja->id,
-                    'nama' => $recentUsulans->first()->pegawai->unitKerja->subUnitKerja->unitKerja->nama,
-                ] : null,
-            ] : null
-        ]);
-
-
-        // Timeline data - usulan per month
-        $timelineData = $periode->usulans()
-            ->select(
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('YEAR(created_at) as year'),
-                DB::raw('count(*) as count')
-            )
-            ->groupBy('month', 'year')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get()
-            ->map(function ($item) {
+        // Timeline data (berdasarkan data yang sudah difilter)
+        $timelineData = $usulans->groupBy(function ($usulan) {
+                return \Carbon\Carbon::parse($usulan->created_at)->format('M Y');
+            })
+            ->map(function ($group, $label) {
                 return [
-                    'month' => $item->month,
-                    'year' => $item->year,
-                    'count' => $item->count,
-                    'label' => \Carbon\Carbon::create($item->year, $item->month)->format('M Y')
+                    'month' => \Carbon\Carbon::parse($group->first()->created_at)->month,
+                    'year' => \Carbon\Carbon::parse($group->first()->created_at)->year,
+                    'count' => $group->count(),
+                    'label' => $label
                 ];
-            });
+            })
+            ->values()
+            ->sortBy(['year', 'month']);
 
-        return view('backend.layouts.views.kepegawaian-universitas.dashboard-periode.show', compact(
-            'user',
-            'periode',
-            'stats',
-            'usulanByStatus',
-            'usulanByJenisPegawai',
-            'recentUsulans',
-            'timelineData'
-        ));
+        // Data untuk ditampilkan di view
+        $viewData = [
+            'user' => Auth::guard('pegawai')->user(),
+            'periode' => $periode,
+            'stats' => $stats,
+            'usulanByStatus' => $usulanByStatus,
+            'usulanByJenisPegawai' => $usulanByJenisPegawai,
+            'recentUsulans' => $recentUsulans,
+            'timelineData' => $timelineData,
+            'filter' => $filter,
+            'filterValue' => $filterValue,
+            'usulans' => $usulans // Tambahkan data usulan lengkap untuk ditampilkan
+        ];
+
+        return view('backend.layouts.views.kepegawaian-universitas.dashboard-periode.show', $viewData);
     }
 }

@@ -52,9 +52,9 @@ class PeriodeUsulanController extends Controller
         // Statistics for this period
         $stats = [
             'total_usulan' => $periode->usulans()->count(),
-            'usulan_disetujui' => $periode->usulans()->where('status_usulan', 'Disetujui')->count(),
-            'usulan_ditolak' => $periode->usulans()->where('status_usulan', 'Ditolak')->count(),
-            'usulan_pending' => $periode->usulans()->where('status_usulan', 'Menunggu Verifikasi')->count(),
+            'usulan_disetujui' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
+            'usulan_ditolak' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
+            'usulan_pending' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
         ];
 
         return view('backend.layouts.views.admin-universitas.periode-usulan.show', compact('periode', 'stats'));

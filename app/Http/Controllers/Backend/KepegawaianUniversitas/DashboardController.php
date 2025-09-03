@@ -67,17 +67,35 @@ class DashboardController extends Controller
                 ->withCount([
                     'usulans',
                     'usulans as usulan_disetujui_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN);
+                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS);
                     },
-                    'usulans as usulan_ditolak_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN);
-                    },
+
                     'usulans as usulan_pending_count' => function ($query) {
                         $query->whereIn('status_usulan', [
                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
                             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
                         ]);
+                    },
+                    
+                    // Tambahan statistik untuk status baru
+                    'usulans as usulan_direkomendasikan_kepegawaian_universitas_count' => function ($query) {
+                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS);
+                    },
+                    'usulans as usulan_direkomendasikan_bkn_count' => function ($query) {
+                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN);
+                    },
+                    'usulans as usulan_direkomendasikan_sister_count' => function ($query) {
+                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER);
+                    },
+                    'usulans as usulan_tidak_direkomendasikan_kepegawaian_universitas_count' => function ($query) {
+                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS);
+                    },
+                    'usulans as usulan_tidak_direkomendasikan_bkn_count' => function ($query) {
+                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN);
+                    },
+                    'usulans as usulan_tidak_direkomendasikan_sister_count' => function ($query) {
+                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER);
                     }
                 ])
                 ->orderBy('created_at', 'desc')
@@ -89,8 +107,15 @@ class DashboardController extends Controller
                 'periodes_aktif' => $periodes->where('status', 'Buka')->count(),
                 'total_usulan' => $periodes->sum('usulans_count'),
                 'usulan_disetujui' => $periodes->sum('usulan_disetujui_count'),
-                'usulan_ditolak' => $periodes->sum('usulan_ditolak_count'),
                 'usulan_pending' => $periodes->sum('usulan_pending_count'),
+                
+                // Tambahan statistik untuk status baru
+                'usulan_direkomendasikan_kepegawaian_universitas' => $periodes->sum('usulan_direkomendasikan_kepegawaian_universitas_count'),
+                'usulan_direkomendasikan_bkn' => $periodes->sum('usulan_direkomendasikan_bkn_count'),
+                'usulan_direkomendasikan_sister' => $periodes->sum('usulan_direkomendasikan_sister_count'),
+                'usulan_tidak_direkomendasikan_kepegawaian_universitas' => $periodes->sum('usulan_tidak_direkomendasikan_kepegawaian_universitas_count'),
+                'usulan_tidak_direkomendasikan_bkn' => $periodes->sum('usulan_tidak_direkomendasikan_bkn_count'),
+                'usulan_tidak_direkomendasikan_sister' => $periodes->sum('usulan_tidak_direkomendasikan_sister_count'),
             ];
 
             return view('backend.layouts.views.kepegawaian-universitas.dashboard-periode.index', [
@@ -117,8 +142,15 @@ class DashboardController extends Controller
                     'periodes_aktif' => 0,
                     'total_usulan' => 0,
                     'usulan_disetujui' => 0,
-                    'usulan_ditolak' => 0,
                     'usulan_pending' => 0,
+                    
+                    // Tambahan statistik untuk status baru
+                    'usulan_direkomendasikan_kepegawaian_universitas' => 0,
+                    'usulan_direkomendasikan_bkn' => 0,
+                    'usulan_direkomendasikan_sister' => 0,
+                    'usulan_tidak_direkomendasikan_kepegawaian_universitas' => 0,
+                    'usulan_tidak_direkomendasikan_bkn' => 0,
+                    'usulan_tidak_direkomendasikan_sister' => 0,
                 ],
                 'user' => Auth::user(),
                 'error' => 'Terjadi kesalahan saat memuat dashboard. Silakan coba lagi.'

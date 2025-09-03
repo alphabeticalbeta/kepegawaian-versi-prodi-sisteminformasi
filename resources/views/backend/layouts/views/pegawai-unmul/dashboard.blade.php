@@ -99,6 +99,27 @@
                                     case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER:
                                         return 'Usulan Sudah Dikirim ke Sister';
 
+                                    // Status baru untuk Kepegawaian Universitas
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS:
+                                        return 'Direkomendasikan Kepegawaian Universitas';
+                                    
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS:
+                                        return 'Tidak Direkomendasikan Kepegawaian Universitas';
+
+                                    // Status baru untuk BKN
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN:
+                                        return 'Direkomendasikan BKN';
+                                    
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN:
+                                        return 'Tidak Direkomendasikan BKN';
+
+                                    // Status baru untuk Sister
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER:
+                                        return 'Direkomendasikan Sister';
+                                    
+                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER:
+                                        return 'Tidak Direkomendasikan Sister';
+
                                     default:
                                         return $status;
                                 }
@@ -115,8 +136,19 @@
                                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-orange-100 text-orange-800',
 
                                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN => 'bg-purple-100 text-purple-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN => 'bg-red-100 text-red-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800',
+
+                                // Status baru untuk Kepegawaian Universitas
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-green-100 text-green-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
+
+                                // Status baru untuk BKN
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN => 'bg-green-100 text-green-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN => 'bg-red-100 text-red-800',
+
+                                // Status baru untuk Sister
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER => 'bg-green-100 text-green-800',
+                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER => 'bg-red-100 text-red-800',
 
                                 // Status baru
                                 'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',

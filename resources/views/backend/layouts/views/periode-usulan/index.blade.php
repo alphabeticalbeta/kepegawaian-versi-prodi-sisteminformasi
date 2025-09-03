@@ -396,7 +396,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse ($periodeUsulans as $periode)
-                    <tr class="hover:bg-gray-50 transition-colors duration-200" data-jenis="{{ $periode->jenis_usulan }}">
+                    <tr class="hover:bg-gray-50 transition-colors duration-200" data-jenis="{{ $periode->jenis_usulan }}" data-periode-id="{{ $periode->id }}">
                         <td class="px-6 py-4 font-medium text-gray-900">
                             {{ $periode->nama_periode }} ({{ $periode->tahun_periode }})
                         </td>
@@ -482,11 +482,19 @@
                             </td>
                             <td class="px-6 py-4">
                                 @if(($periode->usulans_count ?? 0) > 0)
-                                    <a href="{{ route('backend.kepegawaian-universitas.dashboard-periode.show', $periode) }}"
-                                       class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
-                                        <i class="fas fa-users mr-1"></i>
-                                        Lihat {{ $periode->usulans_count }} Pengusul
-                                    </a>
+                                    @if($jenisUsulan === 'kepangkatan')
+                                        <button onclick="openModalLihatPengusulKepangkatan({{ $periode->id }})"
+                                               class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                            <i class="fas fa-users mr-1"></i>
+                                            Lihat {{ $periode->usulans_count }} Pengusul
+                                        </button>
+                                    @else
+                                        <a href="{{ route('backend.kepegawaian-universitas.dashboard-periode.show', $periode) }}"
+                                           class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                            <i class="fas fa-users mr-1"></i>
+                                            Lihat {{ $periode->usulans_count }} Pengusul
+                                        </a>
+                                    @endif
                                 @else
                                     <span class="text-xs text-gray-500">Belum ada pengusul</span>
                                 @endif
@@ -741,7 +749,7 @@ window.toggleStatus = function(periodeId, currentStatus, event) {
     showModal(
         'Konfirmasi Perubahan Status',
         `Anda yakin ingin ${actionText} periode ini?`,
-        'Ya, Ubah Status',
+        'Iya',
         'Batal',
         'success'
     ).then((confirmed) => {
@@ -873,5 +881,11 @@ window.confirmDelete = function(periodeId, periodeName, event) {
 }
 
 </script>
+
+{{-- Include Modal Kepangkatan --}}
+@include('backend.layouts.views.periode-usulan.modal-kepangkatan.modal-kepangkatan')
+
+{{-- Include JavaScript Modal Kepangkatan --}}
+<script src="{{ asset('js/modal-kepangkatan.js') }}"></script>
 
 

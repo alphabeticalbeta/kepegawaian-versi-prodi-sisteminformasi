@@ -302,7 +302,7 @@ class PusatUsulanController extends Controller
 
                 case 'not_recommended':
                     // Return ke employee dan tidak bisa submit lagi di periode tersebut
-                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS;
                     $usulan->catatan_verifikator = $request->catatan_umum;
                     $logMessage = 'Usulan tidak direkomendasikan oleh Admin Universitas. Pegawai tidak dapat submit lagi di periode ini.';
                     break;
@@ -343,12 +343,12 @@ class PusatUsulanController extends Controller
                     break;
 
                 case 'reject_proposal':
-                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS;
                     $logMessage = 'Usulan ditolak oleh Admin Universitas. Proses dihentikan.';
                     break;
 
                 case 'approve_proposal':
-                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN; // atau 'Disetujui Universitas' sesuai kebijakanmu
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS; // atau 'Disetujui Universitas' sesuai kebijakanmu
                     $logMessage = 'Usulan disetujui dan direkomendasikan oleh Admin Universitas.';
                     break;
 
@@ -362,7 +362,7 @@ class PusatUsulanController extends Controller
 
                 case 'recommend_proposal':
                     // Sudah lulus prasyarat di atas
-                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS;
                     $logMessage = 'Usulan direkomendasikan oleh Admin Universitas.';
                     break;
             }

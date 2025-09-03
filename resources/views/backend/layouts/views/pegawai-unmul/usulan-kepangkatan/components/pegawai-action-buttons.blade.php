@@ -7,11 +7,21 @@
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS
         ];
         
-        $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);
+        // Status yang dapat diedit (tidak view-only) - hanya status draft dan permintaan perbaikan
+        $editableStatuses = [
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN
+        ];
+        
+        if (in_array($usulan->status_usulan, $editableStatuses)) {
+            $isViewOnly = false;  // Dapat diedit
+        } else {
+            $isViewOnly = true;  // View-only untuk semua status lainnya
+        }
     @endphp
 
     @if(!$isViewOnly)
@@ -48,6 +58,15 @@
                         class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105">
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     Kirim Usulan Perbaikan Dari BKN ke Kepegawaian Universitas
+                </button>
+            @endif
+
+            {{-- Kirim Usulan Perbaikan Ke BKN --}}
+            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
+                <button type="button" onclick="submitAction('kirim_perbaikan_ke_bkn')"
+                        class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    Kirim Usulan Perbaikan Ke BKN
                 </button>
             @endif
         </div>

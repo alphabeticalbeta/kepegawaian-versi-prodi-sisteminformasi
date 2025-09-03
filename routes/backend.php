@@ -335,6 +335,10 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 // Pendaftar route (STANDARDIZED)
                 Route::get('/{periodeUsulan}/pendaftar', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'showPendaftar'])
                     ->name('pendaftar');
+                
+                // API route untuk menghitung usulan kepangkatan per jenis
+                Route::get('/{periodeUsulan}/usulan-kepangkatan-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'getUsulanKepangkatanCount'])
+                    ->name('usulan-kepangkatan-count');
             });
 
             // =====================================================
@@ -379,6 +383,20 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 // Toggle periode status
                 Route::post('/toggle-periode', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'togglePeriode'])
                     ->name('toggle-periode');
+
+                // Validasi Kepangkatan Routes
+                Route::get('/{usulan}/validasi-kepangkatan', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'showKepangkatanValidation'])
+                    ->name('validasi-kepangkatan');
+                Route::post('/{usulan}/validasi-kepangkatan', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'saveKepangkatanValidation'])
+                    ->name('save-validasi-kepangkatan');
+                
+                // Change Status Route
+                Route::post('/{usulan}/change-status', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'changeStatus'])
+                    ->name('change-status');
+
+                // Route untuk menyimpan validasi BKN
+        Route::post('/{usulan}/save-bkn-validation', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'saveBknValidation'])
+            ->name('save-bkn-validation');
             });
         });
 

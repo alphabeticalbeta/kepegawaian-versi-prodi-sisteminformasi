@@ -155,7 +155,7 @@ class AdminFakultasController extends Controller
                 },
                 'usulans as disetujui' => function ($query) use ($unitKerjaId) {
                     $query->whereIn('status_usulan', [
-                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
                     ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
@@ -163,7 +163,7 @@ class AdminFakultasController extends Controller
                 },
                 'usulans as ditolak' => function ($query) use ($unitKerjaId) {
                     $query->whereIn('status_usulan', [
-                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS
                     ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
@@ -301,7 +301,7 @@ class AdminFakultasController extends Controller
                 },
                 'usulans as disetujui' => function ($query) use ($unitKerjaId) {
                     $query->whereIn('status_usulan', [
-                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
                     ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
@@ -309,7 +309,7 @@ class AdminFakultasController extends Controller
                 },
                 'usulans as ditolak' => function ($query) use ($unitKerjaId) {
                     $query->whereIn('status_usulan', [
-                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+                        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS
                     ])
                         ->whereHas('pegawai.unitKerja.subUnitKerja.unitKerja', function ($subQuery) use ($unitKerjaId) {
                             $subQuery->where('id', $unitKerjaId);
@@ -602,7 +602,7 @@ class AdminFakultasController extends Controller
                     $catatanLengkap = implode("\n", $catatanDetail);
 
                     // Update usulan - mencegah submit di periode ini
-                    $usulan->status_usulan = Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
+                    $usulan->status_usulan = Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS;
                     $usulan->catatan_verifikator = $catatanLengkap;
                     $logMessage = 'Usulan ditandai belum direkomendasikan oleh Admin Fakultas.';
                     break;

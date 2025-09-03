@@ -5,11 +5,24 @@
         \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
         \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
         \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN,
-        \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN
     ];
     
-    $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);
+    // Status yang dapat diedit (tidak view-only) - hanya status draft dan permintaan perbaikan
+    $editableStatuses = [
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+        \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN
+    ];
+    
+    if (in_array($usulan->status_usulan, $editableStatuses)) {
+        $isViewOnly = false;  // Dapat diedit
+    } else {
+        $isViewOnly = true;  // View-only untuk semua status lainnya
+    }
+
+
 @endphp
 
 {{-- Dokumen Pendukung Jabatan Struktural --}}
@@ -33,9 +46,30 @@
                 <p class="text-xs text-gray-600 mb-2">Surat pelantikan dan berita acara jabatan terakhir (Wajib)</p>
                 @if($isViewOnly)
                     @if(isset($usulan->data_usulan['dokumen_usulan']['surat_pelantikan_berita_acara']['path']))
-                        <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <i data-lucide="file-text" class="w-5 h-5 text-green-600"></i>
-                            <span class="text-sm text-green-800">Surat Pelantikan sudah diupload</span>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <i data-lucide="file-text" class="w-5 h-5 text-green-600"></i>
+                                <span class="text-sm text-green-800">Surat Pelantikan sudah diupload</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+                                <i data-lucide="file-pdf" class="w-5 h-5 text-red-600"></i>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-800">Surat Pelantikan dan Berita Acara Jabatan Terakhir</div>
+                                    <div class="text-xs text-gray-500">{{ basename($usulan->data_usulan['dokumen_usulan']['surat_pelantikan_berita_acara']['path']) }}</div>
+                                </div>
+                                <a href="{{ asset('storage/' . $usulan->data_usulan['dokumen_usulan']['surat_pelantikan_berita_acara']['path']) }}" 
+                                   target="_blank" 
+                                   class="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    Lihat
+                                </a>
+                                <a href="{{ asset('storage/' . $usulan->data_usulan['dokumen_usulan']['surat_pelantikan_berita_acara']['path']) }}" 
+                                   download="{{ basename($usulan->data_usulan['dokumen_usulan']['surat_pelantikan_berita_acara']['path']) }}"
+                                   class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Download
+                                </a>
+                            </div>
                         </div>
                     @else
                         <div class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -58,9 +92,30 @@
                 <p class="text-xs text-gray-600 mb-2">Surat pencantuman gelar (Opsional)</p>
                 @if($isViewOnly)
                     @if(isset($usulan->data_usulan['dokumen_usulan']['surat_pencantuman_gelar']['path']))
-                        <div class="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <i data-lucide="file-text" class="w-5 h-5 text-blue-600"></i>
-                            <span class="text-sm text-blue-800">Surat Pencantuman Gelar sudah diupload</span>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <i data-lucide="file-text" class="w-5 h-5 text-blue-600"></i>
+                                <span class="text-sm text-blue-800">Surat Pencantuman Gelar sudah diupload</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+                                <i data-lucide="file-pdf" class="w-5 h-5 text-red-600"></i>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-800">Surat Pencantuman Gelar</div>
+                                    <div class="text-xs text-gray-500">{{ basename($usulan->data_usulan['dokumen_usulan']['surat_pencantuman_gelar']['path']) }}</div>
+                                </div>
+                                <a href="{{ asset('storage/' . $usulan->data_usulan['dokumen_usulan']['surat_pencantuman_gelar']['path']) }}" 
+                                   target="_blank" 
+                                   class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    Lihat
+                                </a>
+                                <a href="{{ asset('storage/' . $usulan->data_usulan['dokumen_usulan']['surat_pencantuman_gelar']['path']) }}" 
+                                   download="{{ basename($usulan->data_usulan['dokumen_usulan']['surat_pencantuman_gelar']['path']) }}"
+                                   class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Download
+                                </a>
+                            </div>
                         </div>
                     @else
                         <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -83,9 +138,30 @@
                 <p class="text-xs text-gray-600 mb-2">Sertifikat diklat kepemimpinan atau pengembangan kompetensi (Wajib)</p>
                 @if($isViewOnly)
                     @if(isset($usulan->data_usulan['dokumen_usulan']['sertifikat_diklat_pim_pkm']['path']))
-                        <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <i data-lucide="file-text" class="w-5 h-5 text-green-600"></i>
-                            <span class="text-sm text-green-800">Sertifikat Diklat sudah diupload</span>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <i data-lucide="file-text" class="w-5 h-5 text-green-600"></i>
+                                <span class="text-sm text-green-800">Sertifikat Diklat sudah diupload</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+                                <i data-lucide="file-pdf" class="w-5 h-5 text-red-600"></i>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-800">Sertifikat Diklat / PIM / PKM</div>
+                                    <div class="text-xs text-gray-500">{{ basename($usulan->data_usulan['dokumen_usulan']['sertifikat_diklat_pim_pkm']['path']) }}</div>
+                                </div>
+                                <a href="{{ asset('storage/' . $usulan->data_usulan['dokumen_usulan']['sertifikat_diklat_pim_pkm']['path']) }}" 
+                                   target="_blank" 
+                                   class="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    Lihat
+                                </a>
+                                <a href="{{ asset('storage/' . $usulan->data_usulan['dokumen_usulan']['sertifikat_diklat_pim_pkm']['path']) }}" 
+                                   download="{{ basename($usulan->data_usulan['dokumen_usulan']['sertifikat_diklat_pim_pkm']['path']) }}"
+                                   class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Download
+                                </a>
+                            </div>
                         </div>
                     @else
                         <div class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">

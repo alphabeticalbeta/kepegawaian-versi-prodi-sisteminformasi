@@ -16,7 +16,7 @@ class UsulanController extends Controller
     public function index()
     {
         // Get usulans that are ready for senat decision
-        $usulans = Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)
+        $usulans = Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)
             ->with(['pegawai', 'periodeUsulan'])
             ->latest()
             ->paginate(10);
@@ -37,7 +37,7 @@ class UsulanController extends Controller
         ]);
 
         // Check if usulan is in correct status for Tim Senat
-        if ($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN) {
+        if ($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS) {
             return redirect()->route('tim-senat.usulan.index')
                 ->with('error', 'Usulan tidak dapat diproses karena status tidak sesuai.');
         }
@@ -161,7 +161,7 @@ class UsulanController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS;
         $usulan->data_usulan['keputusan_senat'] = [
             'status' => 'Ditolak',
             'alasan' => $request->input('alasan_penolakan'),
@@ -196,7 +196,7 @@ class UsulanController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
+                    $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS;
         $usulan->data_usulan['keputusan_senat'] = [
             'status' => 'Disetujui',
             'catatan' => $request->input('catatan_persetujuan'),

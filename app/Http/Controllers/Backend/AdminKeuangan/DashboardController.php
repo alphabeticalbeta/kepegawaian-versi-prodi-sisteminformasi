@@ -27,9 +27,9 @@ class DashboardController extends Controller
             // Statistik keuangan
             $stats = [
                 'total_usulan' => Usulan::count(),
-                'usulan_pending' => Usulan::where('status_usulan', 'Menunggu Verifikasi')->count(),
-                'usulan_approved' => Usulan::where('status_usulan', 'Disetujui')->count(),
-                'usulan_rejected' => Usulan::where('status_usulan', 'Ditolak')->count(),
+                'usulan_pending' => Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
+                'usulan_approved' => Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
+                'usulan_rejected' => Usulan::where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             ];
 
             // Recent activities

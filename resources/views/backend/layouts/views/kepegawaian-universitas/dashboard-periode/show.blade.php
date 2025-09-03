@@ -31,100 +31,15 @@
 
 
 
-    <!-- Charts and Analytics -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Status Distribution Chart -->
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4">Distribusi Status Usulan</h3>
-            <div class="space-y-4">
-                @foreach($usulanByStatus as $status => $count)
-                    @php
-                        $percentage = $stats['total_usulan'] > 0 ? ($count / $stats['total_usulan']) * 100 : 0;
-                        $colorClass = match($status) {
-                            'Disetujui' => 'bg-green-500',
-                            'Ditolak' => 'bg-red-500',
-                            'Menunggu Verifikasi' => 'bg-yellow-500',
-                            'Dalam Proses' => 'bg-blue-500',
-                            default => 'bg-gray-500'
-                        };
-                    @endphp
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-slate-600">{{ $status }}</span>
-                            <span class="font-semibold">{{ $count }} ({{ number_format($percentage, 1) }}%)</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="{{ $colorClass }} h-2 rounded-full" style="width: {{ $percentage }}%"></div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
 
-        <!-- Employee Type Distribution -->
-        <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4">Usulan per Jenis Pegawai</h3>
-            <div class="space-y-4">
-                @forelse($usulanByJenisPegawai as $jenis => $count)
-                    @php
-                        $percentage = $stats['total_usulan'] > 0 ? ($count / $stats['total_usulan']) * 100 : 0;
-                        $colorClass = match($jenis) {
-                            'Dosen' => 'bg-indigo-500',
-                            'Tenaga Kependidikan' => 'bg-purple-500',
-                            default => 'bg-gray-500'
-                        };
-                    @endphp
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-slate-600">{{ $jenis }}</span>
-                            <span class="font-semibold">{{ $count }} ({{ number_format($percentage, 1) }}%)</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="{{ $colorClass }} h-2 rounded-full" style="width: {{ $percentage }}%"></div>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-slate-500 text-center">Belum ada data usulan</p>
-                @endforelse
-            </div>
-        </div>
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="flex flex-wrap gap-4 mb-6">
-        <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.edit', $periode) }}"
-           class="bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-colors duration-200 font-medium flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-            </svg>
-            Edit Periode
-        </a>
+    {{-- Include Daftar Pengusul Kepangkatan --}}
+    @include('backend.layouts.views.kepegawaian-universitas.usulan.daftar-pengusul.daftar-pengusul-kepangkatan')
 
-        <button class="bg-emerald-600 text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition-colors duration-200 font-medium flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Export Data
-        </button>
 
-        <form id="togglePeriodeForm" action="{{ route('backend.kepegawaian-universitas.usulan.toggle-periode') }}" method="POST" class="inline">
-            @csrf
-            <input type="hidden" name="periode_id" value="{{ $periode->id }}">
-            <button type="submit" id="togglePeriodeBtn"
-                    class="px-6 py-3 rounded-xl font-medium flex items-center transition-colors duration-200
-                    {{ $periode->status === 'Buka' ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700' }}">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    @if($periode->status === 'Buka')
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    @else
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
-                    @endif
-                </svg>
-                <span id="togglePeriodeText">{{ $periode->status === 'Buka' ? 'Tutup Periode' : 'Buka Periode' }}</span>
-            </button>
-        </form>
-    </div>
 
+    {{-- Recent Usulans - Hanya tampil jika tidak ada filter --}}
+    @if(!isset($filter) || $filter !== 'jenis_usulan_pangkat')
     <!-- Recent Usulans -->
     <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30">
         <div class="p-6 border-b border-slate-200">
@@ -209,6 +124,7 @@
             </table>
         </div>
     </div>
+    @endif
 </div>
 
 @push('styles')

@@ -19,8 +19,8 @@ class KeputusanSenatController extends Controller
             'periodeUsulan:id,nama_periode,tanggal_mulai,tanggal_selesai'
         ])
         ->whereIn('status_usulan', [
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS
         ])
         ->latest()
         ->get();

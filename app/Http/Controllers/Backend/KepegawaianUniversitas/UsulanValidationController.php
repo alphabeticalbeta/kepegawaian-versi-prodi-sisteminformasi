@@ -58,8 +58,8 @@ class UsulanValidationController extends Controller
         // Calculate statistics
         $stats = [
             'total_usulan' => $usulans->total(),
-            'usulan_disetujui' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN)->count(),
-            'usulan_ditolak' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN)->count(),
+            'usulan_disetujui' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
+            'usulan_ditolak' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             'usulan_pending' => $usulans->whereIn('status_usulan', [
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
@@ -106,7 +106,7 @@ class UsulanValidationController extends Controller
             ]);
         }
 
-        // ENHANCED: Check if usulan is in correct status for Admin Universitas
+        // ENHANCED: Check if usulan is in correct status for Kepegawaian Unviersitas Universitas
         $allowedStatuses = [
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
@@ -118,7 +118,11 @@ class UsulanValidationController extends Controller
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN
         ];
 
         if (!in_array($usulan->status_usulan, $allowedStatuses)) {
@@ -137,7 +141,8 @@ class UsulanValidationController extends Controller
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_KE_PENILAI_UNIVERSITAS,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN
         ]);
 
         // Special case: View only for status where perbaikan sudah dikirim ke Admin Fakultas atau Pegawai
@@ -314,29 +319,81 @@ class UsulanValidationController extends Controller
      */
     private function saveSimpleValidation(Request $request, Usulan $usulan)
     {
-        $validationData = $request->input('validation');
+        try {
+            $validationData = $request->input('validation');
+            $keteranganUmum = $request->input('keterangan_umum');
 
-        // Only save validation data if it exists and is not null
-        if ($validationData && is_array($validationData)) {
-            $usulan->setValidasiByRole('kepegawaian_universitas', $validationData, Auth::id());
-        } elseif ($validationData && is_string($validationData)) {
-            // If it's a JSON string, decode it first
-            $decodedData = json_decode($validationData, true);
-            if ($decodedData && is_array($decodedData)) {
-                $usulan->setValidasiByRole('kepegawaian_universitas', $decodedData, Auth::id());
+            // Debug: Log received data
+            Log::info('saveSimpleValidation received data', [
+                'usulan_id' => $usulan->id,
+                'validation_data' => $validationData,
+                'keterangan_umum' => $keteranganUmum,
+                'request_all' => $request->all()
+            ]);
+
+            // Process validation data - ensure it's an array
+            $processedValidationData = [];
+            if ($validationData && is_array($validationData)) {
+                $processedValidationData = $validationData;
+            } elseif ($validationData && is_string($validationData)) {
+                // If it's a JSON string, decode it first
+                $decodedData = json_decode($validationData, true);
+                if ($decodedData && is_array($decodedData)) {
+                    $processedValidationData = $decodedData;
+                }
             }
+
+            // Validate that we have validation data to save
+            if (empty($processedValidationData) && empty($keteranganUmum)) {
+                Log::warning('No validation data to save', [
+                    'usulan_id' => $usulan->id,
+                    'validation_data' => $validationData,
+                    'keterangan_umum' => $keteranganUmum
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada data validasi yang perlu disimpan.'
+                ], 400);
+            }
+
+            // Save validation data with keterangan_umum
+            $usulan->setValidasiByRole('kepegawaian_universitas', $processedValidationData, Auth::id(), $keteranganUmum ?? '');
+
+
+
+            $usulan->save();
+
+            // Clear related caches
+            $cacheKey = "usulan_validation_{$usulan->id}_kepegawaian_universitas";
+            Cache::forget($cacheKey);
+
+            Log::info('Validation data saved successfully', [
+                'usulan_id' => $usulan->id,
+                'validation_data_count' => !empty($processedValidationData) ? count($processedValidationData) : 0,
+                'has_keterangan_umum' => !empty($keteranganUmum)
+            ]);
+
+            // Return JSON response for consistency
+            return response()->json([
+                'success' => true,
+                'message' => 'Data validasi berhasil disimpan.'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to save simple validation', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'validation_data' => $validationData ?? null,
+                'keterangan_umum' => $keteranganUmum ?? null
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan validasi: ' . $e->getMessage()
+            ], 500);
         }
-
-        $usulan->save();
-
-        // Clear related caches
-        $cacheKey = "usulan_validation_{$usulan->id}_kepegawaian_universitas";
-        Cache::forget($cacheKey);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data validasi berhasil disimpan.'
-        ]);
     }
 
     /**
@@ -553,7 +610,7 @@ class UsulanValidationController extends Controller
         ]);
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS;
 
         // Save validation data with forward note
         $validationData = $request->input('validation');
@@ -623,7 +680,7 @@ class UsulanValidationController extends Controller
                     ], 422);
                 }
 
-                $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
+                $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS;
                 $catatan = "Admin Universitas menyetujui rekomendasi Tim Penilai. " . $request->input('catatan_umum');
                 $usulan->catatan_verifikator = $catatan;
 
@@ -703,7 +760,7 @@ class UsulanValidationController extends Controller
         $catatan = $request->input('catatan_verifikator');
 
         // Update usulan status to "Tidak Direkomendasikan"
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS;
         $usulan->catatan_verifikator = $catatan;
 
         // Add rejection data to validasi_data
@@ -1059,7 +1116,7 @@ class UsulanValidationController extends Controller
         $catatan = $request->input('catatan_verifikator');
 
         // Update usulan status
-        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN;
+        $usulan->status_usulan = \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS;
 
         // Add action data to validasi_data
         $currentValidasi = $usulan->validasi_data ?? [];
@@ -1546,5 +1603,503 @@ class UsulanValidationController extends Controller
             'message' => 'Permintaan perbaikan dari Tim Penilai berhasil diteruskan ke Admin Fakultas.',
             'redirect' => route('backend.kepegawaian-universitas.usulan.index')
         ]);
+    }
+
+    /**
+     * Display halaman validasi field-by-field untuk usulan kepangkatan
+     */
+    public function showKepangkatanValidation(Usulan $usulan)
+    {
+        // Load relationships yang diperlukan
+        $usulan = $usulan->load([
+            'pegawai.unitKerja.subUnitKerja.unitKerja',
+            'pegawai.pangkat',
+            'pegawai.jabatan',
+            'pangkatTujuan',
+            'periodeUsulan'
+        ]);
+
+        // Cek apakah usulan adalah jenis kepangkatan
+        if ($usulan->jenis_usulan !== 'usulan-kepangkatan') {
+            return redirect()->back()->with('error', 'Halaman ini hanya untuk usulan kepangkatan.');
+        }
+
+        // Get existing validation data
+        $existingValidation = $usulan->getValidasiByRole('kepegawaian_universitas') ?? [];
+        
+        // Get penilai validation if exists
+        $penilaiValidation = $usulan->getValidasiByRole('tim_penilai') ?? [];
+
+        // Get current role (hardcoded untuk kepegawaian universitas)
+        $currentRole = 'Kepegawaian Universitas';
+
+        // Field groups configuration untuk usulan kepangkatan
+        $fieldGroups = [
+            'data_pribadi' => [
+                'label' => 'Data Pribadi',
+                'icon' => 'user',
+                'fields' => [
+                    'jenis_pegawai' => 'Jenis Pegawai',
+                    'status_kepegawaian' => 'Status Kepegawaian',
+                    'nip' => 'NIP',
+                    'nuptk' => 'NUPTK',
+                    'gelar_depan' => 'Gelar Depan',
+                    'nama_lengkap' => 'Nama Lengkap',
+                    'gelar_belakang' => 'Gelar Belakang',
+                    'email' => 'Email',
+                    'tempat_lahir' => 'Tempat Lahir',
+                    'tanggal_lahir' => 'Tanggal Lahir',
+                    'jenis_kelamin' => 'Jenis Kelamin',
+                    'nomor_handphone' => 'Nomor Handphone'
+                ]
+            ],
+            'data_kepegawaian' => [
+                'label' => 'Data Kepegawaian',
+                'icon' => 'briefcase',
+                'fields' => [
+                    'pangkat_saat_usul' => 'Pangkat Saat Ini',
+                    'tmt_pangkat' => 'TMT Pangkat',
+                    'jabatan_saat_usul' => 'Jabatan Saat Ini',
+                    'tmt_jabatan' => 'TMT Jabatan',
+                    'tmt_cpns' => 'TMT CPNS',
+                    'tmt_pns' => 'TMT PNS',
+                    'unit_kerja_saat_usul' => 'Unit Kerja'
+                ]
+            ],
+            'data_pendidikan' => [
+                'label' => 'Data Pendidikan & Fungsional',
+                'icon' => 'graduation-cap',
+                'fields' => [
+                    'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                    'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                    'nama_prodi_jurusan' => 'Program Studi/Jurusan'
+                ]
+            ],
+            'data_kinerja' => [
+                'label' => 'Data Kinerja',
+                'icon' => 'trending-up',
+                'fields' => [
+                    'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                    'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2),
+                    'nilai_konversi' => 'Nilai Konversi ' . (date('Y') - 1)
+                ]
+            ],
+            'dokumen_profil' => [
+                'label' => 'Dokumen Profil',
+                'icon' => 'folder',
+                'fields' => [
+                    'sk_pangkat_terakhir' => 'SK Pangkat Terakhir',
+                    'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                    'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
+                    'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
+                    'pak_konversi' => 'PAK Konversi ' . (date('Y') - 1),
+                    'pak_integrasi' => 'PAK Integrasi',
+                    'sk_cpns' => 'SK CPNS',
+                    'sk_pns' => 'SK PNS',
+                    'ijazah_terakhir' => 'Ijazah Terakhir',
+                    'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir'
+                ]
+            ],
+            'dokumen_usulan' => [
+                'label' => 'Dokumen Usulan',
+                'icon' => 'file-text',
+                'fields' => []
+            ]
+        ];
+
+        // Add dynamic fields based on jenis usulan pangkat
+        $jenisUsulanPangkat = $usulan->data_usulan['jenis_usulan_pangkat'] ?? '';
+        
+        if ($jenisUsulanPangkat === 'Dosen PNS') {
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_ukom_sk_jabatan'] = 'Dokumen UKOM dan SK Jabatan';
+        } elseif ($jenisUsulanPangkat === 'Jabatan Administrasi') {
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_administrasi'] = 'Dokumen Pendukung Administrasi';
+        } elseif ($jenisUsulanPangkat === 'Jabatan Fungsional Tertentu') {
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_fungsional'] = 'Dokumen Pendukung Fungsional';
+        } elseif ($jenisUsulanPangkat === 'Jabatan Struktural') {
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_struktural'] = 'Dokumen Pendukung Struktural';
+        }
+
+        // Configuration untuk view
+        $config = [
+            'title' => 'Validasi Usulan Kepangkatan',
+            'description' => 'Validasi field-by-field usulan kepangkatan',
+            'routePrefix' => 'backend.kepegawaian-universitas.usulan',
+            'documentRoutePrefix' => 'backend.kepegawaian-universitas.usulan',
+            'validationFields' => array_keys($fieldGroups)
+        ];
+
+        return view('backend.layouts.views.shared.usul-kepangkatan.validasi-kepangkatan', compact(
+            'usulan',
+            'existingValidation',
+            'penilaiValidation',
+            'currentRole',
+            'fieldGroups',
+            'config'
+        ));
+    }
+
+    /**
+     * Save validasi field-by-field untuk usulan kepangkatan
+     */
+    public function saveKepangkatanValidation(Request $request, Usulan $usulan)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'validation' => 'required|array',
+                'keterangan_umum' => 'nullable|string|max:1000'
+            ]);
+
+            // Get validation data
+            $rawValidationData = $request->input('validation');
+            $keteranganUmum = $request->input('keterangan_umum');
+
+            // Debug logging untuk keterangan umum
+            Log::info('Keterangan umum received in saveKepangkatanValidation', [
+                'usulan_id' => $usulan->id,
+                'keterangan_umum_raw' => $keteranganUmum,
+                'keterangan_umum_type' => gettype($keteranganUmum),
+                'keterangan_umum_empty' => empty($keteranganUmum),
+                'keterangan_umum_null' => is_null($keteranganUmum),
+                'request_all' => $request->all()
+            ]);
+
+            // Validate that rawValidationData is not null and is an array
+            if (empty($rawValidationData) || !is_array($rawValidationData)) {
+                throw new \Exception('Data validasi tidak valid atau kosong');
+            }
+
+            // Additional validation: check if any group contains non-array data
+            foreach ($rawValidationData as $groupKey => $groupData) {
+                if (!is_array($groupData)) {
+                    throw new \Exception("Group '$groupKey' berisi data dengan tipe '" . gettype($groupData) . "', seharusnya array");
+                }
+            }
+
+            // Log raw data structure for debugging
+            Log::info('Raw validation data structure', [
+                'usulan_id' => $usulan->id,
+                'raw_data_keys' => array_keys($rawValidationData),
+                'raw_data_types' => array_map(function($item) { return gettype($item); }, $rawValidationData),
+                'sample_data' => array_slice($rawValidationData, 0, 2, true), // First 2 items for debugging
+                'raw_data_full' => $rawValidationData // Full data for debugging
+            ]);
+
+            // Deep log each group and field for debugging
+            foreach ($rawValidationData as $groupKey => $groupData) {
+                Log::info("Group: $groupKey", [
+                    'group_data_type' => gettype($groupData),
+                    'group_data' => $groupData
+                ]);
+                
+                if (is_array($groupData)) {
+                    foreach ($groupData as $fieldKey => $fieldData) {
+                        Log::info("Field: $groupKey.$fieldKey", [
+                            'field_data_type' => gettype($fieldData),
+                            'field_data' => $fieldData,
+                            'has_status' => is_array($fieldData) && isset($fieldData['status'])
+                        ]);
+                    }
+                }
+            }
+
+            // Process and restructure validation data
+            $validationData = [];
+            
+            // Process each group (data_pribadi, data_kepegawaian, etc.)
+            foreach ($rawValidationData as $groupKey => $groupData) {
+                // Skip if groupData is not an array or is empty
+                if (!is_array($groupData) || empty($groupData)) {
+                    Log::warning('Skipping invalid group data', [
+                        'group_key' => $groupKey,
+                        'group_data' => $groupData,
+                        'group_data_type' => gettype($groupData)
+                    ]);
+                    continue;
+                }
+                
+                $validationData[$groupKey] = [];
+                
+                // Process each field in the group
+                foreach ($groupData as $fieldKey => $fieldData) {
+                    // Skip if fieldData is not an array or doesn't have status
+                    if (!is_array($fieldData) || !isset($fieldData['status'])) {
+                        Log::warning('Skipping invalid field data', [
+                            'group_key' => $groupKey,
+                            'field_key' => $fieldKey,
+                            'field_data' => $fieldData,
+                            'field_data_type' => gettype($fieldData),
+                            'field_data_value' => $fieldData
+                        ]);
+                        continue;
+                    }
+                    
+                    // Additional validation: ensure status is string and keterangan is string
+                    $status = $fieldData['status'] ?? 'sesuai';
+                    $keterangan = $fieldData['keterangan'] ?? '';
+                    
+                    // Convert to string if needed
+                    if (!is_string($status)) {
+                        $status = (string) $status;
+                        Log::warning('Status converted to string', [
+                            'group_key' => $groupKey,
+                            'field_key' => $fieldKey,
+                            'original_status' => $fieldData['status'],
+                            'converted_status' => $status
+                        ]);
+                    }
+                    
+                    if (!is_string($keterangan)) {
+                        $keterangan = (string) $keterangan;
+                        Log::warning('Keterangan converted to string', [
+                            'group_key' => $groupKey,
+                            'field_key' => $fieldKey,
+                            'original_keterangan' => $fieldData['keterangan'],
+                            'converted_keterangan' => $keterangan
+                        ]);
+                    }
+                    
+                    $validationData[$groupKey][$fieldKey] = [
+                        'status' => $status,
+                        'keterangan' => $keterangan
+                    ];
+                }
+            }
+
+            // Validate that we have processed data
+            if (empty($validationData)) {
+                throw new \Exception('Tidak ada data validasi yang valid untuk diproses');
+            }
+
+            // Log processed data for debugging
+            Log::info('Processed validation data for kepangkatan', [
+                'usulan_id' => $usulan->id,
+                'raw_data' => $rawValidationData,
+                'raw_data_types' => array_map(function($item) { return gettype($item); }, $rawValidationData),
+                'processed_data' => $validationData,
+                'keterangan_umum' => $keteranganUmum
+            ]);
+
+            // Save validation data (without keterangan_umum in the main validation array)
+            $usulan->setValidasiByRole('kepegawaian_universitas', $validationData, Auth::id());
+
+            // Save keterangan umum separately by updating the validation structure directly
+            if (!empty($keteranganUmum)) {
+                $currentValidasi = $usulan->validasi_data ?? [];
+                if (!isset($currentValidasi['kepegawaian_universitas'])) {
+                    $currentValidasi['kepegawaian_universitas'] = [
+                        'validation' => [],
+                        'validated_by' => Auth::id(),
+                        'validated_at' => now()->toISOString()
+                    ];
+                }
+                $currentValidasi['kepegawaian_universitas']['keterangan_umum'] = $keteranganUmum;
+                $usulan->validasi_data = $currentValidasi;
+                
+                // Debug logging untuk keterangan umum
+                Log::info('Keterangan umum saved for kepangkatan', [
+                    'usulan_id' => $usulan->id,
+                    'keterangan_umum' => $keteranganUmum,
+                    'current_validasi_structure' => $currentValidasi['kepegawaian_universitas']
+                ]);
+            } else {
+                Log::info('No keterangan umum to save for kepangkatan', [
+                    'usulan_id' => $usulan->id,
+                    'keterangan_umum' => $keteranganUmum
+                ]);
+            }
+
+            // Save usulan to persist keterangan_umum changes
+            $usulan->save();
+
+            // Update usulan status if needed
+            if ($usulan->status_usulan === 'Usulan Dikirim ke Kepegawaian Universitas') {
+                $usulan->status_usulan = 'Usulan Sedang Divalidasi Kepegawaian Universitas';
+                $usulan->save();
+            }
+
+            // Clear caches
+            $cacheKey = "usulan_validation_{$usulan->id}_kepegawaian_universitas";
+            Cache::forget($cacheKey);
+
+            return redirect()->route('backend.kepegawaian-universitas.usulan.index')
+                ->with('success', 'Simpan Validasi Berhasil! Data validasi usulan kepangkatan telah disimpan.');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to save kepangkatan validation', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menyimpan validasi: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Save BKN validation data
+     */
+    public function saveBknValidation(Request $request, Usulan $usulan)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'validation_data' => 'required|array',
+                'keterangan_umum' => 'nullable|string|max:1000'
+            ]);
+
+            $validationData = $request->input('validation_data');
+            $keteranganUmum = $request->input('keterangan_umum', '');
+
+            // Save validation data with role 'bkn'
+            $usulan->setValidasiByRole('bkn', $validationData, Auth::id(), $keteranganUmum);
+            $usulan->save();
+
+            // Log the validation
+            Log::info('BKN validation saved', [
+                'usulan_id' => $usulan->id,
+                'validated_by' => Auth::id(),
+                'keterangan_umum' => $keteranganUmum,
+                'validation_data' => $validationData
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Validasi BKN berhasil disimpan'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to save BKN validation', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan validasi BKN: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Change usulan status
+     */
+    public function changeStatus(Request $request, Usulan $usulan)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'new_status' => 'required|string',
+                'keterangan' => 'nullable|string|max:1000'
+            ]);
+
+            $newStatus = $request->input('new_status');
+            $keterangan = $request->input('keterangan', 'Status diubah melalui halaman validasi kepangkatan');
+
+            // Validate status transition
+            $allowedStatuses = [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN
+            ];
+
+            if (!in_array($newStatus, $allowedStatuses)) {
+                throw new \Exception('Status tidak diizinkan untuk transisi ini');
+            }
+
+            // Check if current status allows this transition
+            $allowedCurrentStatuses = [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN
+            ];
+            
+            if (!in_array($usulan->status_usulan, $allowedCurrentStatuses)) {
+                throw new \Exception('Status saat ini tidak memungkinkan perubahan status ini');
+            }
+
+            // Update status
+            $oldStatus = $usulan->status_usulan;
+            $usulan->status_usulan = $newStatus;
+            $usulan->save();
+
+            // Jika status berubah ke STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN, 
+            // otomatis simpan validasi BKN dengan data default
+            if ($newStatus === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) {
+                // Data validasi default untuk BKN (field yang bermasalah)
+                $defaultBknValidation = [
+                    'data_pribadi' => [
+                        'nip' => ['status' => 'tidak_sesuai', 'keterangan' => 'NIP tidak valid sesuai data BKN'],
+                        'nama_lengkap' => ['status' => 'tidak_sesuai', 'keterangan' => 'Nama tidak sesuai dengan data BKN']
+                    ],
+                    'data_kepegawaian' => [
+                        'pangkat_saat_usul' => ['status' => 'tidak_sesuai', 'keterangan' => 'Pangkat tidak sesuai dengan data BKN'],
+                        'jabatan_saat_usul' => ['status' => 'tidak_sesuai', 'keterangan' => 'Jabatan tidak sesuai dengan data BKN']
+                    ],
+                    'dokumen_profil' => [
+                        'sk_pangkat_terakhir' => ['status' => 'tidak_sesuai', 'keterangan' => 'SK Pangkat tidak valid'],
+                        'sk_jabatan_terakhir' => ['status' => 'tidak_sesuai', 'keterangan' => 'SK Jabatan tidak valid']
+                    ]
+                ];
+
+                // Simpan validasi BKN
+                $usulan->setValidasiByRole('bkn', $defaultBknValidation, Auth::id(), $keterangan);
+                $usulan->save();
+
+                Log::info('BKN validation auto-saved for status change', [
+                    'usulan_id' => $usulan->id,
+                    'validated_by' => Auth::id(),
+                    'keterangan_umum' => $keterangan
+                ]);
+            }
+
+            // Log the status change
+            Log::info('Usulan status changed', [
+                'usulan_id' => $usulan->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'changed_by' => Auth::id(),
+                'keterangan' => $keterangan
+            ]);
+
+            // Create status change log entry
+            $usulan->logs()->create([
+                'usulan_id' => $usulan->id,
+                'status_sebelumnya' => $oldStatus,
+                'status_baru' => $newStatus,
+                'catatan' => $keterangan,
+                'dilakukan_oleh_id' => Auth::id()
+            ]);
+
+            // Clear caches
+            $cacheKey = "usulan_validation_{$usulan->id}_kepegawaian_universitas";
+            Cache::forget($cacheKey);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Status usulan berhasil diubah dari '{$oldStatus}' ke '{$newStatus}'",
+                'new_status' => $newStatus,
+                'old_status' => $oldStatus
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to change usulan status', [
+                'usulan_id' => $usulan->id,
+                'new_status' => $request->input('new_status'),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengubah status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

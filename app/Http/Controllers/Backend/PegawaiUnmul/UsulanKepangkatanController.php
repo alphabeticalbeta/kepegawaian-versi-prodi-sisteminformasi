@@ -271,11 +271,18 @@ class UsulanKepangkatanController extends Controller
         // Handle document uploads
         $dokumenPaths = $this->handleDocumentUploads($request, $usulan);
 
-        // Update usulan
-        $usulan->update([
+        // Update usulan - hanya ubah status jika belum ada status atau masih Draft
+        $updateData = [
             'pangkat_tujuan_id' => $request->pangkat_tujuan_id,
-            'status_usulan' => Usulan::STATUS_DRAFT_USULAN
-        ]);
+        ];
+        
+        // Hanya ubah status ke Draft jika status saat ini null atau sudah Draft
+        if (is_null($usulan->status_usulan) || $usulan->status_usulan === Usulan::STATUS_DRAFT_USULAN) {
+            $updateData['status_usulan'] = Usulan::STATUS_DRAFT_USULAN;
+        }
+        // Jika status sudah ada (misalnya Permintaan Perbaikan), status TIDAK diubah
+        
+        $usulan->update($updateData);
 
         // Update dokumen_usulan in data_usulan
         $dataUsulan = $usulan->data_usulan;
@@ -680,7 +687,13 @@ class UsulanKepangkatanController extends Controller
             abort(404, 'File tidak ditemukan.');
         }
 
-        // Return file
+        // Check if this is a download request
+        if (request()->has('download') && request()->get('download') == '1') {
+            $filename = basename($path);
+            return Storage::disk('local')->download($path, $filename);
+        }
+
+        // Return file for viewing
         return Storage::disk('local')->response($path);
     }
     /**

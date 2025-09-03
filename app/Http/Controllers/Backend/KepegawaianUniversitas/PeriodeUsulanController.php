@@ -550,4 +550,65 @@ class PeriodeUsulanController extends Controller
             ]);
         }
     }
+
+    /**
+     * API untuk mendapatkan count usulan kepangkatan per jenis
+     */
+    public function getUsulanKepangkatanCount(PeriodeUsulan $periodeUsulan)
+    {
+        try {
+            // Pastikan periode ini adalah jenis kepangkatan
+            if ($periodeUsulan->jenis_usulan !== 'usulan-kepangkatan') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Periode ini bukan jenis usulan kepangkatan'
+                ], 400);
+            }
+
+            // Ambil semua usulan dari periode ini
+            $usulans = $periodeUsulan->usulans()->get();
+
+            // Hitung berdasarkan jenis_usulan_pangkat
+            $counts = [
+                'dosen_pns' => 0,
+                'jabatan_administrasi' => 0,
+                'jabatan_fungsional' => 0,
+                'jabatan_struktural' => 0
+            ];
+
+            foreach ($usulans as $usulan) {
+                $jenisUsulanPangkat = $usulan->data_usulan['jenis_usulan_pangkat'] ?? null;
+                
+                if ($jenisUsulanPangkat) {
+                    switch ($jenisUsulanPangkat) {
+                        case 'Dosen PNS':
+                            $counts['dosen_pns']++;
+                            break;
+                        case 'Jabatan Administrasi':
+                            $counts['jabatan_administrasi']++;
+                            break;
+                        case 'Jabatan Fungsional Tertentu':
+                            $counts['jabatan_fungsional']++;
+                            break;
+                        case 'Jabatan Struktural':
+                            $counts['jabatan_struktural']++;
+                            break;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'counts' => $counts,
+                'total' => $usulans->count()
+            ]);
+
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghitung usulan kepangkatan'
+            ], 500);
+        }
+    }
 }
