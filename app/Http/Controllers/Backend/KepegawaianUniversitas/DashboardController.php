@@ -29,100 +29,8 @@ class DashboardController extends Controller
         try {
             \Log::info('Kepegawaian Universitas Dashboard accessed successfully', ['user_id' => Auth::id()]);
 
-            // Menggunakan logika dari DashboardPeriodeController dengan jenis 'all'
-            $jenisUsulan = 'all';
-
-            // Mapping jenis usulan dari sidebar ke nama periode
-            $jenisMapping = [
-                'all' => 'Semua Usulan Aktif',
-                'nuptk' => 'Usulan NUPTK',
-                'laporan-lkd' => 'Usulan Laporan LKD',
-                'presensi' => 'Usulan Presensi',
-                'penyesuaian-masa-kerja' => 'Usulan Penyesuaian Masa Kerja',
-                'ujian-dinas-ijazah' => 'Usulan Ujian Dinas & Ijazah',
-                'jabatan-dosen-regular' => 'Usulan Jabatan Dosen Reguler',
-                'jabatan-dosen-pengangkatan' => 'Usulan Jabatan Dosen Pengangkatan Pertama',
-                'laporan-serdos' => 'Usulan Laporan Serdos',
-                'pensiun' => 'Usulan Pensiun',
-                'kepangkatan' => 'Usulan Kepangkatan',
-                'pencantuman-gelar' => 'Usulan Pencantuman Gelar',
-                'id-sinta-sister' => 'Usulan ID SINTA ke SISTER',
-                'satyalancana' => 'Usulan Satyalancana',
-                'tugas-belajar' => 'Usulan Tugas Belajar',
-                'pengaktifan-kembali' => 'Usulan Pengaktifan Kembali'
-            ];
-
-            $namaUsulan = $jenisMapping[$jenisUsulan] ?? 'Usulan Jabatan';
-
-            // Ambil semua periode untuk jenis usulan ini (histori)
-            $periodes = \App\Models\KepegawaianUniversitas\PeriodeUsulan::where(function($query) use ($namaUsulan, $jenisUsulan) {
-                    // Jika jenis usulan adalah 'all', ambil semua periode aktif
-                    if ($jenisUsulan === 'all') {
-                        $query->where('status', 'Buka');
-                    } else {
-                        // Exact match untuk jenis usulan utama
-                        $query->where('jenis_usulan', $namaUsulan);
-                    }
-                })
-                ->withCount([
-                    'usulans',
-                    'usulans as usulan_disetujui_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS);
-                    },
-
-                    'usulans as usulan_pending_count' => function ($query) {
-                        $query->whereIn('status_usulan', [
-                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS,
-                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
-                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
-                        ]);
-                    },
-                    
-                    // Tambahan statistik untuk status baru
-                    'usulans as usulan_direkomendasikan_kepegawaian_universitas_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS);
-                    },
-                    'usulans as usulan_direkomendasikan_bkn_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN);
-                    },
-                    'usulans as usulan_direkomendasikan_sister_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER);
-                    },
-                    'usulans as usulan_tidak_direkomendasikan_kepegawaian_universitas_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS);
-                    },
-                    'usulans as usulan_tidak_direkomendasikan_bkn_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN);
-                    },
-                    'usulans as usulan_tidak_direkomendasikan_sister_count' => function ($query) {
-                        $query->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER);
-                    }
-                ])
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-            // Overall statistics untuk jenis usulan ini
-            $overallStats = [
-                'total_periodes' => $periodes->count(),
-                'periodes_aktif' => $periodes->where('status', 'Buka')->count(),
-                'total_usulan' => $periodes->sum('usulans_count'),
-                'usulan_disetujui' => $periodes->sum('usulan_disetujui_count'),
-                'usulan_pending' => $periodes->sum('usulan_pending_count'),
-                
-                // Tambahan statistik untuk status baru
-                'usulan_direkomendasikan_kepegawaian_universitas' => $periodes->sum('usulan_direkomendasikan_kepegawaian_universitas_count'),
-                'usulan_direkomendasikan_bkn' => $periodes->sum('usulan_direkomendasikan_bkn_count'),
-                'usulan_direkomendasikan_sister' => $periodes->sum('usulan_direkomendasikan_sister_count'),
-                'usulan_tidak_direkomendasikan_kepegawaian_universitas' => $periodes->sum('usulan_tidak_direkomendasikan_kepegawaian_universitas_count'),
-                'usulan_tidak_direkomendasikan_bkn' => $periodes->sum('usulan_tidak_direkomendasikan_bkn_count'),
-                'usulan_tidak_direkomendasikan_sister' => $periodes->sum('usulan_tidak_direkomendasikan_sister_count'),
-            ];
-
-            return view('backend.layouts.views.kepegawaian-universitas.dashboard-periode.index', [
-                'periodes' => $periodes,
-                'jenisUsulan' => $jenisUsulan,
-                'namaUsulan' => $namaUsulan,
-                'overallStats' => $overallStats,
+            // Return simple dashboard view without complex data
+            return view('backend.layouts.views.kepegawaian-universitas.dashboard', [
                 'user' => Auth::user()
             ]);
         } catch (\Exception $e) {
@@ -132,26 +40,8 @@ class DashboardController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // If even the minimal version fails, return a basic error page
-            return response()->view('backend.layouts.views.kepegawaian-universitas.dashboard-periode.index', [
-                'periodes' => collect(),
-                'jenisUsulan' => 'all',
-                'namaUsulan' => 'Semua Usulan Aktif',
-                'overallStats' => [
-                    'total_periodes' => 0,
-                    'periodes_aktif' => 0,
-                    'total_usulan' => 0,
-                    'usulan_disetujui' => 0,
-                    'usulan_pending' => 0,
-                    
-                    // Tambahan statistik untuk status baru
-                    'usulan_direkomendasikan_kepegawaian_universitas' => 0,
-                    'usulan_direkomendasikan_bkn' => 0,
-                    'usulan_direkomendasikan_sister' => 0,
-                    'usulan_tidak_direkomendasikan_kepegawaian_universitas' => 0,
-                    'usulan_tidak_direkomendasikan_bkn' => 0,
-                    'usulan_tidak_direkomendasikan_sister' => 0,
-                ],
+            // Return simple error view
+            return response()->view('backend.layouts.views.kepegawaian-universitas.dashboard', [
                 'user' => Auth::user(),
                 'error' => 'Terjadi kesalahan saat memuat dashboard. Silakan coba lagi.'
             ], 500);

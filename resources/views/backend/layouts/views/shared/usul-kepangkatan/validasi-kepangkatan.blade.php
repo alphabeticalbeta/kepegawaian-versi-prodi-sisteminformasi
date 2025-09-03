@@ -66,14 +66,50 @@
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN => 'bg-indigo-100 text-indigo-800 border-indigo-300',
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN => 'bg-orange-100 text-orange-800 border-orange-300',
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN => 'bg-orange-100 text-orange-800 border-orange-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN => 'bg-red-100 text-red-800 border-red-300',
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN => 'bg-green-100 text-green-800 border-green-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT => 'bg-emerald-100 text-emerald-800 border-emerald-300',
                 ];
                 $statusColor = $statusColors[$usulan->status_usulan] ?? 'bg-gray-100 text-gray-800 border-gray-300';
+                
+                                 // Define view-only statuses
+                 $viewOnlyStatuses = [
+                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
+                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN,
+                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN,
+                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
+                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT,
+                 ];
+                $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);
             @endphp
             <div class="inline-flex items-center px-4 py-2 rounded-full border {{ $statusColor }}">
                 <span class="text-sm font-medium">Status: {{ $usulan->status_usulan }}</span>
+                @if($isViewOnly)
+                    <span class="ml-3 px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full border border-orange-200">
+                        <i data-lucide="eye" class="w-3 h-3 inline mr-1"></i>
+                        View Only
+                    </span>
+                @endif
             </div>
         </div>
+
+        {{-- View Only Info Panel --}}
+        @if($isViewOnly)
+            <div class="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <div class="flex items-center">
+                    <i data-lucide="info" class="w-5 h-5 text-orange-600 mr-3"></i>
+                    <div>
+                        <div class="text-sm font-semibold text-orange-800 mb-1">
+                            Mode View Only
+                        </div>
+                        <div class="text-sm text-orange-700">
+                            <strong>Perhatian:</strong> Usulan saat ini dalam status yang tidak memungkinkan perubahan validasi. 
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
 
 
@@ -204,7 +240,7 @@
         </div>
 
         {{-- Include Tabel Validasi --}}
-        @include('backend.layouts.views.shared.usul-kepangkatan.usulan-detail-validation-table')
+        @include('backend.layouts.views.shared.usul-kepangkatan.usulan-detail-validation-table', ['isViewOnly' => $isViewOnly])
     </div>
 </div>
 

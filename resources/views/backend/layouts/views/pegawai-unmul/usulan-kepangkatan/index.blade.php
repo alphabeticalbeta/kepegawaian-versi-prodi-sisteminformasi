@@ -519,7 +519,13 @@ function validateForm() {
     const selectedOption = document.querySelector('input[name="jenis_usulan"]:checked');
     
     if (!selectedOption) {
-        alert('Silakan pilih jenis usulan pangkat terlebih dahulu.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Peringatan',
+            text: 'Silakan pilih jenis usulan pangkat terlebih dahulu.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#f59e0b'
+        });
         return false;
     }
     
@@ -562,30 +568,50 @@ window.addEventListener('resize', function() {
 });
 
 function confirmDelete(usulanId) {
-    if (confirm('Apakah Anda yakin ingin menghapus usulan ini? Tindakan ini tidak dapat dibatalkan.')) {
-        // Create form untuk DELETE request
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/pegawai-unmul/usulan-kepangkatan/${usulanId}`;
-        
-        // Add CSRF token
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        form.appendChild(csrfToken);
-        
-        // Add method override untuk DELETE
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'DELETE';
-        form.appendChild(methodField);
-        
-        // Submit form
-        document.body.appendChild(form);
-        form.submit();
-    }
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: 'Apakah Anda yakin ingin menghapus usulan ini? Tindakan ini tidak dapat dibatalkan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Menghapus Usulan...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Create form untuk DELETE request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/pegawai-unmul/usulan-kepangkatan/${usulanId}`;
+            
+            // Add CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            form.appendChild(csrfToken);
+            
+            // Add method override untuk DELETE
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
+            
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
 }
 
 // Close modal when clicking outside
@@ -598,6 +624,67 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Initialize SweetAlert2 functions for index page
+    console.log('SweetAlert2 functions initialized for pegawai-unmul usulan kepangkatan index');
+    
+    // Global success handler
+    window.showSuccess = function(message, title = 'Berhasil') {
+        Swal.fire({
+            icon: 'success',
+            title: title,
+            text: message,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#10b981',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    };
+    
+    // Global error handler
+    window.showError = function(message, title = 'Terjadi Kesalahan') {
+        Swal.fire({
+            icon: 'error',
+            title: title,
+            text: message,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ef4444'
+        });
+    };
+    
+    // Global confirmation handler
+    window.showConfirmation = function(message, title = 'Konfirmasi', callback) {
+        Swal.fire({
+            title: title,
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed && callback) {
+                callback();
+            }
+        });
+    };
+    
+    // Global loading handler
+    window.showLoading = function(message = 'Memproses...') {
+        Swal.fire({
+            title: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    };
+    
+    // Global close loading
+    window.closeLoading = function() {
+        Swal.close();
+    };
 });
 </script>
 @endsection

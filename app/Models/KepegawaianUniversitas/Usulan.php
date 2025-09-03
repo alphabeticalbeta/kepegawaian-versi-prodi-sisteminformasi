@@ -1634,6 +1634,8 @@ public function getSenateDecisionCounts(): array
     // Legacy status constants (for backward compatibility) - HAPUS YANG TIDAK DIGUNAKAN
     const STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI = 'Menunggu Hasil Penilaian Tim Penilai';
 
+    const STATUS_SK_TERBIT = 'SK SUDAH TERBIT';
+
     /**
      * Determine final status based on Tim Penilai assessment results
      */

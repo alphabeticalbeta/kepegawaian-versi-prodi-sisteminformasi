@@ -90,7 +90,98 @@
 @endif
 
 <script>
+
+
+// Action button configurations
+const actionConfigs = {
+    'kirim_ke_kepegawaian': {
+        title: 'Kirim Usulan ke Kepegawaian Universitas',
+        message: 'Apakah Anda yakin ingin mengirim usulan ini ke Kepegawaian Universitas? Usulan akan diverifikasi oleh tim kepegawaian.',
+        icon: 'question',
+        confirmColor: '#3b82f6',
+        loadingText: 'Mengirim usulan ke Kepegawaian Universitas...'
+    },
+    'kirim_perbaikan_ke_kepegawaian': {
+        title: 'Kirim Usulan Perbaikan',
+        message: 'Apakah Anda yakin ingin mengirim usulan perbaikan ini ke Kepegawaian Universitas? Pastikan semua field telah diperbaiki.',
+        icon: 'question',
+        confirmColor: '#f59e0b',
+        loadingText: 'Mengirim usulan perbaikan ke Kepegawaian Universitas...'
+    },
+    'kirim_perbaikan_bkn_ke_kepegawaian': {
+        title: 'Kirim Usulan Perbaikan dari BKN',
+        message: 'Apakah Anda yakin ingin mengirim usulan perbaikan dari BKN ini ke Kepegawaian Universitas? Pastikan semua field telah diperbaiki.',
+        icon: 'question',
+        confirmColor: '#8b5cf6',
+        loadingText: 'Mengirim usulan perbaikan dari BKN ke Kepegawaian Universitas...'
+    },
+    'kirim_perbaikan_ke_bkn': {
+        title: 'Kirim Usulan Perbaikan ke BKN',
+        message: 'Apakah Anda yakin ingin mengirim usulan perbaikan ini ke BKN? Usulan akan diproses oleh tim BKN.',
+        icon: 'question',
+        confirmColor: '#3b82f6',
+        loadingText: 'Mengirim usulan perbaikan ke BKN...'
+    }
+};
+
 function submitAction(action) {
+    try {
+        // Check if SweetAlert2 is available
+        if (typeof Swal === 'undefined') {
+            if (confirm('Apakah Anda yakin ingin melanjutkan aksi ini?')) {
+                processAction(action);
+            }
+            return;
+        }
+        
+        const config = actionConfigs[action];
+        if (!config) {
+            // Use global showError if available, otherwise use fallback
+            if (typeof window.showError === 'function') {
+                window.showError('Aksi tidak dikenal');
+            } else {
+                alert('Aksi tidak dikenal');
+            }
+            return;
+        }
+
+        // Show confirmation dialog
+        Swal.fire({
+            title: config.title,
+            text: config.message,
+            icon: config.icon,
+            showCancelButton: true,
+            confirmButtonColor: config.confirmColor,
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading
+                Swal.fire({
+                    title: config.loadingText,
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Process the action
+                processAction(action);
+            }
+        }).catch((error) => {
+            // Fallback to processAction directly
+            processAction(action);
+        });
+        
+    } catch (error) {
+        // Fallback to processAction directly
+        processAction(action);
+    }
+}
+
+function processAction(action) {
     try {
         // Try to find existing form
         let actionForm = document.getElementById('actionForm');
@@ -149,8 +240,19 @@ function submitAction(action) {
         actionForm.submit();
         
     } catch (error) {
-        console.error('Error in submitAction:', error);
-        alert('Terjadi kesalahan. Silakan coba lagi.');
+        // Close loading if SweetAlert2 is available
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+        // Show error message using global function if available
+        if (typeof window.showError === 'function') {
+            window.showError('Terjadi kesalahan saat memproses aksi. Silakan coba lagi.');
+        } else {
+            alert('Terjadi kesalahan saat memproses aksi. Silakan coba lagi.');
+        }
     }
 }
+
+// Using global SweetAlert2 functions from show.blade.php
+// showSuccess and showError are defined globally
 </script>

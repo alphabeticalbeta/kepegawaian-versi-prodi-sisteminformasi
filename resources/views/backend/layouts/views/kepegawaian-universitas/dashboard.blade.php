@@ -3,155 +3,163 @@
 @section('title', 'Dashboard Kepegawaian Universitas')
 
 @section('content')
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Error Message -->
-        @if(isset($error))
-            <div class="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg relative shadow-md" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline">{{ $error }}</span>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <!-- Header Section -->
+        <div class="relative overflow-hidden bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 shadow-2xl">
+            <div class="absolute inset-0 bg-black opacity-10"></div>
+            <div class="relative px-6 py-16 sm:px-8 sm:py-24">
+                <div class="mx-auto max-w-4xl text-center">
+                    <div class="mb-8">
+                        <div class="mx-auto h-24 w-24 rounded-full bg-white bg-opacity-20 flex items-center justify-center backdrop-blur-sm overflow-hidden">
+                            <img src="{{ asset('images/logo-unmul.png') }}" alt="Logo UNMUL" class="h-16 w-16 object-contain">
+                        </div>
+                    </div>
+                    <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl mb-6">
+                        Selamat Datang
+                    </h1>
+                    <p class="text-xl text-blue-100 sm:text-2xl font-medium">
+                        Website Kepegawaian Universitas
+                    </p>
+                    <div class="mt-8">
+                        <div class="inline-flex items-center px-6 py-3 rounded-full bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30">
+                            <svg class="h-5 w-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-white font-medium">Sistem Terintegrasi</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        @endif
-
-        <!-- Header Halaman -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Pusat Usulan Universitas</h1>
-            <p class="mt-1 text-sm text-gray-600">
-                Selamat datang, <span class="font-medium">{{ Auth::user()->nama_lengkap ?? 'Admin' }}</span>.
-                Kelola validasi usulan kepegawaian UNMUL.
-            </p>
+            
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div class="absolute top-0 right-0 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
         </div>
 
-        <!-- Info Panel -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-            </div>
-                <div class="ml-3">
-                    <p class="text-sm text-blue-700">
-                        <strong>Dashboard Universitas</strong> |
-                        Total periode aktif: {{ $stats['total_periods'] ?? 0 }} |
-                        Total usulan menunggu validasi: {{ $stats['total_usulans_pending'] ?? 0 }} |
-                        Total usulan: {{ $stats['total_usulans_all'] ?? 0 }}
-                    </p>
+        <!-- Main Content Section -->
+        <div class="relative z-10 -mt-16 px-6 sm:px-8">
+            <div class="mx-auto max-w-7xl">
+                <!-- Welcome Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <!-- Card 1: Kepegawaian -->
+                    <div class="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300 border-l-4 border-blue-500">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-blue-100 rounded-full">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="ml-3 text-lg font-semibold text-gray-900">Kepegawaian</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm">Kelola data dan administrasi kepegawaian dengan sistem terintegrasi</p>
+                    </div>
+
+                    <!-- Card 2: Validasi -->
+                    <div class="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300 border-l-4 border-green-500">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-green-100 rounded-full">
+                                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="ml-3 text-lg font-semibold text-gray-900">Validasi</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm">Proses validasi usulan yang efisien dan terstruktur</p>
+                    </div>
+
+                    <!-- Card 3: Monitoring -->
+                    <div class="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300 border-l-4 border-purple-500">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-purple-100 rounded-full">
+                                <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="ml-3 text-lg font-semibold text-gray-900">Monitoring</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm">Pemantauan real-time status usulan dan progress</p>
+                    </div>
+                </div>
+
+                <!-- Welcome Message -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8 text-center mb-12">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="mb-6">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
+                                <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">
+                            Selamat Datang di Sistem Kepegawaian
+                        </h2>
+                        <p class="text-lg text-gray-600 leading-relaxed">
+                            Kami menyediakan platform terintegrasi untuk mengelola semua aspek kepegawaian universitas. 
+                            Dari administrasi data hingga validasi usulan, semuanya dapat diakses dengan mudah dan efisien.
+                        </p>
+                        <div class="mt-8 flex flex-wrap justify-center gap-4">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Sistem Terintegrasi
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Real-time Monitoring
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                User-Friendly Interface
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Section -->
+                <div class="text-center pb-12">
+                    <div class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full">
+                        <svg class="h-5 w-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-gray-700 font-medium">Powered by UNMUL Technology</span>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Card Utama -->
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium leading-6 text-gray-900">Daftar Periode Usulan Aktif</h3>
-                <p class="mt-1 text-sm text-gray-500">
-                    Angka pada kolom "Validasi" menunjukkan jumlah usulan yang menunggu validasi universitas. Klik tombol aksi untuk melihat semua usulan periode tersebut.
-                </p>
-            </div>
-
-            <!-- Tabel Data -->
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Periode</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jadwal Usulan</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Validasi</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse ($activePeriods as $periode)
-                            @php
-                                $usulansForValidation = $periode->usulans->where('status_usulan', 'Usulan Disetujui Admin Fakultas');
-                                $jumlahValidasi = $usulansForValidation->count();
-                            @endphp
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $periode->nama_periode }}</div>
-                                    <div class="text-sm text-gray-500">Tahun {{ $periode->tahun_periode ?? date('Y', strtotime($periode->tanggal_mulai)) }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ \App\Helpers\UsulanHelper::getJenisUsulanBadgeClass($periode->jenis_usulan) }}">
-                                        <i data-lucide="{{ \App\Helpers\UsulanHelper::getJenisUsulanIcon($periode->jenis_usulan) }}" class="w-3 h-3 mr-1"></i>
-                                        {{ \App\Helpers\UsulanHelper::formatJenisUsulan($periode->jenis_usulan) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                    {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->isoFormat('D MMM') }} - {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->isoFormat('D MMM Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    @if($periode->status == 'Buka')
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            Buka
-                                        </span>
-                                    @else
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            Tutup
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    @if($jumlahValidasi > 0)
-                                        <div class="relative group">
-                                            <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full cursor-help">
-                                                {{ $jumlahValidasi }}
-                                            </span>
-                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                {{ $jumlahValidasi }} usulan menunggu validasi
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div class="relative group">
-                                            <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-gray-100 bg-gray-600 rounded-full cursor-help">
-                                                0
-                                            </span>
-                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                Tidak ada usulan
-                                            </div>
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <a href="{{ route('backend.kepegawaian-universitas.usulan.index') }}"
-                                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
-                                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                        </svg>
-                                        @if($jumlahValidasi > 0)
-                                            Validasi ({{ $jumlahValidasi }})
-                                        @else
-                                            Lihat Semua
-                                        @endif
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center">
-                                    <div class="text-center">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                            <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2z" />
-                                        </svg>
-                                        <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak Ada Periode Usulan Aktif</h3>
-                                        <p class="mt-1 text-sm text-gray-500">
-                                            Saat ini tidak ada periode usulan yang aktif untuk validasi universitas.
-                                        </p>
-                                        <p class="mt-1 text-xs text-gray-400">
-                                            Total periode ditemukan: {{ $activePeriods->count() }}
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
+
+    <style>
+        @keyframes blob {
+            0% {
+                transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+            100% {
+                transform: translate(0px, 0px) scale(1);
+            }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+    </style>
 @endsection
 
 

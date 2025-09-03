@@ -20,6 +20,24 @@
                         View Only
                     </span>
                 @endif
+                @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN)
+                    <span class="ml-3 px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                        <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
+                        View Only
+                    </span>
+                @endif
+                @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)
+                    <span class="ml-3 px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                        <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
+                        View Only
+                    </span>
+                @endif
+                @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT)
+                    <span class="ml-3 px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                        <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
+                        View Only
+                    </span>
+                @endif
             </h2>
         </div>
 
@@ -147,6 +165,60 @@
                     </div>
                 @endif
             @endif
+
+        @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN)
+            <div class="bg-red-50 border-b border-red-200 px-6 py-4">
+                <div class="flex items-center">
+                    <i data-lucide="x-circle" class="w-5 h-5 text-red-600 mr-3"></i>
+                    <div>
+                        <div class="text-sm font-semibold text-red-800 mb-1">
+                            Status: Usulan Belum Direkomendasi BKN
+                        </div>
+                        <div class="text-sm text-red-700">
+                            <strong>Perhatian:</strong> Usulan telah ditolak oleh BKN dan tidak direkomendasikan. 
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            Pegawai harus memperbaiki data yang tidak sesuai sebelum dapat diajukan kembali.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)
+            <div class="bg-green-50 border-b border-green-200 px-6 py-4">
+                <div class="flex items-center">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-3"></i>
+                    <div>
+                        <div class="text-sm font-semibold text-green-800 mb-1">
+                            Status: Usulan Direkomendasikan BKN
+                        </div>
+                        <div class="text-sm text-green-700">
+                            <strong>Selamat:</strong> Usulan telah direkomendasikan oleh BKN dan disetujui. 
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            Usulan telah berhasil melewati tahap validasi BKN.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT)
+            <div class="bg-emerald-50 border-b border-emerald-200 px-6 py-4">
+                <div class="flex items-center">
+                    <i data-lucide="award" class="w-5 h-5 text-emerald-600 mr-3"></i>
+                    <div>
+                        <div class="text-sm font-semibold text-emerald-800 mb-1">
+                            Status: SK Sudah Terbit
+                        </div>
+                        <div class="text-sm text-emerald-700">
+                            <strong>Selamat:</strong> SK (Surat Keputusan) telah terbit dan usulan telah selesai diproses. 
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            Proses usulan kepangkatan telah berhasil diselesaikan.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         @endif
 
         <div class="overflow-x-auto">
@@ -210,10 +282,13 @@
                                     // Check if field is invalid
                                     $isInvalid = $fieldValidation['status'] === 'tidak_sesuai';
 
-                                                                         // Check if current role can edit
+                                    // Check if current role can edit
                                      $canEdit = $currentRole === 'Kepegawaian Universitas' && 
                                                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS &&
-                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN;
+                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
+                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
+                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN &&
+                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT;
 
                                     // Get penilai validation data if exists
                                     $penilaiInvalidStatus = null;
@@ -373,7 +448,10 @@
                             $generalNote = $displayValidation['keterangan_umum'] ?? '';
                             $canEditGeneralNote = $currentRole === 'Kepegawaian Universitas' && 
                                                   $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS &&
-                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN;
+                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
+                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
+                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN &&
+                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT;
                         @endphp
                         <tr class="bg-gray-50">
                             <td colspan="3" class="px-6 py-6">
@@ -451,7 +529,7 @@
                     Belum Direkomendasikan Dari BKN
                 </button>
 
-                {{-- Button Usulan Direkomendasi BKN --}}
+                                {{-- Button Usulan Direkomendasi BKN --}}
                 <button type="button" 
                         onclick="saveAndChangeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN }}')"
                         class="flex items-center px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
@@ -459,11 +537,27 @@
                     Usulan Direkomendasi BKN
                 </button>
             </div>
-            @endif
+        @endif
+
+        {{-- Status Change Buttons for "Usulan Direkomendasikan BKN" --}}
+        @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)
+        <div class="flex gap-3">
+            {{-- Button SK Sudah Terbit --}}
+            <button type="button" 
+                    onclick="changeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT }}')"
+                    class="flex items-center px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
+                <i data-lucide="award" class="w-4 h-4 mr-2"></i>
+                SK Sudah Terbit
+            </button>
+        </div>
+        @endif
 
             {{-- Save Validation Button --}}
             @if($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS && 
-                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN)
+                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
+                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
+                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN &&
+                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT)
             <button type="submit" id="saveValidationBtn" 
                     class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                 <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
