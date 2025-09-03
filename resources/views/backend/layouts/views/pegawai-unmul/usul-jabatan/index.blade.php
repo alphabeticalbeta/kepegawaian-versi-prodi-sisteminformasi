@@ -324,7 +324,7 @@ function showLogs(usulanId) {
     `;
 
     // Fetch logs
-    fetch(`/pegawai-unmul/usulan-jabatan/${usulanId}/logs`)
+            fetch(`/pegawai-unmul/usulan/${usulanId}/logs`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.logs && data.logs.length > 0) {

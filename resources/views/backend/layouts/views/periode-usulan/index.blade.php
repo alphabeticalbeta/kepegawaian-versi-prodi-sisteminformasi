@@ -478,25 +478,25 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
-                                {{ $periode->usulans_count ?? 0 }}
+                                {{ $periode->usulans_submitted_count ?? 0 }}
                             </td>
                             <td class="px-6 py-4">
-                                @if(($periode->usulans_count ?? 0) > 0)
+                                @if(($periode->usulans_submitted_count ?? 0) > 0)
                                     @if($jenisUsulan === 'kepangkatan')
                                         <button onclick="openModalLihatPengusulKepangkatan({{ $periode->id }})"
                                                class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
                                             <i class="fas fa-users mr-1"></i>
-                                            Lihat {{ $periode->usulans_count }} Pengusul
+                                            Lihat {{ $periode->usulans_submitted_count }} Pengusul
                                         </button>
                                     @else
                                         <a href="{{ route('backend.kepegawaian-universitas.dashboard-periode.show', $periode) }}"
                                            class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
                                             <i class="fas fa-users mr-1"></i>
-                                            Lihat {{ $periode->usulans_count }} Pengusul
+                                            Lihat {{ $periode->usulans_submitted_count }} Pengusul
                                         </a>
                                     @endif
                                 @else
-                                    <span class="text-xs text-gray-500">Belum ada pengusul</span>
+                                    <span class="text-xs text-gray-500">Belum ada pengusul yang dikirim</span>
                                 @endif
                             </td>
                         <td class="px-6 py-4">
@@ -747,7 +747,7 @@ window.toggleStatus = function(periodeId, currentStatus, event) {
     const actionText = currentStatus === 'Buka' ? 'menutup' : 'membuka';
 
     showModal(
-        'Konfirmasi Perubahan Status',
+        'Konfirmasi Kirim Usulan',
         `Anda yakin ingin ${actionText} periode ini?`,
         'Iya',
         'Batal',

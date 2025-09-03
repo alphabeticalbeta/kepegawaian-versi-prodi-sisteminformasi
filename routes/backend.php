@@ -441,6 +441,14 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::get('/usulan/api/statistics', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPegawaiController::class, 'getStatistics'])
                 ->name('usulan-pegawai.api.statistics');
 
+            // API untuk logs usulan (untuk modal) - Route utama untuk semua jenis usulan
+            Route::get('/usulan/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPegawaiController::class, 'getLogs'])
+                ->name('usulan.logs');
+
+            // Route untuk logs-simple (halaman terpisah)
+            Route::get('/usulan/{usulan}/logs-simple', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPegawaiController::class, 'showLogsSimple'])
+                ->name('usulan.logs-simple');
+
             // =====================================================
             // USULAN JABATAN ROUTES (STANDARDIZED)
             // =====================================================
@@ -467,8 +475,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('show-document');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanJabatanController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -491,8 +498,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -515,8 +521,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanLaporanLkdController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -539,8 +544,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPresensiController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
 
@@ -564,8 +568,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanIdSintaSisterController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -588,8 +591,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanSatyalancanaController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -612,8 +614,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -636,8 +637,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPengaktifanKembaliController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -660,8 +660,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPenyesuaianMasaKerjaController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -684,8 +683,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanUjianDinasIjazahController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -708,8 +706,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanLaporanSerdosController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -732,8 +729,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPensiunController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
             // =====================================================
@@ -754,8 +750,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
                 Route::get('/{usulanKepangkatan}/dokumen/{field}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'showDocument'])
                     ->name('show-document');
             });
@@ -780,8 +775,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('destroy');
 
                 // API routes (STANDARDIZED)
-                Route::get('/{usulan}/logs', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanPencantumanGelarController::class, 'getLogs'])
-                    ->name('logs');
+                // Route logs dihapus - digabung ke route utama
             });
 
 
@@ -792,9 +786,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 return redirect()->route('pegawai-unmul.usulan-jabatan.show-document', [$usulan, $field]);
             });
 
-            Route::get('/usulan/{usulan}/logs', function ($usulan) {
-                return redirect()->route('pegawai-unmul.usulan-jabatan.logs', $usulan);
-            });
+            // Route redirect logs dihapus - sudah digabung ke route utama
         });
 
     // ======================================================================

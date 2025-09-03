@@ -2086,7 +2086,7 @@ class UsulanValidationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Status usulan berhasil diubah dari '{$oldStatus}' ke '{$newStatus}'",
+                'message' => "Status usulan berhasil dikirim, status berubah Dari '{$oldStatus}' ke '{$newStatus}'",
                 'new_status' => $newStatus,
                 'old_status' => $oldStatus
             ]);

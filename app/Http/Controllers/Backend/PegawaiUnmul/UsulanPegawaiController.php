@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend\PegawaiUnmul;
 use App\Http\Controllers\Controller;
 use App\Models\KepegawaianUniversitas\Pegawai;
 use App\Models\KepegawaianUniversitas\PeriodeUsulan;
+use App\Models\KepegawaianUniversitas\Usulan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -260,5 +261,229 @@ class UsulanPegawaiController extends Controller
         ];
 
         return response()->json($statistics);
+    }
+
+    /**
+     * Mendapatkan histori periode untuk sidebar
+     */
+    public function getHistoriPeriode(Request $request)
+    {
+        $pegawai = Auth::user();
+
+        // Daftar jenis usulan yang tersedia
+        $jenisUsulanOptions = [
+            'jabatan' => [
+                'title' => 'Usulan Jabatan',
+                'description' => 'Pengajuan kenaikan jabatan fungsional',
+                'icon' => 'trending-up',
+                'color' => 'blue',
+                'available' => $this->isUsulanAvailable('jabatan', $pegawai),
+                'route' => 'pegawai-unmul.usulan-jabatan.create'
+            ],
+            'pangkat' => [
+                'title' => 'Usulan Pangkat',
+                'description' => 'Pengajuan kenaikan pangkat',
+                'icon' => 'award',
+                'color' => 'green',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ],
+            'tunjangan' => [
+                'title' => 'Usulan Tunjangan',
+                'description' => 'Pengajuan tunjangan tambahan',
+                'icon' => 'dollar-sign',
+                'color' => 'yellow',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ],
+            'pensiun' => [
+                'title' => 'Usulan Pensiun',
+                'description' => 'Pengajuan pensiun dini atau reguler',
+                'icon' => 'calendar-x',
+                'color' => 'red',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ],
+            'mutasi' => [
+                'title' => 'Usulan Mutasi',
+                'description' => 'Pengajuan pindah unit kerja',
+                'icon' => 'map-pin',
+                'color' => 'purple',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ],
+            'cuti' => [
+                'title' => 'Usulan Cuti',
+                'description' => 'Pengajuan cuti tahunan atau khusus',
+                'icon' => 'calendar',
+                'color' => 'indigo',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ],
+            'pendidikan' => [
+                'title' => 'Usulan Pendidikan',
+                'description' => 'Pengajuan tugas belajar atau studi lanjut',
+                'icon' => 'book-open',
+                'color' => 'teal',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ],
+            'penelitian' => [
+                'title' => 'Usulan Penelitian',
+                'description' => 'Pengajuan penelitian atau pengabdian',
+                'icon' => 'flask',
+                'color' => 'orange',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ],
+            'pengabdian' => [
+                'title' => 'Usulan Pengabdian',
+                'description' => 'Pengajuan kegiatan pengabdian masyarakat',
+                'icon' => 'heart',
+                'color' => 'pink',
+                'available' => false, // Belum tersedia
+                'route' => null
+            ]
+        ];
+
+        return view('backend.layouts.views.pegawai-unmul.usulan-selector', [
+            'jenisUsulanOptions' => $jenisUsulanOptions
+        ]);
+    }
+
+    /**
+     * Mendapatkan data log untuk usulan tertentu (untuk modal)
+     */
+    public function getLogs(\App\Models\KepegawaianUniversitas\Usulan $usulan)
+    {
+        try {
+            $pegawai = Auth::user();
+            
+            // Verify this usulan belongs to the authenticated user
+            if ($usulan->pegawai_id !== $pegawai->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to this usulan'
+                ], 403);
+            }
+            
+            // Get logs for this usulan
+            $logs = $usulan->logs()
+                ->with('dilakukanOleh:id,nama_lengkap')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Transform logs to simple array to avoid accessor issues
+            $transformedLogs = $logs->map(function($log) {
+                return [
+                    'id' => $log->id,
+                    'status_sebelumnya' => $log->status_sebelumnya,
+                    'status_baru' => $log->status_baru,
+                    'catatan' => $log->catatan,
+                    'created_at' => $log->created_at->toISOString(),
+                    'dilakukan_oleh' => $log->dilakukanOleh ? [
+                        'id' => $log->dilakukanOleh->id,
+                        'nama_lengkap' => $log->dilakukanOleh->nama_lengkap
+                    ] : null
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'logs' => $transformedLogs,
+                'usulan_info' => [
+                    'id' => $usulan->id,
+                    'jenis_usulan' => $usulan->jenis_usulan,
+                    'status_saat_ini' => $usulan->status_usulan
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in getLogs', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat data log: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Menampilkan halaman logs-simple untuk usulan tertentu
+     */
+    public function showLogsSimple(\App\Models\KepegawaianUniversitas\Usulan $usulan)
+    {
+        try {
+            $pegawai = Auth::user();
+            
+            // Verify this usulan belongs to the authenticated user
+            if ($usulan->pegawai_id !== $pegawai->id) {
+                abort(403, 'Unauthorized access to this usulan');
+            }
+            
+            // Get logs for this usulan
+            $logs = $usulan->logs()
+                ->with('dilakukanOleh:id,nama_lengkap')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Transform logs to simple array to avoid accessor issues
+            $formattedLogs = [];
+            foreach ($logs as $log) {
+                // Get user name safely
+                $userName = 'System';
+                if ($log->dilakukan_oleh_id) {
+                    $user = \App\Models\KepegawaianUniversitas\Pegawai::find($log->dilakukan_oleh_id);
+                    if ($user) {
+                        $userName = $user->nama_lengkap;
+                    }
+                }
+
+                // Format date safely
+                $formattedDate = 'Unknown';
+                if ($log->created_at) {
+                    try {
+                        $formattedDate = $log->created_at->format('d F Y, H:i');
+                    } catch (\Exception $e) {
+                        $formattedDate = $log->created_at->toDateString();
+                    }
+                }
+
+                $formattedLogs[] = [
+                    'id' => $log->id,
+                    'status' => $log->status_baru ?? $log->status_sebelumnya ?? 'Unknown',
+                    'status_sebelumnya' => $log->status_sebelumnya,
+                    'status_baru' => $log->status_baru,
+                    'keterangan' => $log->catatan ?? 'No description',
+                    'user_name' => $userName,
+                    'formatted_date' => $formattedDate,
+                    'created_at' => $log->created_at ? $log->created_at->toISOString() : null,
+                ];
+            }
+
+            // Load usulan with relationships for the view
+            $usulanWithRelations = $usulan->load([
+                'pegawai',
+                'periodeUsulan',
+                'jabatanLama',
+                'jabatanTujuan'
+            ]);
+
+            // Return simple HTML view
+            return view('backend.layouts.views.pegawai-unmul.logs-usulan', [
+                'logs' => $formattedLogs,
+                'usulan' => $usulanWithRelations
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in showLogsSimple', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            abort(500, 'Gagal memuat data log: ' . $e->getMessage());
+        }
     }
 }

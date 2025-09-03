@@ -343,6 +343,7 @@
         <form action="{{ route('pegawai-unmul.usulan-kepangkatan.update', $usulan) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <input type="hidden" name="action" id="formAction" value="simpan">
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
                             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
                 <h2 class="text-xl font-bold text-white flex items-center">
@@ -945,127 +946,95 @@
 
 @push('scripts')
 <script>
-    // SweetAlert2 functions for pegawai-unmul usulan kepangkatan
+    // Global functions for usulan kepangkatan (SweetAlert2 already loaded in app.blade.php)
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('SweetAlert2 functions initialized for pegawai-unmul usulan kepangkatan');
+        console.log('Global functions initialized for usulan kepangkatan');
         
         // Global success handler
         window.showSuccess = function(message, title = 'Berhasil') {
-            Swal.fire({
-                icon: 'success',
-                title: title,
-                text: message,
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#10b981',
-                timer: 3000,
-                timerProgressBar: true
-            });
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: title,
+                    text: message,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#10b981',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            } else {
+                alert('Success: ' + message);
+            }
         };
         
         // Global error handler
         window.showError = function(message, title = 'Terjadi Kesalahan') {
-            Swal.fire({
-                icon: 'error',
-                title: title,
-                text: message,
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#ef4444'
-            });
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: title,
+                    text: message,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#ef4444'
+                });
+            } else {
+                alert('Error: ' + message);
+            }
         };
         
         // Global confirmation handler
         window.showConfirmation = function(message, title = 'Konfirmasi', callback) {
-            Swal.fire({
-                title: title,
-                text: message,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3b82f6',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Ya',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed && callback) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3b82f6',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed && callback) {
+                        callback();
+                    }
+                });
+            } else {
+                if (confirm(message)) {
                     callback();
                 }
-            });
+            }
         };
         
         // Global loading handler
         window.showLoading = function(message = 'Memproses...') {
-            Swal.fire({
-                title: message,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: message,
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            } else {
+                // Simple loading indicator
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'simpleLoading';
+                loadingDiv.innerHTML = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;"><div style="background: white; padding: 20px; border-radius: 8px;">' + message + '</div></div>';
+                document.body.appendChild(loadingDiv);
+            }
         };
         
         // Global close loading
         window.closeLoading = function() {
-            Swal.close();
-        };
-        
-        // Form submission success
-        window.handleFormSuccess = function(response) {
-            if (response.success) {
-                showSuccess(response.message || 'Data berhasil disimpan');
-                // Optional: redirect or refresh
-                if (response.redirect) {
-                    setTimeout(() => {
-                        window.location.href = response.redirect;
-                    }, 1500);
-                }
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
             } else {
-                showError(response.message || 'Terjadi kesalahan saat menyimpan data');
-            }
-        };
-        
-        // Form submission error
-        window.handleFormError = function(error) {
-            console.error('Form submission error:', error);
-            let errorMessage = 'Terjadi kesalahan saat memproses permintaan';
-            
-            if (error.response && error.response.data) {
-                if (error.response.data.message) {
-                    errorMessage = error.response.data.message;
-                } else if (error.response.data.errors) {
-                    const errors = Object.values(error.response.data.errors).flat();
-                    errorMessage = errors.join('\n');
+                const loadingDiv = document.getElementById('simpleLoading');
+                if (loadingDiv) {
+                    loadingDiv.remove();
                 }
-            } else if (error.message) {
-                errorMessage = error.message;
             }
-            
-            showError(errorMessage);
-        };
-        
-        // Status change confirmation
-        window.confirmStatusChange = function(statusName, callback) {
-            showConfirmation(
-                `Apakah Anda yakin ingin mengubah status menjadi "${statusName}"?`,
-                'Konfirmasi Perubahan Status',
-                callback
-            );
-        };
-        
-        // Document upload success
-        window.handleDocumentUploadSuccess = function(response) {
-            if (response.success) {
-                showSuccess('Dokumen berhasil diupload');
-                // Optional: refresh page or update UI
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showError(response.message || 'Gagal mengupload dokumen');
-            }
-        };
-        
-        // Document upload error
-        window.handleDocumentUploadError = function(error) {
-            handleFormError(error);
         };
     });
 </script>

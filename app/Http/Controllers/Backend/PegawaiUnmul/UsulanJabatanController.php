@@ -954,15 +954,6 @@ class UsulanJabatanController extends BaseUsulanController
     }
 
     /**
-     * Get usulan logs
-     * SIMPLIFIED: Back to standard {usulan} parameter
-     */
-    public function getLogs(UsulanModel $usulan)
-    {
-        return $this->getUsulanLogs($usulan);
-    }
-
-    /**
      * Debug method untuk development
      * SIMPLIFIED: Back to standard {usulan} parameter
      */

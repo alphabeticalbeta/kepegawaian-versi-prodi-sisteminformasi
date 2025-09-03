@@ -48,7 +48,7 @@ class PeriodeUsulanController extends Controller
             'pengaktifan-kembali' => 'usulan-pengaktifan-kembali'
         ];
         
-        $query = PeriodeUsulan::withCount('usulans');
+        $query = PeriodeUsulan::withCount(['usulans', 'usulansSubmitted']);
         
         // Filter berdasarkan jenis usulan jika parameter diberikan
         if ($jenisUsulan && $jenisUsulan !== 'all') {

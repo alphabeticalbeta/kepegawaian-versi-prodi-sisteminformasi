@@ -250,15 +250,36 @@ class UsulanLog extends Model
      */
     public function getActionDescription(): string
     {
+        // Use the fixed accessors that handle arrays
+        $statusBaru = $this->status_baru;
+        $statusSebelumnya = $this->status_sebelumnya;
+        $status = $this->status;
+        
+        // Convert arrays to strings if needed
+        if (is_array($statusBaru)) {
+            $statusBaru = json_encode($statusBaru);
+        }
+        if (is_array($statusSebelumnya)) {
+            $statusSebelumnya = json_encode($statusSebelumnya);
+        }
+        if (is_array($status)) {
+            $status = json_encode($status);
+        }
+        
+        // Convert null to empty string
+        $statusBaru = $statusBaru ?? '';
+        $statusSebelumnya = $statusSebelumnya ?? '';
+        $status = $status ?? '';
+        
         if ($this->isInitialLog()) {
-            return "Usulan dibuat dengan status {$this->status_baru}";
+            return "Usulan dibuat dengan status {$statusBaru}";
         }
 
         if ($this->isStatusChange()) {
-            return "Status diubah dari {$this->status_sebelumnya} ke {$this->status_baru}";
+            return "Status diubah dari {$statusSebelumnya} ke {$statusBaru}";
         }
 
-        return "Update pada usulan dengan status {$this->status}";
+        return "Update pada usulan dengan status {$status}";
     }
 
     /**

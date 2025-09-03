@@ -411,16 +411,16 @@ function changeStatus(newStatus) {
     
     // Show confirmation dialog for ALL status changes
     Swal.fire({
-        title: 'Konfirmasi Perubahan Status',
+        title: 'Konfirmasi Kirim Usulan',
         html: `
             <div class="text-center">
                 <div class="mb-4">
                     <i class="fas fa-exclamation-triangle text-6xl text-yellow-500"></i>
                 </div>
-                <p class="text-lg font-semibold text-gray-800 mb-2">Apakah Anda yakin ingin mengubah status usulan?</p>
+                <p class="text-lg font-semibold text-gray-800 mb-2">Apakah Anda yakin ingin mengirim usulan?</p>
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
                     <p class="text-sm text-blue-800">
-                        <strong>Status Baru:</strong> ${newStatus}
+                        <strong>Status Usulan:</strong> ${newStatus}
                     </p>
                 </div>
             </div>

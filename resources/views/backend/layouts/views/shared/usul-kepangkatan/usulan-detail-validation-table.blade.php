@@ -69,6 +69,84 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Field-Field Tidak Sesuai untuk Status Kepegawaian Universitas --}}
+            @php
+                $kepegawaianValidation = $usulan->getValidasiByRole('kepegawaian_universitas') ?? ['validation' => []];
+                $kepegawaianInvalidFields = [];
+                if (isset($kepegawaianValidation['validation'])) {
+                    foreach ($kepegawaianValidation['validation'] as $groupKey => $groupData) {
+                        if (is_array($groupData)) {
+                            foreach ($groupData as $fieldKey => $fieldData) {
+                                if (isset($fieldData['status']) && $fieldData['status'] === 'tidak_sesuai') {
+                                    $kepegawaianInvalidFields[] = [
+                                        'group' => $groupKey,
+                                        'field' => $fieldKey,
+                                        'keterangan' => $fieldData['keterangan'] ?? ''
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            @endphp
+
+            @if(!empty($kepegawaianInvalidFields))
+                <div class="bg-orange-50 border-b border-orange-200 px-6 py-4">
+                    <div class="flex items-start">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-orange-600 mr-3 mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold text-orange-800 mb-2">
+                                Field-Field Tidak Sesuai dari Kepegawaian Universitas:
+                            </div>
+                            <div class="space-y-2">
+                                @foreach($kepegawaianInvalidFields as $invalidField)
+                                    @php
+                                        $groupLabel = $config['validationFields'][$invalidField['group']] ?? ucfirst(str_replace('_', ' ', $invalidField['group']));
+                                        $fieldLabel = $fieldGroups[$invalidField['group']]['fields'][$invalidField['field']] ?? ucfirst(str_replace('_', ' ', $invalidField['field']));
+                                    @endphp
+                                    <div class="bg-white border border-orange-200 rounded-lg p-3">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <div class="text-sm font-medium text-orange-800">
+                                                    {{ $groupLabel }} - {{ $fieldLabel }}
+                                                </div>
+                                                @if(!empty($invalidField['keterangan']))
+                                                    <div class="text-sm text-orange-700 mt-1">
+                                                        <strong>Keterangan:</strong> {{ $invalidField['keterangan'] }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                                                Tidak Sesuai
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Keterangan Umum untuk Status Kepegawaian Universitas --}}
+                @if(!empty($kepegawaianValidation['keterangan_umum'] ?? ''))
+                    <div class="bg-purple-50 border-b border-purple-200 px-6 py-4">
+                        <div class="flex items-start">
+                            <i data-lucide="sticky-note" class="w-5 h-5 text-purple-600 mr-3 mt-0.5"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-purple-800 mb-2">
+                                    Keterangan Umum dari Kepegawaian Universitas:
+                                </div>
+                                <div class="bg-white border border-purple-200 rounded-lg p-3">
+                                    <div class="text-sm text-purple-700">
+                                        {{ $kepegawaianValidation['keterangan_umum'] }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endif
         @endif
 
         @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN)

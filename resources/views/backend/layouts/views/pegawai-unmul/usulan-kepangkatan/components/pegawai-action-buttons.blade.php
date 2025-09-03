@@ -183,73 +183,96 @@ function submitAction(action) {
 
 function processAction(action) {
     try {
-        // Try to find existing form
-        let actionForm = document.getElementById('actionForm');
-        let actionValue = document.getElementById('actionValue');
+        // Gunakan form utama yang sudah ada
+        let actionForm = document.querySelector('form[action*="usulan-kepangkatan"]');
+        let actionInput = document.getElementById('formAction');
         
-        // If form not found, create it dynamically
-        if (!actionForm || !actionValue) {
-            // Remove existing form if any
-            const existingForm = document.getElementById('actionForm');
-            if (existingForm) {
-                existingForm.remove();
+        if (actionForm && actionInput) {
+            // Set action dan submit form utama
+            actionInput.value = action;
+            
+            // Close loading SweetAlert2 jika ada
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
             }
             
-            // Create new form
-            actionForm = document.createElement('form');
-            actionForm.id = 'actionForm';
-            actionForm.action = '{{ route("pegawai-unmul.usulan-kepangkatan.update", $usulan) }}';
-            actionForm.method = 'POST';
-            actionForm.enctype = 'multipart/form-data';
-            actionForm.style.display = 'none';
-            
-            // Add CSRF token
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = '{{ csrf_token() }}';
-            actionForm.appendChild(csrfInput);
-            
-            // Add method override
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'PUT';
-            actionForm.appendChild(methodInput);
-            
-            // Add action input
-            actionValue = document.createElement('input');
-            actionValue.type = 'hidden';
-            actionValue.name = 'action';
-            actionValue.id = 'actionValue';
-            actionForm.appendChild(actionValue);
-            
-            // Add pangkat_tujuan_id
-            const pangkatInput = document.createElement('input');
-            pangkatInput.type = 'hidden';
-            pangkatInput.name = 'pangkat_tujuan_id';
-            pangkatInput.value = '{{ $usulan->pangkat_tujuan_id ?? "" }}';
-            actionForm.appendChild(pangkatInput);
-            
-            // Add form to body
-            document.body.appendChild(actionForm);
+            // Submit form utama
+            actionForm.submit();
+        } else {
+            // Fallback: buat form dinamis jika form utama tidak ditemukan
+            console.warn('Form utama tidak ditemukan, menggunakan fallback form dinamis');
+            createDynamicForm(action);
         }
         
-        // Set action value and submit
-        actionValue.value = action;
-        actionForm.submit();
-        
     } catch (error) {
+        console.error('Error in processAction:', error);
+        
         // Close loading if SweetAlert2 is available
         if (typeof Swal !== 'undefined') {
             Swal.close();
         }
-        // Show error message using global function if available
+        
+        // Show error message
         if (typeof window.showError === 'function') {
             window.showError('Terjadi kesalahan saat memproses aksi. Silakan coba lagi.');
         } else {
             alert('Terjadi kesalahan saat memproses aksi. Silakan coba lagi.');
         }
+    }
+}
+
+// Fallback function untuk membuat form dinamis jika diperlukan
+function createDynamicForm(action) {
+    try {
+        // Remove existing form if any
+        const existingForm = document.getElementById('actionForm');
+        if (existingForm) {
+            existingForm.remove();
+        }
+        
+        // Create new form
+        const actionForm = document.createElement('form');
+        actionForm.id = 'actionForm';
+        actionForm.action = '{{ route("pegawai-unmul.usulan-kepangkatan.update", $usulan) }}';
+        actionForm.method = 'POST';
+        actionForm.enctype = 'multipart/form-data';
+        actionForm.style.display = 'none';
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        actionForm.appendChild(csrfInput);
+        
+        // Add method override
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'PUT';
+        actionForm.appendChild(methodInput);
+        
+        // Add action input
+        const actionValue = document.createElement('input');
+        actionValue.type = 'hidden';
+        actionValue.name = 'action';
+        actionValue.value = action;
+        actionForm.appendChild(actionValue);
+        
+        // Add pangkat_tujuan_id
+        const pangkatInput = document.createElement('input');
+        pangkatInput.type = 'hidden';
+        pangkatInput.name = 'pangkat_tujuan_id';
+        pangkatInput.value = '{{ $usulan->pangkat_tujuan_id ?? "" }}';
+        actionForm.appendChild(pangkatInput);
+        
+        // Add form to body and submit
+        document.body.appendChild(actionForm);
+        actionForm.submit();
+        
+    } catch (error) {
+        console.error('Error creating dynamic form:', error);
+        alert('Terjadi kesalahan saat membuat form. Silakan coba lagi.');
     }
 }
 
