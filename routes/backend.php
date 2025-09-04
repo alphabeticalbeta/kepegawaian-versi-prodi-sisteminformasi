@@ -339,6 +339,10 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 // API route untuk menghitung usulan kepangkatan per jenis
                 Route::get('/{periodeUsulan}/usulan-kepangkatan-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'getUsulanKepangkatanCount'])
                     ->name('usulan-kepangkatan-count');
+
+                // API route untuk menghitung usulan NUPTK per jenis
+                Route::get('/{periodeUsulan}/usulan-nuptk-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'getUsulanNuptkCount'])
+                    ->name('usulan-nuptk-count');
             });
 
             // =====================================================
@@ -389,6 +393,12 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('validasi-kepangkatan');
                 Route::post('/{usulan}/validasi-kepangkatan', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'saveKepangkatanValidation'])
                     ->name('save-validasi-kepangkatan');
+
+                // Validasi NUPTK Routes
+                Route::get('/{usulan}/validasi-nuptk', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'showNuptkValidation'])
+                    ->name('validasi-nuptk');
+                Route::post('/{usulan}/validasi-nuptk', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'saveNuptkValidation'])
+                    ->name('save-validasi-nuptk');
                 
                 // Change Status Route
                 Route::post('/{usulan}/change-status', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'changeStatus'])
@@ -738,10 +748,14 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::prefix('usulan-kepangkatan')->name('usulan-kepangkatan.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'index'])
                     ->name('index');
+                Route::get('/create', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'create'])
+                    ->name('create');
                 Route::post('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'store'])
                     ->name('store');
                 Route::get('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'show'])
                     ->name('show');
+                Route::get('/{usulan}/create-kepangkatan', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'show'])
+                    ->name('create-kepangkatan');
                 Route::get('/{usulan}/edit', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'edit'])
                     ->name('edit');
                 Route::put('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'update'])
@@ -753,6 +767,41 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 // Route logs dihapus - digabung ke route utama
                 Route::get('/{usulanKepangkatan}/dokumen/{field}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanKepangkatanController::class, 'showDocument'])
                     ->name('show-document');
+            });
+
+            // =====================================================
+            // USULAN NUPTK ROUTES (STANDARDIZED)
+            // =====================================================
+            Route::prefix('usulan-nuptk')->name('usulan-nuptk.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'index'])
+                    ->name('index');
+                Route::get('/create', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'create'])
+                    ->name('create');
+                Route::post('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'store'])
+                    ->name('store');
+                // Route khusus untuk create-nuptk (seperti create-kepangkatan) - HARUS DI ATAS route {usulan}
+                Route::get('/{usulan}/create-nuptk', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'show'])
+                    ->name('create-nuptk');
+
+                // Submit to Kepegawaian
+                Route::post('/{usulan}/submit-to-kepegawaian', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'submitToKepegawaian'])
+                    ->name('submit-to-kepegawaian');
+
+                // API routes (STANDARDIZED)
+                // Route logs dihapus - digabung ke route utama
+                Route::get('/{usulan}/dokumen/{field}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'showDocument'])
+                    ->name('show-document');
+
+                Route::get('/{usulan}/edit', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'edit'])
+                    ->name('edit');
+                Route::put('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'update'])
+                    ->name('update');
+                Route::delete('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'destroy'])
+                    ->name('destroy');
+
+                // Route {usulan} harus di BAWAH route yang lebih spesifik
+                Route::get('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanNuptkController::class, 'show'])
+                    ->name('show');
             });
 
             // =====================================================

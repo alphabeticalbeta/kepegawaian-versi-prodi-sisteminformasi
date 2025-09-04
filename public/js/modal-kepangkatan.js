@@ -75,7 +75,6 @@ function fetchUsulanKepangkatanCount(periodeId, timeoutId) {
         }
     })
     .catch(error => {
-        console.error('Error fetching usulan count:', error);
         // Clear timeout dan gunakan fallback
         if (timeoutId) clearTimeout(timeoutId);
         fallbackToEvenDistribution(periodeId);
@@ -86,7 +85,7 @@ function fetchUsulanKepangkatanCount(periodeId, timeoutId) {
 function setLoadingState() {
     document.getElementById('count-dosen-pns').textContent = '...';
     document.getElementById('count-jabatan-administrasi').textContent = '...';
-    document.getElementById('count-jabatan-fungsional').textContent = '...';
+    document.getElementById('count-jabatan-fungsional-tertentu').textContent = '...';
     document.getElementById('count-jabatan-struktural').textContent = '...';
 }
 
@@ -94,7 +93,7 @@ function setLoadingState() {
 function updateCountsFromData(counts) {
     document.getElementById('count-dosen-pns').textContent = counts.dosen_pns || 0;
     document.getElementById('count-jabatan-administrasi').textContent = counts.jabatan_administrasi || 0;
-    document.getElementById('count-jabatan-fungsional').textContent = counts.jabatan_fungsional || 0;
+    document.getElementById('count-jabatan-fungsional-tertentu').textContent = counts.jabatan_fungsional_tertentu || 0;
     document.getElementById('count-jabatan-struktural').textContent = counts.jabatan_struktural || 0;
 }
 
@@ -110,7 +109,7 @@ function fallbackToEvenDistribution(periodeId) {
         
         document.getElementById('count-dosen-pns').textContent = countPerJenis + (remainder > 0 ? 1 : 0);
         document.getElementById('count-jabatan-administrasi').textContent = countPerJenis + (remainder > 1 ? 1 : 0);
-        document.getElementById('count-jabatan-fungsional').textContent = countPerJenis + (remainder > 2 ? 1 : 0);
+        document.getElementById('count-jabatan-fungsional-tertentu').textContent = countPerJenis + (remainder > 2 ? 1 : 0);
         document.getElementById('count-jabatan-struktural').textContent = countPerJenis;
     }
 }
@@ -119,7 +118,7 @@ function fallbackToEvenDistribution(periodeId) {
 function setAllCountsToZero() {
     document.getElementById('count-dosen-pns').textContent = '0';
     document.getElementById('count-jabatan-administrasi').textContent = '0';
-    document.getElementById('count-jabatan-fungsional').textContent = '0';
+    document.getElementById('count-jabatan-fungsional-tertentu').textContent = '0';
     document.getElementById('count-jabatan-struktural').textContent = '0';
 }
 
@@ -130,7 +129,6 @@ function lihatPengusulKepangkatan(jenisUsulan) {
     
     // Gunakan periode ID yang tersimpan
     if (!currentPeriodeId) {
-        console.error('Periode ID tidak tersedia');
         return;
     }
     
@@ -145,7 +143,6 @@ function lihatPengusulKepangkatan(jenisUsulan) {
     
     // Redirect ke halaman yang benar
     const finalUrl = `${redirectUrl}?${filterParams.toString()}`;
-    console.log('Redirecting to:', finalUrl);
     
     window.location.href = finalUrl;
 }

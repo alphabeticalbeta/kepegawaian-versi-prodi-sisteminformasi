@@ -5,8 +5,8 @@
         $viewOnlyStatuses = [
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS
         ];
         
@@ -14,7 +14,7 @@
         $editableStatuses = [
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER
         ];
         
         if (in_array($usulan->status_usulan, $editableStatuses)) {
@@ -52,21 +52,21 @@
                 </button>
             @endif
 
-            {{-- Kirim Usulan Perbaikan Dari BKN ke Kepegawaian Universitas --}}
-            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN)
-                <button type="button" onclick="submitAction('kirim_perbaikan_bkn_ke_kepegawaian')"
+            {{-- Kirim Usulan Perbaikan Dari Tim Sister ke Kepegawaian Universitas --}}
+            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER)
+                <button type="button" onclick="submitAction('kirim_perbaikan_tim_sister_ke_kepegawaian')"
                         class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105">
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    Kirim Usulan Perbaikan Dari BKN ke Kepegawaian Universitas
+                    Kirim Usulan Perbaikan Dari Tim Sister ke Kepegawaian Universitas
                 </button>
             @endif
 
-            {{-- Kirim Usulan Perbaikan Ke BKN --}}
-            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
-                <button type="button" onclick="submitAction('kirim_perbaikan_ke_bkn')"
+            {{-- Kirim Usulan Perbaikan Ke Tim Sister --}}
+            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_TIM_SISTER)
+                <button type="button" onclick="submitAction('kirim_perbaikan_ke_tim_sister')"
                         class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105">
                     <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim Usulan Perbaikan Ke BKN
+                    Kirim Usulan Perbaikan Ke Tim Sister
                 </button>
             @endif
         </div>
@@ -108,19 +108,19 @@ const actionConfigs = {
         confirmColor: '#f59e0b',
         loadingText: 'Mengirim usulan perbaikan ke Kepegawaian Universitas...'
     },
-    'kirim_perbaikan_bkn_ke_kepegawaian': {
-        title: 'Kirim Usulan Perbaikan dari BKN',
-        message: 'Apakah Anda yakin ingin mengirim usulan perbaikan dari BKN ini ke Kepegawaian Universitas? Pastikan semua field telah diperbaiki.',
+    'kirim_perbaikan_tim_sister_ke_kepegawaian': {
+        title: 'Kirim Usulan Perbaikan dari Tim Sister',
+        message: 'Apakah Anda yakin ingin mengirim usulan perbaikan dari Tim Sister ini ke Kepegawaian Universitas? Pastikan semua field telah diperbaiki.',
         icon: 'question',
         confirmColor: '#8b5cf6',
-        loadingText: 'Mengirim usulan perbaikan dari BKN ke Kepegawaian Universitas...'
+        loadingText: 'Mengirim usulan perbaikan dari Tim Sister ke Kepegawaian Universitas...'
     },
-    'kirim_perbaikan_ke_bkn': {
-        title: 'Kirim Usulan Perbaikan ke BKN',
-        message: 'Apakah Anda yakin ingin mengirim usulan perbaikan ini ke BKN? Usulan akan diproses oleh tim BKN.',
+    'kirim_perbaikan_ke_tim_sister': {
+        title: 'Kirim Usulan Perbaikan ke Tim Sister',
+        message: 'Apakah Anda yakin ingin mengirim usulan perbaikan ini ke Tim Sister? Usulan akan diproses oleh tim Sister.',
         icon: 'question',
         confirmColor: '#3b82f6',
-        loadingText: 'Mengirim usulan perbaikan ke BKN...'
+        loadingText: 'Mengirim usulan perbaikan ke Tim Sister...'
     }
 };
 
@@ -184,7 +184,7 @@ function submitAction(action) {
 function processAction(action) {
     try {
         // Gunakan form utama yang sudah ada
-        let actionForm = document.querySelector('form[action*="usulan-kepangkatan"]');
+        let actionForm = document.querySelector('form[action*="usulan-nuptk"]');
         let actionInput = document.getElementById('formAction');
         
         if (actionForm && actionInput) {
@@ -204,7 +204,6 @@ function processAction(action) {
         }
         
     } catch (error) {
-        
         // Close loading if SweetAlert2 is available
         if (typeof Swal !== 'undefined') {
             Swal.close();
@@ -231,7 +230,7 @@ function createDynamicForm(action) {
         // Create new form
         const actionForm = document.createElement('form');
         actionForm.id = 'actionForm';
-        actionForm.action = '{{ route("pegawai-unmul.usulan-kepangkatan.update", $usulan) }}';
+        actionForm.action = '{{ route("pegawai-unmul.usulan-nuptk.update", $usulan) }}';
         actionForm.method = 'POST';
         actionForm.enctype = 'multipart/form-data';
         actionForm.style.display = 'none';
@@ -257,12 +256,14 @@ function createDynamicForm(action) {
         actionValue.value = action;
         actionForm.appendChild(actionValue);
         
-        // Add pangkat_tujuan_id
-        const pangkatInput = document.createElement('input');
-        pangkatInput.type = 'hidden';
-        pangkatInput.name = 'pangkat_tujuan_id';
-        pangkatInput.value = '{{ $usulan->pangkat_tujuan_id ?? "" }}';
-        actionForm.appendChild(pangkatInput);
+        // Add jenis_nuptk if needed
+        if ('{{ $usulan->jenis_nuptk ?? "" }}') {
+            const nuptkInput = document.createElement('input');
+            nuptkInput.type = 'hidden';
+            nuptkInput.name = 'jenis_nuptk';
+            nuptkInput.value = '{{ $usulan->jenis_nuptk ?? "" }}';
+            actionForm.appendChild(nuptkInput);
+        }
         
         // Add form to body and submit
         document.body.appendChild(actionForm);

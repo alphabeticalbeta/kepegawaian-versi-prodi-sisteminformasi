@@ -208,7 +208,7 @@
                                             <div class="flex items-center">
                                                 <i data-lucide="briefcase" class="w-4 h-4 text-green-600 mr-2"></i>
                                                 <div>
-                                                    <div class="font-semibold">a. Jabatan Administrasi</div>
+                                                    <div class="font-semibold">Jabatan Administrasi</div>
                                                     <div class="text-xs text-gray-500">Pengajuan kenaikan pangkat untuk jabatan administrasi</div>
                                                 </div>
                                             </div>
@@ -220,7 +220,7 @@
                                             <div class="flex items-center">
                                                 <i data-lucide="award" class="w-4 h-4 text-purple-600 mr-2"></i>
                                                 <div>
-                                                    <div class="font-semibold">b. Jabatan Fungsional Tertentu</div>
+                                                    <div class="font-semibold">Jabatan Fungsional Tertentu</div>
                                                     <div class="text-xs text-gray-500">Pengajuan kenaikan pangkat untuk jabatan fungsional tertentu</div>
                                                 </div>
                                             </div>
@@ -232,7 +232,7 @@
                                             <div class="flex items-center">
                                                 <i data-lucide="building" class="w-4 h-4 text-red-600 mr-2"></i>
                                                 <div>
-                                                    <div class="font-semibold">c. Jabatan Struktural</div>
+                                                    <div class="font-semibold">Jabatan Struktural</div>
                                                     <div class="text-xs text-gray-500">Pengajuan kenaikan pangkat untuk jabatan struktural</div>
                                                 </div>
                                             </div>
@@ -325,7 +325,7 @@
                                             <div class="flex items-center">
                                                 <i data-lucide="briefcase" class="w-3 h-3 text-green-600 mr-1"></i>
                                                 <div>
-                                                    <div class="font-semibold">a. Jabatan Administrasi</div>
+                                                    <div class="font-semibold">Jabatan Administrasi</div>
                                                     <div class="text-xs text-gray-500">Jabatan administrasi</div>
                                                 </div>
                                             </div>
@@ -337,7 +337,7 @@
                                             <div class="flex items-center">
                                                 <i data-lucide="award" class="w-3 h-3 text-purple-600 mr-1"></i>
                                                 <div>
-                                                    <div class="font-semibold">b. Jabatan Fungsional Tertentu</div>
+                                                    <div class="font-semibold">Jabatan Fungsional Tertentu</div>
                                                     <div class="text-xs text-gray-500">Jabatan fungsional tertentu</div>
                                                 </div>
                                             </div>
@@ -349,7 +349,7 @@
                                             <div class="flex items-center">
                                                 <i data-lucide="building" class="w-3 h-3 text-red-600 mr-1"></i>
                                                 <div>
-                                                    <div class="font-semibold">c. Jabatan Struktural</div>
+                                                    <div class="font-semibold">Jabatan Struktural</div>
                                                     <div class="text-xs text-gray-500">Jabatan struktural</div>
                                                 </div>
                                             </div>
@@ -445,7 +445,6 @@ function showLogs(usulanId) {
             }
         })
         .catch(error => {
-            console.error('Error loading logs:', error);
             content.innerHTML = `
                 <div class="text-center py-8">
                     <i data-lucide="alert-triangle" class="w-12 h-12 text-red-400 mx-auto mb-4"></i>
@@ -626,7 +625,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize SweetAlert2 functions for index page
-    console.log('SweetAlert2 functions initialized for pegawai-unmul usulan kepangkatan index');
     
     // Global success handler
     window.showSuccess = function(message, title = 'Berhasil') {

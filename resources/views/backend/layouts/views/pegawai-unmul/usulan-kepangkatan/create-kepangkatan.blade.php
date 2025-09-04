@@ -80,14 +80,20 @@
         <div class="mb-6">
             @php
                 $statusColors = [
-                    'Draft' => 'bg-gray-100 text-gray-800 border-gray-300',
-                    'Diajukan' => 'bg-blue-100 text-blue-800 border-blue-300',
-                    'Sedang Direview' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-                    'Disetujui' => 'bg-green-100 text-green-800 border-green-300',
-                    'Direkomendasikan' => 'bg-purple-100 text-purple-800 border-purple-300',
-                    'Ditolak' => 'bg-red-100 text-red-800 border-red-300',
-                    'Dikembalikan ke Pegawai' => 'bg-orange-100 text-orange-800 border-orange-300',
-                    'Perlu Perbaikan' => 'bg-amber-100 text-amber-800 border-amber-300',
+                    // Draft statuses (Editable)
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800 border-gray-300',
+                    
+                    // View-only statuses
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-blue-100 text-blue-800 border-blue-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-green-100 text-green-800 border-green-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN => 'bg-purple-100 text-purple-800 border-purple-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN => 'bg-green-100 text-green-800 border-green-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-amber-100 text-amber-800 border-amber-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN => 'bg-amber-100 text-amber-800 border-amber-300',
+                    
+                    // Editable statuses (Permintaan perbaikan)
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS => 'bg-orange-100 text-orange-800 border-orange-300',
+                    \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN => 'bg-orange-100 text-orange-800 border-orange-300',
                 ];
                 $statusColor = $statusColors[$usulan->status_usulan] ?? 'bg-gray-100 text-gray-800 border-gray-300';
             @endphp
@@ -96,7 +102,144 @@
             </div>
         </div>
 
+        @php
+            // Cek kelengkapan data profil untuk usulan kepangkatan
+            $requiredFields = [
+                'nama_lengkap', 'nip', 'email', 'tempat_lahir', 'tanggal_lahir',
+                'jenis_kelamin', 'nomor_handphone', 'gelar_belakang',
+                'nama_universitas_sekolah', 'nama_prodi_jurusan',
+                'ijazah_terakhir', 'transkrip_nilai_terakhir', 'sk_pangkat_terakhir',
+                'sk_jabatan_terakhir', 'skp_tahun_pertama', 'skp_tahun_kedua'
+            ];
 
+            // Tambahkan field khusus untuk usulan kepangkatan
+            if ($pegawai->jenis_pegawai === 'Dosen') {
+                $requiredFields[] = 'sk_cpns';
+                $requiredFields[] = 'sk_pns';
+            }
+
+            $missingFields = [];
+            foreach ($requiredFields as $field) {
+                if (empty($pegawai->$field)) {
+                    $missingFields[] = $field;
+                }
+            }
+
+            $isProfileComplete = empty($missingFields);
+            $canProceed = $isProfileComplete;
+
+            // Jika mode edit atau show, pastikan form tetap ditampilkan
+            if (isset($isEditMode) && $isEditMode) {
+                $canProceed = true;
+            }
+        @endphp
+
+        {{-- Profile Incomplete Warning --}}
+        @if(!$canProceed)
+            <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-5">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3"></i>
+                        Profil Tidak Lengkap
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="w-5 h-5 text-red-600 mr-2 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-red-800">Data Profil Wajib Dilengkapi</h4>
+                                <p class="text-sm text-red-700 mt-1">
+                                    Untuk dapat membuat usulan kepangkatan, Anda harus melengkapi data profil terlebih dahulu. 
+                                    Berikut adalah field yang masih kosong:
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach($missingFields as $field)
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                                <div class="flex items-center">
+                                    <i data-lucide="x-circle" class="w-4 h-4 text-red-500 mr-2"></i>
+                                    <span class="text-sm text-red-800 font-medium">
+                                        @switch($field)
+                                            @case('nama_lengkap')
+                                                Nama Lengkap
+                                                @break
+                                            @case('nip')
+                                                NIP
+                                                @break
+                                            @case('email')
+                                                Email
+                                                @break
+                                            @case('tempat_lahir')
+                                                Tempat Lahir
+                                                @break
+                                            @case('tanggal_lahir')
+                                                Tanggal Lahir
+                                                @break
+                                            @case('jenis_kelamin')
+                                                Jenis Kelamin
+                                                @break
+                                            @case('nomor_handphone')
+                                                Nomor Handphone
+                                                @break
+                                            @case('gelar_belakang')
+                                                Gelar Belakang
+                                                @break
+                                            @case('nama_universitas_sekolah')
+                                                Nama Universitas/Sekolah
+                                                @break
+                                            @case('nama_prodi_jurusan')
+                                                Nama Program Studi/Jurusan
+                                                @break
+                                            @case('ijazah_terakhir')
+                                                Ijazah Terakhir
+                                                @break
+                                            @case('transkrip_nilai_terakhir')
+                                                Transkrip Nilai Terakhir
+                                                @break
+                                            @case('sk_pangkat_terakhir')
+                                                SK Pangkat Terakhir
+                                                @break
+                                            @case('sk_jabatan_terakhir')
+                                                SK Jabatan Terakhir
+                                                @break
+                                            @case('skp_tahun_pertama')
+                                                SKP Tahun {{ date('Y') - 1 }}
+                                                @break
+                                            @case('skp_tahun_kedua')
+                                                SKP Tahun {{ date('Y') - 2 }}
+                                                @break
+                                            @case('sk_cpns')
+                                                SK CPNS
+                                                @break
+                                            @case('sk_pns')
+                                                SK PNS
+                                                @break
+                                            @default
+                                                {{ ucwords(str_replace('_', ' ', $field)) }}
+                                        @endswitch
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    <div class="mt-6 flex justify-center">
+                        <a href="{{ route('pegawai-unmul.profile.show') }}" 
+                           class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            My Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Form Content --}}
+        @if($canProceed)
 
         {{-- Field Validation Display --}}
         @php
@@ -242,10 +385,11 @@
                         @php
                             $dokumenUsulanFields = [
                                 'dokumen_ukom_sk_jabatan',
-                                'dokumen_pendukung_jabatan_administrasi',
-                                'dokumen_pendukung_jabatan_fungsional_tertentu',
+                                'surat_pencantuman_gelar',
+                                'surat_lulus_ujian_dinas',
+                                'dokumen_uji_kompetensi',
                                 'surat_pelantikan_berita_acara',
-                                'surat_pencantuman_gelar'
+                                'sertifikat_diklat_pim_pkm'
                             ];
                         @endphp
                         
@@ -263,14 +407,16 @@
                                                 <span class="text-sm font-medium @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN) text-purple-800 @elseif($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN) text-blue-800 @else text-red-800 @endif">
                                                     @if($fieldKey === 'dokumen_ukom_sk_jabatan')
                                                         Dokumen UKOM dan SK Jabatan
-                                                    @elseif($fieldKey === 'dokumen_pendukung_jabatan_administrasi')
-                                                        Dokumen Pendukung Jabatan Administrasi
-                                                    @elseif($fieldKey === 'dokumen_pendukung_jabatan_fungsional_tertentu')
-                                                        Dokumen Pendukung Jabatan Fungsional Tertentu
-                                                    @elseif($fieldKey === 'surat_pelantikan_berita_acara')
-                                                        Surat Pelantikan dan Berita Acara Jabatan Terakhir
                                                     @elseif($fieldKey === 'surat_pencantuman_gelar')
                                                         Surat Pencantuman Gelar
+                                                    @elseif($fieldKey === 'surat_lulus_ujian_dinas')
+                                                        Surat Lulus Ujian Dinas
+                                                    @elseif($fieldKey === 'dokumen_uji_kompetensi')
+                                                        Surat Uji Kompetensi
+                                                    @elseif($fieldKey === 'surat_pelantikan_berita_acara')
+                                                        Surat Pelantikan dan Berita Acara Jabatan Terakhir
+                                                    @elseif($fieldKey === 'sertifikat_diklat_pim_pkm')
+                                                        Sertifikat Diklat / PIM / PKM
                                                     @else
                                                         {{ ucwords(str_replace('_', ' ', $fieldKey)) }}
                                                     @endif
@@ -940,6 +1086,7 @@
 
         {{-- Action Buttons untuk Pegawai --}}
         @include('backend.layouts.views.pegawai-unmul.usulan-kepangkatan.components.pegawai-action-buttons')
+        @endif
         </form>
     </div>
 </div>
@@ -948,7 +1095,6 @@
 <script>
     // Global functions for usulan kepangkatan (SweetAlert2 already loaded in app.blade.php)
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Global functions initialized for usulan kepangkatan');
         
         // Global success handler
         window.showSuccess = function(message, title = 'Berhasil') {

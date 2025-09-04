@@ -1713,11 +1713,14 @@ class UsulanValidationController extends Controller
         if ($jenisUsulanPangkat === 'Dosen PNS') {
             $fieldGroups['dokumen_usulan']['fields']['dokumen_ukom_sk_jabatan'] = 'Dokumen UKOM dan SK Jabatan';
         } elseif ($jenisUsulanPangkat === 'Jabatan Administrasi') {
-            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_administrasi'] = 'Dokumen Pendukung Administrasi';
+            $fieldGroups['dokumen_usulan']['fields']['surat_pencantuman_gelar'] = 'Surat Pencantuman Gelar';
+            $fieldGroups['dokumen_usulan']['fields']['surat_lulus_ujian_dinas'] = 'Surat Lulus Ujian Dinas';
         } elseif ($jenisUsulanPangkat === 'Jabatan Fungsional Tertentu') {
-            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_fungsional'] = 'Dokumen Pendukung Fungsional';
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_uji_kompetensi'] = 'Surat Uji Kompetensi';
         } elseif ($jenisUsulanPangkat === 'Jabatan Struktural') {
-            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_struktural'] = 'Dokumen Pendukung Struktural';
+            $fieldGroups['dokumen_usulan']['fields']['surat_pelantikan_berita_acara'] = 'Surat Pelantikan dan Berita Acara Jabatan Terakhir';
+            $fieldGroups['dokumen_usulan']['fields']['surat_pencantuman_gelar'] = 'Surat Pencantuman Gelar';
+            $fieldGroups['dokumen_usulan']['fields']['sertifikat_diklat_pim_pkm'] = 'Sertifikat Diklat / PIM / PKM';
         }
 
         // Configuration untuk view
@@ -1928,6 +1931,335 @@ class UsulanValidationController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Failed to save kepangkatan validation', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menyimpan validasi: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Show validation form untuk usulan NUPTK
+     */
+    public function showNuptkValidation(Usulan $usulan)
+    {
+        // Load relationships yang diperlukan
+        $usulan = $usulan->load([
+            'pegawai.unitKerja.subUnitKerja.unitKerja',
+            'pegawai.pangkat',
+            'pegawai.jabatan',
+            'periodeUsulan'
+        ]);
+
+        // Cek apakah usulan adalah jenis NUPTK
+        if ($usulan->jenis_usulan !== 'usulan-nuptk') {
+            return redirect()->back()->with('error', 'Halaman ini hanya untuk usulan NUPTK.');
+        }
+
+        // Get existing validation data
+        $existingValidation = $usulan->getValidasiByRole('kepegawaian_universitas') ?? [];
+        
+        // Get current role (hardcoded untuk kepegawaian universitas)
+        $currentRole = 'Kepegawaian Universitas';
+
+        // Field groups configuration untuk usulan NUPTK
+        $fieldGroups = [
+            'data_pribadi' => [
+                'label' => 'Data Pribadi',
+                'icon' => 'user',
+                'fields' => [
+                    'jenis_pegawai' => 'Jenis Pegawai',
+                    'status_kepegawaian' => 'Status Kepegawaian',
+                    'nip' => 'NIP',
+                    'nuptk' => 'NUPTK',
+                    'gelar_depan' => 'Gelar Depan',
+                    'nama_lengkap' => 'Nama Lengkap',
+                    'gelar_belakang' => 'Gelar Belakang',
+                    'email' => 'Email',
+                    'tempat_lahir' => 'Tempat Lahir',
+                    'tanggal_lahir' => 'Tanggal Lahir',
+                    'jenis_kelamin' => 'Jenis Kelamin',
+                    'nomor_handphone' => 'Nomor Handphone'
+                ]
+            ],
+            'data_kepegawaian' => [
+                'label' => 'Data Kepegawaian',
+                'icon' => 'briefcase',
+                'fields' => [
+                    'jabatan_saat_usul' => 'Jabatan Saat Ini',
+                    'tmt_jabatan' => 'TMT Jabatan',
+                    'tmt_cpns' => 'TMT CPNS',
+                    'tmt_pns' => 'TMT PNS',
+                    'unit_kerja_saat_usul' => 'Unit Kerja'
+                ]
+            ],
+            'data_pendidikan' => [
+                'label' => 'Data Pendidikan & Fungsional',
+                'icon' => 'graduation-cap',
+                'fields' => [
+                    'pendidikan_terakhir' => 'Pendidikan Terakhir',
+                    'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
+                    'nama_prodi_jurusan' => 'Program Studi/Jurusan',
+                    'jenis_nuptk' => 'Jenis NUPTK'
+                ]
+            ],
+            'data_kinerja' => [
+                'label' => 'Data Kinerja',
+                'icon' => 'trending-up',
+                'fields' => [
+                    'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
+                    'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2)
+                ]
+            ],
+            'dokumen_profil' => [
+                'label' => 'Dokumen Profil',
+                'icon' => 'folder',
+                'fields' => [
+                    'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
+                    'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
+                    'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
+                    'sk_cpns' => 'SK CPNS',
+                    'sk_pns' => 'SK PNS',
+                    'ijazah_terakhir' => 'Ijazah Terakhir',
+                    'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir'
+                ]
+            ],
+            'dokumen_usulan' => [
+                'label' => 'Dokumen Usulan',
+                'icon' => 'file-text',
+                'fields' => []
+            ]
+        ];
+
+        // Add dynamic fields based on jenis NUPTK
+        $jenisNuptk = $usulan->jenis_nuptk ?? '';
+        
+        if ($jenisNuptk === 'dosen_tetap') {
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_dosen_tetap'] = 'Dokumen Pendukung Dosen Tetap';
+        } elseif ($jenisNuptk === 'dosen_tidak_tetap') {
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_dosen_tidak_tetap'] = 'Dokumen Pendukung Dosen Tidak Tetap';
+        } elseif ($jenisNuptk === 'pengajar_non_dosen') {
+            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_pengajar'] = 'Dokumen Pendukung Pengajar Non Dosen';
+        }
+
+        // Get validation configuration
+        $config = [
+            'validationFields' => [
+                'data_pribadi' => 'Data Pribadi',
+                'data_kepegawaian' => 'Data Kepegawaian',
+                'data_pendidikan' => 'Data Pendidikan & Fungsional',
+                'data_kinerja' => 'Data Kinerja',
+                'dokumen_profil' => 'Dokumen Profil',
+                'dokumen_usulan' => 'Dokumen Usulan'
+            ]
+        ];
+
+        // Check if usulan is in view-only status
+        $viewOnlyStatuses = [
+            Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER,
+            Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER,
+            Usulan::STATUS_DIREKOMENDASIKAN_SISTER
+        ];
+        
+        $isViewOnly = in_array($usulan->status_usulan, $viewOnlyStatuses);
+
+        return view('backend.layouts.views.kepegawaian-universitas.usulan.validasi-nuptk', compact(
+            'usulan',
+            'existingValidation',
+            'fieldGroups',
+            'config',
+            'currentRole',
+            'isViewOnly'
+        ));
+    }
+
+    /**
+     * Save validasi field-by-field untuk usulan NUPTK
+     */
+    public function saveNuptkValidation(Request $request, Usulan $usulan)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'validation' => 'required|array',
+                'keterangan_umum' => 'nullable|string|max:1000'
+            ]);
+
+            // Get validation data
+            $rawValidationData = $request->input('validation');
+            $keteranganUmum = $request->input('keterangan_umum');
+
+            // Debug logging untuk keterangan umum
+            Log::info('Keterangan umum received in saveNuptkValidation', [
+                'usulan_id' => $usulan->id,
+                'keterangan_umum_raw' => $keteranganUmum,
+                'keterangan_umum_type' => gettype($keteranganUmum),
+                'keterangan_umum_empty' => empty($keteranganUmum),
+                'keterangan_umum_null' => is_null($keteranganUmum),
+                'request_all' => $request->all()
+            ]);
+
+            // Validate that rawValidationData is not null and is an array
+            if (empty($rawValidationData) || !is_array($rawValidationData)) {
+                throw new \Exception('Data validasi tidak valid atau kosong');
+            }
+
+            // Additional validation: check if any group contains non-array data
+            foreach ($rawValidationData as $groupKey => $groupData) {
+                if (!is_array($groupData)) {
+                    throw new \Exception("Group '$groupKey' berisi data dengan tipe '" . gettype($groupData) . "', seharusnya array");
+                }
+            }
+
+            // Log raw data structure for debugging
+            Log::info('Raw validation data structure', [
+                'usulan_id' => $usulan->id,
+                'raw_data_keys' => array_keys($rawValidationData),
+                'raw_data_types' => array_map(function($item) { return gettype($item); }, $rawValidationData),
+                'sample_data' => array_slice($rawValidationData, 0, 2, true), // First 2 items for debugging
+                'raw_data_full' => $rawValidationData // Full data for debugging
+            ]);
+
+            // Deep log each group and field for debugging
+            foreach ($rawValidationData as $groupKey => $groupData) {
+                Log::info("Group: $groupKey", [
+                    'group_data_type' => gettype($groupData),
+                    'group_data' => $groupData
+                ]);
+                
+                if (is_array($groupData)) {
+                    foreach ($groupData as $fieldKey => $fieldData) {
+                        Log::info("Field: $groupKey.$fieldKey", [
+                            'field_data_type' => gettype($fieldData),
+                            'field_data' => $fieldData,
+                            'has_status' => is_array($fieldData) && isset($fieldData['status'])
+                        ]);
+                    }
+                }
+            }
+
+            // Process and restructure validation data
+            $validationData = [];
+            
+            // Process each group (data_pribadi, data_kepegawaian, etc.)
+            foreach ($rawValidationData as $groupKey => $groupData) {
+                // Skip if groupData is not an array or is empty
+                if (!is_array($groupData) || empty($groupData)) {
+                    Log::warning('Skipping invalid group data', [
+                        'group_key' => $groupKey,
+                        'group_data' => $groupData,
+                        'group_data_type' => gettype($groupData)
+                    ]);
+                    continue;
+                }
+                
+                $validationData[$groupKey] = [];
+                
+                // Process each field in the group
+                foreach ($groupData as $fieldKey => $fieldData) {
+                    // Skip if fieldData is not an array or doesn't have status
+                    if (!is_array($fieldData) || !isset($fieldData['status'])) {
+                        Log::warning('Skipping invalid field data', [
+                            'group_key' => $groupKey,
+                            'field_key' => $fieldKey,
+                            'field_data' => $fieldData,
+                            'field_data_type' => gettype($fieldData),
+                            'field_data_value' => $fieldData
+                        ]);
+                        continue;
+                    }
+                    
+                    // Additional validation: ensure status is string and keterangan is string
+                    $status = $fieldData['status'] ?? 'sesuai';
+                    $keterangan = $fieldData['keterangan'] ?? '';
+
+                    // Validate status value
+                    if (!in_array($status, ['sesuai', 'tidak_sesuai', 'belum_ada'])) {
+                        Log::warning('Invalid status value', [
+                            'group_key' => $groupKey,
+                            'field_key' => $fieldKey,
+                            'status' => $status
+                        ]);
+                        $status = 'sesuai'; // Default to 'sesuai' if invalid
+                    }
+
+                    // Validate keterangan length
+                    if (strlen($keterangan) > 500) {
+                        $keterangan = substr($keterangan, 0, 500);
+                        Log::warning('Keterangan truncated', [
+                            'group_key' => $groupKey,
+                            'field_key' => $fieldKey,
+                            'original_length' => strlen($fieldData['keterangan']),
+                            'truncated_length' => strlen($keterangan)
+                        ]);
+                    }
+
+                    $validationData[$groupKey][$fieldKey] = [
+                        'status' => $status,
+                        'keterangan' => $keterangan,
+                        'validated_at' => now()->toISOString(),
+                        'validated_by' => Auth::id()
+                    ];
+                }
+            }
+
+            // Save validation data with role 'kepegawaian_universitas'
+            $usulan->setValidasiByRole('kepegawaian_universitas', $validationData, Auth::id(), $keteranganUmum);
+            $usulan->save();
+
+            // Log the validation
+            Log::info('NUPTK validation saved', [
+                'usulan_id' => $usulan->id,
+                'validated_by' => Auth::id(),
+                'keterangan_umum' => $keteranganUmum,
+                'validation_data' => $validationData
+            ]);
+
+            // Save keterangan umum if provided
+            if (!empty($keteranganUmum)) {
+                $currentValidasi = $usulan->validasi_data ?? [];
+                
+                if (!isset($currentValidasi['kepegawaian_universitas'])) {
+                    $currentValidasi['kepegawaian_universitas'] = [];
+                }
+                
+                $currentValidasi['kepegawaian_universitas']['keterangan_umum'] = $keteranganUmum;
+                $usulan->validasi_data = $currentValidasi;
+                
+                // Debug logging untuk keterangan umum
+                Log::info('Keterangan umum saved for NUPTK', [
+                    'usulan_id' => $usulan->id,
+                    'keterangan_umum' => $keteranganUmum,
+                    'current_validasi_structure' => $currentValidasi['kepegawaian_universitas']
+                ]);
+            } else {
+                Log::info('No keterangan umum to save for NUPTK', [
+                    'usulan_id' => $usulan->id,
+                    'keterangan_umum' => $keteranganUmum
+                ]);
+            }
+
+            // Save usulan to persist keterangan_umum changes
+            $usulan->save();
+
+            // Update usulan status if needed
+            if ($usulan->status_usulan === 'Usulan Dikirim ke Kepegawaian Universitas') {
+                $usulan->status_usulan = 'Usulan Sedang Divalidasi Kepegawaian Universitas';
+                $usulan->save();
+            }
+
+            // Clear caches
+            $cacheKey = "usulan_validation_{$usulan->id}_kepegawaian_universitas";
+            Cache::forget($cacheKey);
+
+            return redirect()->route('backend.kepegawaian-universitas.usulan.index')
+                ->with('success', 'Simpan Validasi Berhasil! Data validasi usulan NUPTK telah disimpan.');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to save NUPTK validation', [
                 'usulan_id' => $usulan->id,
                 'error' => $e->getMessage()
             ]);

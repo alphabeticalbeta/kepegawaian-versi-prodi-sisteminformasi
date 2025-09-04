@@ -91,7 +91,7 @@ class ValidationService
      */
     public function canSubmitPerbaikanFromSister(Usulan $usulan): bool
     {
-        return $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER;
+        return $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER;
     }
 
     /**
@@ -100,7 +100,7 @@ class ValidationService
     public function canSubmitToAdminUnivUsulan(Usulan $usulan): bool
     {
         return in_array($usulan->status_usulan, [
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS
         ]);
     }

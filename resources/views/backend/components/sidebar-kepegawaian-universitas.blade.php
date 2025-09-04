@@ -91,7 +91,7 @@
             <a href="{{ route('backend.kepegawaian-universitas.dashboard') }}"
                class="flex items-center px-4 py-3 rounded-lg group transition {{ request()->routeIs('backend.kepegawaian-universitas.dashboard') ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
                 <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                <span class="font-medium sidebar-text">Dashboard Semua Usulan</span>
+                <span class="font-medium sidebar-text">Dashboard</span>
             </a>
         </div>
 
@@ -148,7 +148,49 @@
                 {{-- PERBAIKAN: Kelas .sidebar-text dihapus dari ikon ini --}}
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform {{ $isUsulanActive ? 'rotate-180' : '' }}"></i>
             </button>
-                        <div id="dropdown-usulan" class="dropdown-menu {{ $isUsulanActive ? '' : 'hidden' }} space-y-1 pl-4 mt-1">
+                <div id="dropdown-usulan" class="dropdown-menu {{ $isUsulanActive ? '' : 'hidden' }} space-y-1 pl-4 mt-1">
+                {{-- Dropdown untuk Usulan Jabatan --}}
+                @php 
+                    $isJabatanActive = in_array(request()->get('jenis'), ['jabatan-dosen-regular', 'jabatan-dosen-pengangkatan']);
+                @endphp
+                <div class="relative nested-dropdown-container">
+                    <button type="button"
+                            class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg group transition {{ $isJabatanActive ? 'bg-gray-100 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}"
+                            aria-controls="dropdown-jabatan-nested"
+                            data-collapse-toggle="dropdown-jabatan-nested"
+                            data-nested="true"
+                            aria-expanded="{{ $isJabatanActive ? 'true' : 'false' }}">
+                        <div class="flex items-center">
+                            <i data-lucide="file-user" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                            <span class="font-medium sidebar-text">Usulan Jabatan</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform {{ $isJabatanActive ? 'rotate-180' : '' }}"></i>
+                    </button>
+                    <div id="dropdown-jabatan-nested" class="dropdown-menu nested-dropdown {{ $isJabatanActive ? '' : 'hidden' }} space-y-1 pl-4 mt-1">
+                        <div class="relative">
+                            <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'jabatan-dosen-regular']) }}"
+                               class="flex items-center px-3 py-2.5 rounded-lg transition {{ request()->get('jenis') == 'jabatan-dosen-regular' ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+                                <i data-lucide="user-graduate" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                                <span class="font-medium sidebar-text">Jabatan Dosen Regular</span>
+                            </a>
+                        </div>
+                        <div class="relative">
+                            <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'jabatan-dosen-pengangkatan']) }}"
+                               class="flex items-center px-3 py-2.5 rounded-lg transition {{ request()->get('jenis') == 'jabatan-dosen-pengangkatan' ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+                                <i data-lucide="user-plus" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                                <span class="font-medium sidebar-text">Jabatan Dosen Pengangkatan Pertama</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'kepangkatan']) }}"
+                       class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'kepangkatan' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
+                        <i data-lucide="trending-up" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                        <span class="font-medium sidebar-text">Usulan Kepangkatan</span>
+                    </a>
+                </div>
+                
                 <div class="relative">
                     <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'nuptk']) }}"
                        class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'nuptk' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
@@ -185,41 +227,6 @@
                     </a>
                 </div>
 
-                {{-- Dropdown untuk Usulan Jabatan --}}
-                @php 
-                    $isJabatanActive = in_array(request()->get('jenis'), ['jabatan-dosen-regular', 'jabatan-dosen-pengangkatan']);
-                @endphp
-                <div class="relative nested-dropdown-container">
-                    <button type="button"
-                            class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg group transition {{ $isJabatanActive ? 'bg-gray-100 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}"
-                            aria-controls="dropdown-jabatan-nested"
-                            data-collapse-toggle="dropdown-jabatan-nested"
-                            data-nested="true"
-                            aria-expanded="{{ $isJabatanActive ? 'true' : 'false' }}">
-                        <div class="flex items-center">
-                            <i data-lucide="file-user" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                            <span class="font-medium sidebar-text">Usulan Jabatan</span>
-                        </div>
-                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform {{ $isJabatanActive ? 'rotate-180' : '' }}"></i>
-                    </button>
-                    <div id="dropdown-jabatan-nested" class="dropdown-menu nested-dropdown {{ $isJabatanActive ? '' : 'hidden' }} space-y-1 pl-4 mt-1">
-                        <div class="relative">
-                            <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'jabatan-dosen-regular']) }}"
-                               class="flex items-center px-3 py-2.5 rounded-lg transition {{ request()->get('jenis') == 'jabatan-dosen-regular' ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
-                                <i data-lucide="user-graduate" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                                <span class="font-medium sidebar-text">Jabatan Dosen Regular</span>
-                            </a>
-                        </div>
-                        <div class="relative">
-                            <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'jabatan-dosen-pengangkatan']) }}"
-                               class="flex items-center px-3 py-2.5 rounded-lg transition {{ request()->get('jenis') == 'jabatan-dosen-pengangkatan' ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
-                                <i data-lucide="user-plus" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                                <span class="font-medium sidebar-text">Jabatan Dosen Pengangkatan Pertama</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="relative">
                     <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'laporan-serdos']) }}"
                        class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'laporan-serdos' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
@@ -232,13 +239,6 @@
                        class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'pensiun' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
                         <i data-lucide="user-minus" class="w-5 h-5 mr-3 flex-shrink-0"></i>
                         <span class="font-medium sidebar-text">Usulan Pensiun</span>
-                    </a>
-                </div>
-                <div class="relative">
-                    <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'kepangkatan']) }}"
-                       class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'kepangkatan' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
-                        <i data-lucide="trending-up" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                        <span class="font-medium sidebar-text">Usulan Kepangkatan</span>
                     </a>
                 </div>
                 <div class="relative">

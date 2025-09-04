@@ -33,14 +33,6 @@ class UsulanKepangkatanController extends Controller
         // Determine jenis usulan berdasarkan status kepegawaian
         $jenisUsulanPeriode = $this->determineJenisUsulanPeriode($pegawai);
 
-        // Debug information
-        Log::info('UsulanKepangkatanController@index Debug', [
-            'pegawai_id' => $pegawai->id,
-            'pegawai_nip' => $pegawai->nip,
-            'jenis_pegawai' => $pegawai->jenis_pegawai,
-            'status_kepegawaian' => $pegawai->status_kepegawaian,
-            'jenis_usulan_periode' => $jenisUsulanPeriode
-        ]);
 
         // Get periode usulan yang sesuai dengan status kepegawaian
         $periodeUsulans = PeriodeUsulan::where('jenis_usulan', $jenisUsulanPeriode)
@@ -49,12 +41,6 @@ class UsulanKepangkatanController extends Controller
             ->orderBy('tanggal_mulai', 'desc')
             ->get();
 
-        // Debug query results
-        Log::info('Periode Usulan Query Results', [
-            'total_periode_found' => $periodeUsulans->count(),
-            'periode_ids' => $periodeUsulans->pluck('id')->toArray(),
-            'periode_names' => $periodeUsulans->pluck('nama_periode')->toArray()
-        ]);
 
         // Alternative query if no results
         if ($periodeUsulans->count() == 0) {
@@ -64,11 +50,6 @@ class UsulanKepangkatanController extends Controller
                 ->orderBy('tanggal_mulai', 'desc')
                 ->get();
 
-            Log::info('Alternative Query Results (without JSON contains)', [
-                'total_periode_found' => $altPeriodeUsulans->count(),
-                'periode_ids' => $altPeriodeUsulans->pluck('id')->toArray(),
-                'periode_names' => $altPeriodeUsulans->pluck('nama_periode')->toArray()
-            ]);
 
             // Use alternative results if found
             if ($altPeriodeUsulans->count() > 0) {
@@ -82,13 +63,6 @@ class UsulanKepangkatanController extends Controller
                           ->with(['periodeUsulan'])
                           ->get();
 
-        // Debug usulan yang ditemukan
-        Log::info('Usulan yang ditemukan untuk pegawai', [
-            'pegawai_id' => $pegawai->id,
-            'jenis_usulan_periode' => $jenisUsulanPeriode,
-            'total_usulan_found' => $usulans->count(),
-            'usulan_ids' => $usulans->pluck('id')->toArray()
-        ]);
 
         // Get status kepegawaian dari pegawai
         $statusKepegawaian = $pegawai->status_kepegawaian ?? null;
@@ -130,7 +104,7 @@ class UsulanKepangkatanController extends Controller
                                  ->first();
         
         if ($existingUsulan) {
-            return redirect()->route('pegawai-unmul.usulan-kepangkatan.show', $existingUsulan->id)
+            return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $existingUsulan->id)
                              ->with('info', 'Anda sudah memiliki usulan untuk periode ini.');
         }
         
@@ -140,6 +114,7 @@ class UsulanKepangkatanController extends Controller
                 'pegawai_id' => $pegawai->id,
                 'periode_usulan_id' => $request->periode_id,
                 'jenis_usulan' => 'usulan-kepangkatan',
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
                 'status_usulan' => Usulan::STATUS_DRAFT_USULAN,
                 'data_usulan' => [
                     'jenis_usulan_pangkat' => $request->jenis_usulan,
@@ -158,7 +133,7 @@ class UsulanKepangkatanController extends Controller
                 'catatan' => 'Usulan berhasil dibuat'
             ]);
             
-            return redirect()->route('pegawai-unmul.usulan-kepangkatan.show', $usulan->id)
+            return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan->id)
                              ->with('success', 'Usulan Kepangkatan berhasil dibuat. Silakan lengkapi data dan dokumen pendukung.');
                              
         } catch (\Exception $e) {
@@ -194,7 +169,10 @@ class UsulanKepangkatanController extends Controller
             'pangkatTujuan'
         ]);
 
-        return view('backend.layouts.views.pegawai-unmul.usulan-kepangkatan.show', compact('usulan'));
+        // Get pegawai data for profile completeness check
+        $pegawai = $usulan->pegawai;
+
+        return view('backend.layouts.views.pegawai-unmul.usulan-kepangkatan.create-kepangkatan', compact('usulan', 'pegawai'));
     }
 
     /**
@@ -208,7 +186,7 @@ class UsulanKepangkatanController extends Controller
         }
 
         // Redirect ke halaman show karena pengeditan bisa dilakukan langsung di sana
-        return redirect()->route('pegawai-unmul.usulan-kepangkatan.show', $usulan);
+        return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan);
     }
 
     /**
@@ -292,7 +270,7 @@ class UsulanKepangkatanController extends Controller
         // Save documents to usulan_dokumens table
         $this->saveUsulanDocuments($usulan, $dokumenPaths, $usulan->pegawai);
 
-        return redirect()->route('pegawai-unmul.usulan-kepangkatan.show', $usulan)
+        return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan)
             ->with('success', 'Usulan berhasil disimpan.');
     }
 
@@ -356,7 +334,7 @@ class UsulanKepangkatanController extends Controller
             'catatan' => 'Usulan berhasil dikirim'
         ]);
 
-        return redirect()->route('pegawai-unmul.usulan-kepangkatan.show', $usulan)
+        return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan)
             ->with('success', 'Usulan berhasil dikirim ke Kepegawaian Universitas.');
     }
 
@@ -420,7 +398,7 @@ class UsulanKepangkatanController extends Controller
             'catatan' => 'Perbaikan usulan berhasil dikirim'
         ]);
 
-        return redirect()->route('pegawai-unmul.usulan-kepangkatan.show', $usulan)
+        return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan)
             ->with('success', 'Perbaikan usulan berhasil dikirim ke Kepegawaian Universitas.');
     }
 
@@ -484,7 +462,7 @@ class UsulanKepangkatanController extends Controller
             'catatan' => 'Perbaikan usulan dari BKN berhasil dikirim'
         ]);
 
-        return redirect()->route('pegawai-unmul.usulan-kepangkatan.show', $usulan)
+        return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan)
             ->with('success', 'Perbaikan usulan dari BKN berhasil dikirim ke Kepegawaian Universitas.');
     }
 
@@ -501,8 +479,6 @@ class UsulanKepangkatanController extends Controller
         // Pastikan usulan masih dalam status yang bisa dihapus
         $deletableStatuses = [
             'Draft Usulan',
-            'Usulan Dikirim ke Kepegawaian Universitas',
-            'Usulan Perbaikan Dari Pegawai Ke Kepegawaian Universitas'
         ];
 
         if (!in_array($usulan->status_usulan, $deletableStatuses) && !is_null($usulan->status_usulan)) {
@@ -572,12 +548,6 @@ class UsulanKepangkatanController extends Controller
                         'uploaded_by' => $usulan->pegawai->id,
                     ];
 
-                    Log::info("Document uploaded successfully", [
-                        'document_key' => $key,
-                        'file_path' => $path,
-                        'file_size' => $file->getSize(),
-                        'pegawai_id' => $usulan->pegawai->id
-                    ]);
 
                 } catch (\Throwable $e) {
                     Log::error("Failed to upload document", [
@@ -607,7 +577,7 @@ class UsulanKepangkatanController extends Controller
         } elseif ($jenisUsulanPangkat === 'Jabatan Administrasi') {
             $baseKeys = ['surat_pencantuman_gelar', 'surat_lulus_ujian_dinas'];
         } elseif ($jenisUsulanPangkat === 'Jabatan Fungsional Tertentu') {
-            $baseKeys = ['dokumen_uji_kompetensi', 'sk_penyetaraan_ijazah'];
+            $baseKeys = ['dokumen_uji_kompetensi'];
         } elseif ($jenisUsulanPangkat === 'Jabatan Struktural') {
             $baseKeys = ['surat_pelantikan_berita_acara', 'surat_pencantuman_gelar', 'sertifikat_diklat_pim_pkm'];
         }

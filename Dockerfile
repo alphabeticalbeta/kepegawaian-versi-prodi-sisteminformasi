@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable redis \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
+# Copy custom PHP configuration
+COPY php.ini /usr/local/etc/php/conf.d/custom.ini
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

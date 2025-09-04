@@ -105,7 +105,7 @@
                     </div>
                 @endif
 
-                @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER)
+                @if($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER)
                     {{-- Sister correction request --}}
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
@@ -575,7 +575,7 @@
                         </button>
                     </div>
                 </div>
-            @elseif($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER)
+            @elseif($usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER)
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 mr-2"></i>

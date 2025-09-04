@@ -21,6 +21,7 @@
         @php
             $usulanMenus = [
                 ['route' => route('pegawai-unmul.usulan-jabatan.index'), 'icon' => 'file-user', 'label' => 'Usulan Jabatan', 'pattern' => 'pegawai-unmul.usulan-jabatan.*'],
+                ['route' => route('pegawai-unmul.usulan-kepangkatan.index'), 'icon' => 'trending-up', 'label' => 'Usulan Kepangkatan', 'pattern' => 'pegawai-unmul.usulan-kepangkatan.*'],
                 ['route' => route('pegawai-unmul.usulan-nuptk.index'), 'icon' => 'user-check', 'label' => 'Usulan NUPTK', 'pattern' => 'pegawai-unmul.usulan-nuptk.*'],
                 ['route' => route('pegawai-unmul.usulan-laporan-lkd.index'), 'icon' => 'file-bar-chart-2', 'label' => 'Usulan Laporan LKD', 'pattern' => 'pegawai-unmul.usulan-laporan-lkd.*'],
                 ['route' => route('pegawai-unmul.usulan-presensi.index'), 'icon' => 'clipboard-check', 'label' => 'Usulan Presensi', 'pattern' => 'pegawai-unmul.usulan-presensi.*'],
@@ -28,7 +29,7 @@
                 ['route' => route('pegawai-unmul.usulan-ujian-dinas-ijazah.index'), 'icon' => 'book-marked', 'label' => 'Usulan Ujian Dinas & Ijazah', 'pattern' => 'pegawai-unmul.usulan-ujian-dinas-ijazah.*'],
                 ['route' => route('pegawai-unmul.usulan-laporan-serdos.index'), 'icon' => 'file-check-2', 'label' => 'Usulan Laporan Serdos', 'pattern' => 'pegawai-unmul.usulan-laporan-serdos.*'],
                 ['route' => route('pegawai-unmul.usulan-pensiun.index'), 'icon' => 'user-minus', 'label' => 'Usulan Pensiun', 'pattern' => 'pegawai-unmul.usulan-pensiun.*'],
-                ['route' => route('pegawai-unmul.usulan-kepangkatan.index'), 'icon' => 'trending-up', 'label' => 'Usulan Kepangkatan', 'pattern' => 'pegawai-unmul.usulan-kepangkatan.*'],
+
                 ['route' => route('pegawai-unmul.usulan-pencantuman-gelar.index'), 'icon' => 'graduation-cap', 'label' => 'Usulan Pencantuman Gelar', 'pattern' => 'pegawai-unmul.usulan-pencantuman-gelar.*'],
                 ['route' => route('pegawai-unmul.usulan-id-sinta-sister.index'), 'icon' => 'link', 'label' => 'Usulan ID SINTA ke SISTER', 'pattern' => 'pegawai-unmul.usulan-id-sinta-sister.*'],
                 ['route' => route('pegawai-unmul.usulan-satyalancana.index'), 'icon' => 'medal', 'label' => 'Usulan Satyalancana', 'pattern' => 'pegawai-unmul.usulan-satyalancana.*'],

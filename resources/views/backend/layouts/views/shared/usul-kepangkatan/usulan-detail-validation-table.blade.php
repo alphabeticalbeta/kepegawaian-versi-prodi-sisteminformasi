@@ -366,7 +366,8 @@
                                                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
                                                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
                                                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN &&
-                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT;
+                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT &&
+                                                $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS;
 
                                     // Get penilai validation data if exists
                                     $penilaiInvalidStatus = null;
@@ -529,7 +530,8 @@
                                                   $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
                                                   $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
                                                   $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN &&
-                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT;
+                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT &&
+                                                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS;
                         @endphp
                         <tr class="bg-gray-50">
                             <td colspan="3" class="px-6 py-6">
@@ -635,7 +637,8 @@
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN &&
-                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT)
+                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT &&
+                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)
             <button type="submit" id="saveValidationBtn" 
                     class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                 <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>

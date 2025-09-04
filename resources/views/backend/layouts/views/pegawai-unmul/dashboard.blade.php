@@ -3,263 +3,163 @@
 @section('title', 'Dashboard Pegawai')
 
 @section('content')
-
-    @php
-    // Cek apakah ada usulan yang perlu diperbaiki
-        $usulanPerluPerbaikan = $usulans->firstWhere('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS);
-    @endphp
-
-    @if($usulanPerluPerbaikan)
-        <div class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 rounded-lg mb-6 shadow-md" role="alert">
-            <div class="flex">
-                <div class="py-1"><svg class="fill-current h-6 w-6 text-orange-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 5v6h2V5H9zm0 8h2v2H9v-2z"/></svg></div>
-                <div>
-                    <p class="font-bold">Aksi Diperlukan</p>
-                    <p class="text-sm">Satu atau lebih usulan Anda telah dikembalikan dan memerlukan perbaikan. Silakan periksa detailnya di bawah.</p>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <!-- Header Section -->
+        <div class="relative overflow-hidden bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 shadow-2xl">
+            <div class="absolute inset-0 bg-black opacity-10"></div>
+            <div class="relative px-6 py-16 sm:px-8 sm:py-24">
+                <div class="mx-auto max-w-4xl text-center">
+                    <div class="mb-8">
+                        <div class="mx-auto h-24 w-24 rounded-full bg-white bg-opacity-20 flex items-center justify-center backdrop-blur-sm overflow-hidden">
+                            <img src="{{ asset('images/logo-unmul.png') }}" alt="Logo UNMUL" class="h-16 w-16 object-contain">
                 </div>
             </div>
-        </div>
-    @endif
-
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {{-- Notifikasi sudah ditangani oleh component flash di layout base --}}
-
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">
-                Riwayat Usulan Saya
+                    <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl mb-6">
+                        Selamat Datang
             </h1>
-            <p class="mt-2 text-gray-600">
-                Pantau status dan riwayat semua usulan yang telah Anda ajukan.
-            </p>
-        </div>
-
-        <div class="bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-800">
-                        Daftar Usulan
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Berikut adalah semua usulan yang pernah Anda buat.
+                    <p class="text-xl text-blue-100 sm:text-2xl font-medium">
+                        Website Pegawai UNMUL
                     </p>
+                    <div class="mt-8">
+                        <div class="inline-flex items-center px-6 py-3 rounded-full bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30">
+                            <svg class="h-5 w-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-white font-medium">Sistem Terintegrasi</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-600">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                        <tr>
-                            <th scope="col" class="px-6 py-4">Jenis Usulan</th>
-                            <th scope="col" class="px-6 py-4">Periode</th>
-                            <th scope="col" class="px-6 py-4">Tanggal Pengajuan</th>
-                            <th scope="col" class="px-6 py-4 text-center">Status</th>
-                            <th scope="col" class="px-6 py-4 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            // Function to get display status based on current status and role
-                            function getDisplayStatus($usulan, $currentRole) {
-                                $status = $usulan->status_usulan;
-
-                                // Mapping status berdasarkan alur kerja yang diminta
-                                switch ($status) {
-                                    // Status untuk Pegawai
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS:
-                                        return 'Usulan Dikirim ke Admin Fakultas';
-
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS:
-                                        if ($currentRole === 'Pegawai') {
-                                            return 'Permintaan Perbaikan dari Admin Fakultas';
-                                        }
-                                        break;
-
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS:
-                                        if ($currentRole === 'Pegawai') {
-                                            return \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS;
-                                        }
-                                        break;
-
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
-                                        if ($currentRole === 'Pegawai') {
-                                            return 'Permintaan Perbaikan dari Penilai Universitas';
-                                        }
-                                        break;
-
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS:
-                                        if ($currentRole === 'Pegawai') {
-                                            return 'Usulan Perbaikan dari Penilai Universitas';
-                                        }
-                                        break;
-
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER:
-                                        return 'Permintaan Perbaikan Usulan dari Tim Sister';
-
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER:
-                                        return 'Usulan Sudah Dikirim ke Sister';
-
-                                    // Status baru untuk Kepegawaian Universitas
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS:
-                                        return 'Direkomendasikan Kepegawaian Universitas';
-                                    
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS:
-                                        return 'Tidak Direkomendasikan Kepegawaian Universitas';
-
-                                    // Status baru untuk BKN
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN:
-                                        return 'Direkomendasikan BKN';
-                                    
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN:
-                                        return 'Tidak Direkomendasikan BKN';
-
-                                    // Status baru untuk Sister
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER:
-                                        return 'Direkomendasikan Sister';
-                                    
-                                    case \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER:
-                                        return 'Tidak Direkomendasikan Sister';
-
-                                    default:
-                                        return $status;
-                                }
-
-                                return $status;
-                            }
-
-                            // Status colors mapping
-                            $statusColors = [
-                                // Status lama (fallback)
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS => 'bg-blue-100 text-blue-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS => 'bg-yellow-100 text-yellow-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS => 'bg-orange-100 text-orange-800',
-
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS => 'bg-green-100 text-green-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800',
-
-                                // Status baru untuk Kepegawaian Universitas
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-green-100 text-green-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800',
-
-                                // Status baru untuk BKN
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN => 'bg-green-100 text-green-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN => 'bg-red-100 text-red-800',
-
-                                // Status baru untuk Sister
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER => 'bg-green-100 text-green-800',
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER => 'bg-red-100 text-red-800',
-
-                                // Status baru
-                                'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
-                                'Permintaan Perbaikan dari Admin Fakultas' => 'bg-orange-100 text-orange-800',
-
-                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-orange-100 text-orange-800',
-                                'Permintaan Perbaikan dari Penilai Universitas' => 'bg-red-100 text-red-800',
-                                'Usulan Perbaikan dari Penilai Universitas' => 'bg-orange-100 text-orange-800',
-                                'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-red-100 text-red-800',
-                                'Usulan Sudah Dikirim ke Sister' => 'bg-blue-100 text-blue-800',
-                            ];
-                        @endphp
-                        @forelse ($usulans as $usulan)
-                            <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
-                                <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{{ \App\Helpers\UsulanHelper::formatJenisUsulan($usulan->jenis_usulan) }}</td>
-                                <td class="px-6 py-4">{{ $usulan->periodeUsulan->nama_periode }}</td>
-                                <td class="px-6 py-4">{{ $usulan->created_at->isoFormat('D MMMM YYYY') }}</td>
-                                <td class="px-6 py-4 text-center">
-                                    @php
-                                        // Get display status
-                                        $displayStatus = getDisplayStatus($usulan, 'Pegawai');
-                                        $statusColor = $statusColors[$displayStatus] ?? 'bg-gray-100 text-gray-800';
-                                    @endphp
-                                    <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColor }}">
-                                        {{ $displayStatus }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex justify-center space-x-2">
-                                        @php
-                                            // Tentukan route berdasarkan jenis usulan
-                                            $routeName = match($usulan->jenis_usulan) {
-                                                'usulan-jabatan' => 'pegawai-unmul.usulan-jabatan',
-                                                'usulan-kepangkatan' => 'pegawai-unmul.usulan-kepangkatan',
-                                                'usulan-id-sinta-sister' => 'pegawai-unmul.usulan-id-sinta-sister',
-                                                'usulan-laporan-lkd' => 'pegawai-unmul.usulan-laporan-lkd',
-                                                'usulan-laporan-serdos' => 'pegawai-unmul.usulan-laporan-serdos',
-                                                'usulan-nuptk' => 'pegawai-unmul.usulan-nuptk',
-                                                'usulan-pencantuman-gelar' => 'pegawai-unmul.usulan-pencantuman-gelar',
-                                                'usulan-pengaktifan-kembali' => 'pegawai-unmul.usulan-pengaktifan-kembali',
-                                                'usulan-pensiun' => 'pegawai-unmul.usulan-pensiun',
-                                                'usulan-penyesuaian-masa-kerja' => 'pegawai-unmul.usulan-penyesuaian-masa-kerja',
-                                                'usulan-presensi' => 'pegawai-unmul.usulan-presensi',
-                                                'usulan-satyalancana' => 'pegawai-unmul.usulan-satyalancana',
-                                                'usulan-tugas-belajar' => 'pegawai-unmul.usulan-tugas-belajar',
-                                                'usulan-ujian-dinas-ijazah' => 'pegawai-unmul.usulan-ujian-dinas-ijazah',
-                                                default => 'pegawai-unmul.usulan-jabatan'
-                                            };
-
-                                            // Tentukan apakah bisa edit atau hanya lihat detail
-                                            $canEdit = in_array($usulan->status_usulan, [
-                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
-                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS,
-                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS,
-                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS,
-                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                                                \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
-                                            ]);
-                                            $actionRoute = $canEdit ? $routeName . '.edit' : $routeName . '.show';
-                                        @endphp
-
-                                        @if(in_array($usulan->status_usulan, [
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_ADMIN_FAKULTAS,
-                                            \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_DARI_PENILAI_UNIVERSITAS
-                                        ]))
-                                            <a href="{{ route($actionRoute, $usulan) }}"
-                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200">
-                                                <i data-lucide="edit" class="w-3 h-3 mr-1"></i>
-                                                Perbaiki Usulan
-                                            </a>
-                                        @else
-                                            <a href="{{ route($actionRoute, $usulan) }}"
-                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 transition-colors duration-200">
-                                                <i data-lucide="eye" class="w-3 h-3 mr-1"></i>
-                                                Detail
-                                            </a>
-                                        @endif
-                                        <a href="{{ route('pegawai-unmul.usulan.logs-simple', $usulan) }}" 
-                                           target="_blank"
-                                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200">
-                                            <i data-lucide="history" class="w-3 h-3 mr-1"></i>
-                                            Log
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr class="bg-white border-b">
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                                    <div class="flex flex-col items-center">
-                                        <i data-lucide="file-x" class="w-12 h-12 text-gray-300 mb-4"></i>
-                                        <p class="text-lg font-medium text-gray-400">Belum ada usulan</p>
-                                        <p class="text-sm text-gray-400">Anda belum pernah membuat usulan apapun.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if ($usulans->hasPages())
-                <div class="p-4 border-t border-gray-200">
-                {{ $usulans->links() }}
-                </div>
-            @endif
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div class="absolute top-0 right-0 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
         </div>
 
+        <!-- Main Content Section -->
+        <div class="relative z-10 -mt-16 px-6 sm:px-8">
+            <div class="mx-auto max-w-7xl">
+                <!-- Welcome Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <!-- Card 1: Usulan -->
+                    <div class="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300 border-l-4 border-blue-500">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-blue-100 rounded-full">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="ml-3 text-lg font-semibold text-gray-900">Usulan</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm">Buat dan kelola usulan kepegawaian dengan mudah dan efisien</p>
+                    </div>
 
+                    <!-- Card 2: Monitoring -->
+                    <div class="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300 border-l-4 border-green-500">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-green-100 rounded-full">
+                                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="ml-3 text-lg font-semibold text-gray-900">Monitoring</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm">Pantau status usulan dan progress secara real-time</p>
+                    </div>
+
+                    <!-- Card 3: Profil -->
+                    <div class="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300 border-l-4 border-purple-500">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 bg-purple-100 rounded-full">
+                                <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="ml-3 text-lg font-semibold text-gray-900">Profil</h3>
+                        </div>
+                        <p class="text-gray-600 text-sm">Kelola data pribadi dan dokumen kepegawaian</p>
+                    </div>
+                </div>
+
+                <!-- Welcome Message -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8 text-center mb-12">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="mb-6">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
+                                <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">
+                            Selamat Datang di Sistem Pegawai UNMUL
+                        </h2>
+                        <p class="text-lg text-gray-600 leading-relaxed">
+                            Kami menyediakan platform terintegrasi untuk mengelola semua aspek kepegawaian Anda. 
+                            Dari pembuatan usulan hingga monitoring status, semuanya dapat diakses dengan mudah dan efisien.
+                        </p>
+                        <div class="mt-8 flex flex-wrap justify-center gap-4">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Sistem Terintegrasi
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Real-time Monitoring
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                User-Friendly Interface
+                            </div>
+                        </div>
+                                    </div>
+                                    </div>
+
+                <!-- Footer Section -->
+                <div class="text-center pb-12">
+                    <div class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full">
+                        <svg class="h-5 w-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-gray-700 font-medium">Powered by UNMUL Technology</span>
+            </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    
+    <style>
+        @keyframes blob {
+            0% {
+                transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+            100% {
+                transform: translate(0px, 0px) scale(1);
+            }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+    </style>
 @endsection
 
 

@@ -140,7 +140,7 @@ class UsulanLog extends Model
             Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800 border-purple-300',
             Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT => 'bg-purple-100 text-purple-800 border-purple-300',
             Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER => 'bg-blue-100 text-blue-800 border-blue-300',
-            Usulan::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER => 'bg-red-100 text-red-800 border-red-300',
+            Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER => 'bg-red-100 text-red-800 border-red-300',
             
             // Draft status constants
             Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800 border-gray-300',

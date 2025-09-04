@@ -885,7 +885,7 @@
                                 Kirim Perbaikan ke Penilai Universitas
                             </button>
             
-                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_USULAN_DARI_TIM_SISTER)
+                        @elseif($isEditMode && $usulan && $usulan->status_usulan === UsulanModel::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER)
                             <button type="button" onclick="showConfirmationModal('submit_perbaikan_tim_sister', document.getElementById('usulan-form'))"
                                     class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i>

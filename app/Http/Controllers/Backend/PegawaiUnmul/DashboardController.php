@@ -23,31 +23,8 @@ class DashboardController extends Controller
         // Get pegawai data
         $pegawai = Pegawai::findOrFail($pegawaiId);
 
-        // Get all usulans with pagination
-        $usulans = Usulan::where('pegawai_id', $pegawaiId)
-            ->with(['periodeUsulan', 'jabatanLama', 'jabatanTujuan'])
-            ->latest()
-            ->paginate(10);
-
-        // Get usulan statistics
-        $usulanStats = $this->getUsulanStatistics($pegawaiId);
-
-        // Get recent usulans
-        $recentUsulans = $this->getRecentUsulans($pegawaiId);
-
-        // Get active periods
-        $activePeriods = $this->getActivePeriods();
-
-        // Get chart data
-        $chartData = $this->getChartData($pegawaiId);
-
         return view('backend.layouts.views.pegawai-unmul.dashboard', [
             'pegawai' => $pegawai,
-            'usulans' => $usulans,
-            'usulanStats' => $usulanStats,
-            'recentUsulans' => $recentUsulans,
-            'activePeriods' => $activePeriods,
-            'chartData' => $chartData,
             'user' => Auth::user()
         ]);
     }

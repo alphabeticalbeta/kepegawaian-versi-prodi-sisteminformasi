@@ -77,6 +77,7 @@ class UsulanPegawaiController extends Controller
         return match($jenisUsulan) {
             'jabatan' => redirect()->route('pegawai-unmul.usulan-jabatan.create'),
             'pangkat' => redirect()->route('pegawai-unmul.usulan-pangkat.create'),
+            'nuptk' => redirect()->route('pegawai-unmul.usulan-nuptk.create'),
             'tunjangan' => redirect()->route('pegawai-unmul.usulan-tunjangan.create'),
             'pensiun' => redirect()->route('pegawai-unmul.usulan-pensiun.create'),
             'mutasi' => redirect()->route('pegawai-unmul.usulan-mutasi.create'),
@@ -106,11 +107,19 @@ class UsulanPegawaiController extends Controller
                 'available' => $this->isUsulanAvailable('jabatan', $pegawai),
                 'route' => 'pegawai-unmul.usulan-jabatan.create'
             ],
+            'nuptk' => [
+                'title' => 'Usulan NUPTK',
+                'description' => 'Pengajuan Nomor Unik Pendidik dan Tenaga Kependidikan',
+                'icon' => 'user-check',
+                'color' => 'green',
+                'available' => $this->isUsulanAvailable('nuptk', $pegawai),
+                'route' => 'pegawai-unmul.usulan-nuptk.create'
+            ],
             'pangkat' => [
                 'title' => 'Usulan Pangkat',
                 'description' => 'Pengajuan kenaikan pangkat',
                 'icon' => 'award',
-                'color' => 'green',
+                'color' => 'emerald',
                 'available' => false, // Belum tersedia
                 'route' => null
             ],
@@ -161,6 +170,7 @@ class UsulanPegawaiController extends Controller
     {
         return match($jenisUsulan) {
             'jabatan' => $this->isJabatanUsulanAvailable($pegawai),
+            'nuptk' => $this->isNuptkUsulanAvailable($pegawai),
             'pangkat' => false, // Implementasi nanti
             'tunjangan' => false, // Implementasi nanti
             default => false
@@ -197,6 +207,40 @@ class UsulanPegawaiController extends Controller
         $hasActiveUsulan = $pegawai->usulans()
             ->where('jenis_usulan', $jenisUsulanPeriode)
                             ->whereNotIn('status_usulan', [\App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS, \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS])
+            ->exists();
+
+        return !$hasActiveUsulan;
+    }
+
+    /**
+     * Cek apakah usulan NUPTK tersedia
+     */
+    protected function isNuptkUsulanAvailable($pegawai): bool
+    {
+        // Cek status kepegawaian
+        $eligibleStatuses = ['Dosen PNS', 'Tenaga Kependidikan PNS'];
+        if (!in_array($pegawai->status_kepegawaian, $eligibleStatuses)) {
+            return false;
+        }
+
+        // Cek periode aktif
+        $activePeriod = PeriodeUsulan::where('jenis_usulan', 'usulan-nuptk')
+            ->where('status', 'Buka')
+            ->where('tanggal_mulai', '<=', now())
+            ->where('tanggal_selesai', '>=', now())
+            ->exists();
+
+        if (!$activePeriod) {
+            return false;
+        }
+
+        // Cek usulan aktif
+        $hasActiveUsulan = $pegawai->usulans()
+            ->where('jenis_usulan', 'usulan-nuptk')
+            ->whereNotIn('status_usulan', [
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS, 
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS
+            ])
             ->exists();
 
         return !$hasActiveUsulan;
