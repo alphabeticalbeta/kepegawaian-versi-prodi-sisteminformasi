@@ -1,12 +1,12 @@
 {{-- Component Modal NUPTK - Hanya untuk jenis usulan NUPTK --}}
-@if($jenisUsulan === 'nuptk')
+@if($jenisUsulan === 'nuptk' || $jenisUsulan === 'usulan-nuptk')
 <!-- Modal Popup untuk Lihat Pengusul NUPTK -->
 <div id="modalLihatPengusulNuptk" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-10 mx-auto p-0 border w-11/12 max-w-4xl shadow-2xl rounded-lg bg-white">
         <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-yellow-600 to-green-600 rounded-t-lg">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-lg">
             <h3 class="text-lg font-bold text-white flex items-center">
-                <i class="fas fa-users mr-3"></i>
+                <i class="fas fa-user-check mr-3"></i>
                 Daftar Pengusul NUPTK
             </h3>
             <button type="button" onclick="closeModalLihatPengusulNuptk()" class="text-white hover:text-gray-200 transition-colors">
@@ -39,7 +39,7 @@
                             <td class="px-6 py-4 text-center font-medium text-gray-900">1</td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <i class="fas fa-graduation-cap text-blue-600 mr-3"></i>
+                                    <i class="fas fa-chalkboard-teacher text-blue-600 mr-3"></i>
                                     <div>
                                         <div class="font-semibold text-gray-900">Dosen Tetap</div>
                                         <div class="text-xs text-gray-500">Pengajuan NUPTK untuk Dosen Tetap</div>
@@ -65,7 +65,7 @@
                             <td class="px-6 py-4 text-center font-medium text-gray-900">2</td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <i class="fas fa-chalkboard-teacher text-green-600 mr-3"></i>
+                                    <i class="fas fa-user-graduate text-green-600 mr-3"></i>
                                     <div>
                                         <div class="font-semibold text-gray-900">Dosen Tidak Tetap</div>
                                         <div class="text-xs text-gray-500">Pengajuan NUPTK untuk Dosen Tidak Tetap</div>
@@ -91,7 +91,7 @@
                             <td class="px-6 py-4 text-center font-medium text-gray-900">3</td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <i class="fas fa-user-tie text-purple-600 mr-3"></i>
+                                    <i class="fas fa-book-reader text-purple-600 mr-3"></i>
                                     <div>
                                         <div class="font-semibold text-gray-900">Pengajar Non Dosen</div>
                                         <div class="text-xs text-gray-500">Pengajuan NUPTK untuk Pengajar Non Dosen</div>
@@ -106,6 +106,32 @@
                             <td class="px-6 py-4 text-center">
                                 <button onclick="lihatPengusulNuptk('pengajar_non_dosen')" 
                                         class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors">
+                                    <i class="fas fa-users mr-1"></i>
+                                    Lihat Pengusul
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Jabatan Fungsional Tertentu -->
+                        <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
+                            <td class="px-6 py-4 text-center font-medium text-gray-900">4</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-briefcase text-orange-600 mr-3"></i>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Jabatan Fungsional Tertentu</div>
+                                        <div class="text-xs text-gray-500">Pengajuan NUPTK untuk Jabatan Fungsional Tertentu</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    <span id="count-jabatan-fungsional-tertentu">0</span>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="lihatPengusulNuptk('jabatan_fungsional_tertentu')" 
+                                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-orange-600 border border-transparent rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
                                     <i class="fas fa-users mr-1"></i>
                                     Lihat Pengusul
                                 </button>

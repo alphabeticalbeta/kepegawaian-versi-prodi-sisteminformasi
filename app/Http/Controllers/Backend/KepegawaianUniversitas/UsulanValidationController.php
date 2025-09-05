@@ -1982,49 +1982,20 @@ class UsulanValidationController extends Controller
                     'tempat_lahir' => 'Tempat Lahir',
                     'tanggal_lahir' => 'Tanggal Lahir',
                     'jenis_kelamin' => 'Jenis Kelamin',
-                    'nomor_handphone' => 'Nomor Handphone'
-                ]
-            ],
-            'data_kepegawaian' => [
-                'label' => 'Data Kepegawaian',
-                'icon' => 'briefcase',
-                'fields' => [
-                    'jabatan_saat_usul' => 'Jabatan Saat Ini',
-                    'tmt_jabatan' => 'TMT Jabatan',
-                    'tmt_cpns' => 'TMT CPNS',
-                    'tmt_pns' => 'TMT PNS',
-                    'unit_kerja_saat_usul' => 'Unit Kerja'
-                ]
-            ],
-            'data_pendidikan' => [
-                'label' => 'Data Pendidikan & Fungsional',
-                'icon' => 'graduation-cap',
-                'fields' => [
-                    'pendidikan_terakhir' => 'Pendidikan Terakhir',
-                    'nama_universitas_sekolah' => 'Nama Universitas/Sekolah',
-                    'nama_prodi_jurusan' => 'Program Studi/Jurusan',
-                    'jenis_nuptk' => 'Jenis NUPTK'
-                ]
-            ],
-            'data_kinerja' => [
-                'label' => 'Data Kinerja',
-                'icon' => 'trending-up',
-                'fields' => [
-                    'predikat_kinerja_tahun_pertama' => 'Predikat SKP Tahun ' . (date('Y') - 1),
-                    'predikat_kinerja_tahun_kedua' => 'Predikat SKP Tahun ' . (date('Y') - 2)
+                    'nomor_handphone' => 'Nomor Handphone',
+                    'nik' => 'NIK',
+                    'nama_ibu_kandung' => 'Nama Ibu Kandung',
+                    'status_kawin' => 'Status Kawin',
+                    'agama' => 'Agama',
+                    'alamat_lengkap' => 'Alamat Lengkap'
                 ]
             ],
             'dokumen_profil' => [
                 'label' => 'Dokumen Profil',
                 'icon' => 'folder',
                 'fields' => [
-                    'sk_jabatan_terakhir' => 'SK Jabatan Terakhir',
-                    'skp_tahun_pertama' => 'SKP Tahun ' . (date('Y') - 1),
-                    'skp_tahun_kedua' => 'SKP Tahun ' . (date('Y') - 2),
-                    'sk_cpns' => 'SK CPNS',
-                    'sk_pns' => 'SK PNS',
-                    'ijazah_terakhir' => 'Ijazah Terakhir',
-                    'transkrip_nilai_terakhir' => 'Transkrip Nilai Terakhir'
+                    'ktp' => 'KTP',
+                    'kartu_keluarga' => 'Kartu Keluarga'
                 ]
             ],
             'dokumen_usulan' => [
@@ -2038,20 +2009,30 @@ class UsulanValidationController extends Controller
         $jenisNuptk = $usulan->jenis_nuptk ?? '';
         
         if ($jenisNuptk === 'dosen_tetap') {
-            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_dosen_tetap'] = 'Dokumen Pendukung Dosen Tetap';
+            $fieldGroups['dokumen_usulan']['fields']['surat_keterangan_sehat'] = 'Surat Keterangan Sehat Rohani, Jasmani dan Bebas Narkotika';
+            $fieldGroups['dokumen_usulan']['fields']['surat_pernyataan_pimpinan'] = 'Surat Pernyataan dari Pimpinan PTN';
+            $fieldGroups['dokumen_usulan']['fields']['surat_pernyataan_dosen_tetap'] = 'Surat Pernyataan Dosen Tetap';
+            $fieldGroups['dokumen_usulan']['fields']['surat_keterangan_aktif_tridharma'] = 'Surat Keterangan Aktif Melaksanakan Tridharma';
+            $fieldGroups['dokumen_usulan']['fields']['nota_dinas'] = 'Nota Dinas';
         } elseif ($jenisNuptk === 'dosen_tidak_tetap') {
-            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_dosen_tidak_tetap'] = 'Dokumen Pendukung Dosen Tidak Tetap';
+            $fieldGroups['dokumen_usulan']['fields']['surat_keterangan_sehat'] = 'Surat Keterangan Sehat Rohani, Jasmani dan Bebas Narkotika';
+            $fieldGroups['dokumen_usulan']['fields']['surat_pernyataan_pimpinan'] = 'Surat Pernyataan dari Pimpinan PTN';
+            $fieldGroups['dokumen_usulan']['fields']['surat_izin_instansi_induk'] = 'Surat Izin Instansi Induk';
+            $fieldGroups['dokumen_usulan']['fields']['surat_perjanjian_kerja'] = 'Surat Perjanjian Kerja';
+            $fieldGroups['dokumen_usulan']['fields']['nota_dinas'] = 'Nota Dinas';
         } elseif ($jenisNuptk === 'pengajar_non_dosen') {
-            $fieldGroups['dokumen_usulan']['fields']['dokumen_pendukung_pengajar'] = 'Dokumen Pendukung Pengajar Non Dosen';
+            $fieldGroups['dokumen_usulan']['fields']['surat_keterangan_sehat'] = 'Surat Keterangan Sehat Rohani, Jasmani dan Bebas Narkotika';
+            $fieldGroups['dokumen_usulan']['fields']['surat_pernyataan_pimpinan'] = 'Surat Pernyataan dari Pimpinan PTN';
+            $fieldGroups['dokumen_usulan']['fields']['sk_tenaga_pengajar'] = 'SK Tenaga Pengajar';
+            $fieldGroups['dokumen_usulan']['fields']['nota_dinas'] = 'Nota Dinas';
+        } elseif ($jenisNuptk === 'jabatan_fungsional_tertentu') {
+            $fieldGroups['dokumen_usulan']['fields']['nota_dinas'] = 'Nota Dinas';
         }
 
         // Get validation configuration
         $config = [
             'validationFields' => [
                 'data_pribadi' => 'Data Pribadi',
-                'data_kepegawaian' => 'Data Kepegawaian',
-                'data_pendidikan' => 'Data Pendidikan & Fungsional',
-                'data_kinerja' => 'Data Kinerja',
                 'dokumen_profil' => 'Dokumen Profil',
                 'dokumen_usulan' => 'Dokumen Usulan'
             ]

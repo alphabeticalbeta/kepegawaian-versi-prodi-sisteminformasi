@@ -195,6 +195,8 @@ class DashboardPeriodeController extends Controller
         // Terapkan filter jika ada
         if ($filter === 'jenis_usulan_pangkat' && $filterValue) {
             $usulansQuery->whereJsonContains('data_usulan->jenis_usulan_pangkat', $filterValue);
+        } elseif ($filter === 'jenis_nuptk' && $filterValue) {
+            $usulansQuery->where('jenis_nuptk', $filterValue);
         }
         
         // Ambil usulan dengan filter
@@ -274,5 +276,30 @@ class DashboardPeriodeController extends Controller
         ];
 
         return view('backend.layouts.views.kepegawaian-universitas.dashboard-periode.show', $viewData);
+    }
+
+    /**
+     * Get count of NUPTK usulans by jenis
+     */
+    public function getUsulanNuptkCount(PeriodeUsulan $periode)
+    {
+        try {
+            $counts = [
+                'dosen_tetap' => $periode->usulans()->where('jenis_nuptk', 'dosen_tetap')->count(),
+                'dosen_tidak_tetap' => $periode->usulans()->where('jenis_nuptk', 'dosen_tidak_tetap')->count(),
+                'pengajar_non_dosen' => $periode->usulans()->where('jenis_nuptk', 'pengajar_non_dosen')->count(),
+                'jabatan_fungsional_tertentu' => $periode->usulans()->where('jenis_nuptk', 'jabatan_fungsional_tertentu')->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'counts' => $counts
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gagal mengambil data jumlah pengusul NUPTK'
+            ], 500);
+        }
     }
 }

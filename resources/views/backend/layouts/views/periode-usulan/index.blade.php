@@ -488,6 +488,12 @@
                                             <i class="fas fa-users mr-1"></i>
                                             Lihat {{ $periode->usulans_count }} Pengusul
                                         </button>
+                                    @elseif($jenisUsulan === 'nuptk' || $jenisUsulan === 'usulan-nuptk')
+                                        <button onclick="openModalLihatPengusulNuptk({{ $periode->id }})"
+                                               class="inline-flex items-center px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-full hover:bg-green-100 hover:text-green-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                            <i class="fas fa-users mr-1"></i>
+                                            Lihat {{ $periode->usulans_count }} Pengusul
+                                        </button>
                                     @else
                                         <a href="{{ route('backend.kepegawaian-universitas.dashboard-periode.show', $periode) }}"
                                            class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
@@ -885,7 +891,13 @@ window.confirmDelete = function(periodeId, periodeName, event) {
 {{-- Include Modal Kepangkatan --}}
 @include('backend.layouts.views.periode-usulan.modal-kepangkatan.modal-kepangkatan')
 
+{{-- Include Modal NUPTK --}}
+@include('backend.layouts.views.periode-usulan.modal-nuptk.modal-nuptk')
+
 {{-- Include JavaScript Modal Kepangkatan --}}
 <script src="{{ asset('js/modal-kepangkatan.js') }}"></script>
+
+{{-- Include JavaScript Modal NUPTK --}}
+<script src="{{ asset('js/modal-nuptk.js') }}"></script>
 
 

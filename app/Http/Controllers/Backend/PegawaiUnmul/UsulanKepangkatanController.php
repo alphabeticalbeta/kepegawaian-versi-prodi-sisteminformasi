@@ -41,6 +41,31 @@ class UsulanKepangkatanController extends Controller
             ->orderBy('tanggal_mulai', 'desc')
             ->get();
 
+        // Debug logging untuk troubleshooting
+        $allPeriods = PeriodeUsulan::where('jenis_usulan', $jenisUsulanPeriode)->get();
+        Log::info('Kepangkatan Access Check', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan_periode' => $jenisUsulanPeriode,
+            'periode_count' => $periodeUsulans->count(),
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            }),
+            'periode_details' => $periodeUsulans->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
 
         // Alternative query if no results
         if ($periodeUsulans->count() == 0) {
@@ -50,10 +75,42 @@ class UsulanKepangkatanController extends Controller
                 ->orderBy('tanggal_mulai', 'desc')
                 ->get();
 
+            Log::info('Kepangkatan Alternative Query', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'alt_periode_count' => $altPeriodeUsulans->count(),
+                'alt_periods' => $altPeriodeUsulans->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama_periode' => $p->nama_periode,
+                        'status_kepegawaian' => $p->status_kepegawaian,
+                        'status' => $p->status
+                    ];
+                })
+            ]);
 
             // Use alternative results if found
             if ($altPeriodeUsulans->count() > 0) {
                 $periodeUsulans = $altPeriodeUsulans;
+                Log::info('Kepangkatan Using Alternative Results', [
+                    'pegawai_id' => $pegawai->id,
+                    'final_periode_count' => $periodeUsulans->count()
+                ]);
+            } else {
+                Log::warning('Kepangkatan Access Denied - No Available Periods', [
+                    'pegawai_id' => $pegawai->id,
+                    'status_kepegawaian' => $pegawai->status_kepegawaian,
+                    'jenis_usulan_periode' => $jenisUsulanPeriode,
+                    'all_periods_count' => $allPeriods->count(),
+                    'all_periods' => $allPeriods->map(function($p) {
+                        return [
+                            'id' => $p->id,
+                            'nama_periode' => $p->nama_periode,
+                            'status_kepegawaian' => $p->status_kepegawaian,
+                            'status' => $p->status
+                        ];
+                    })
+                ]);
             }
         }
 
@@ -88,11 +145,24 @@ class UsulanKepangkatanController extends Controller
         
         // Validate if periode is open and accessible for this pegawai
         if ($periodeUsulan->status !== 'Buka') {
+            Log::warning('Kepangkatan Store - Periode Closed', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'periode_id' => $periodeUsulan->id,
+                'periode_status' => $periodeUsulan->status
+            ]);
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.index')
                              ->with('error', 'Periode usulan sudah ditutup.');
         }
         
         if (!in_array($pegawai->status_kepegawaian, $periodeUsulan->status_kepegawaian ?? [])) {
+            Log::warning('Kepangkatan Store - Access Denied', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'periode_id' => $periodeUsulan->id,
+                'periode_status_kepegawaian' => $periodeUsulan->status_kepegawaian,
+                'periode_status' => $periodeUsulan->status
+            ]);
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.index')
                              ->with('error', 'Anda tidak memiliki akses untuk periode ini.');
         }
@@ -104,6 +174,12 @@ class UsulanKepangkatanController extends Controller
                                  ->first();
         
         if ($existingUsulan) {
+            Log::info('Kepangkatan Store - Existing Usulan Found', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'periode_id' => $periodeUsulan->id,
+                'existing_usulan_id' => $existingUsulan->id
+            ]);
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $existingUsulan->id)
                              ->with('info', 'Anda sudah memiliki usulan untuk periode ini.');
         }
@@ -121,6 +197,14 @@ class UsulanKepangkatanController extends Controller
                     'dokumen_usulan' => []
                 ]
             ]);
+
+            Log::info('Kepangkatan Store - Usulan Created', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'periode_id' => $periodeUsulan->id,
+                'usulan_id' => $usulan->id,
+                'jenis_usulan_pangkat' => $request->jenis_usulan
+            ]);
             
             // Log aktivitas
             UsulanLog::create([
@@ -133,15 +217,25 @@ class UsulanKepangkatanController extends Controller
                 'catatan' => 'Usulan berhasil dibuat'
             ]);
             
+            Log::info('Kepangkatan Store - Success', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'periode_id' => $periodeUsulan->id,
+                'usulan_id' => $usulan->id,
+                'jenis_usulan_pangkat' => $request->jenis_usulan
+            ]);
+
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan->id)
                              ->with('success', 'Usulan Kepangkatan berhasil dibuat. Silakan lengkapi data dan dokumen pendukung.');
                              
         } catch (\Exception $e) {
-            Log::error('Failed to create usulan kepangkatan', [
+            Log::error('Kepangkatan Store - Failed to Create Usulan', [
                 'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
                 'periode_id' => $request->periode_id,
-                'jenis_usulan' => $request->jenis_usulan,
-                'error' => $e->getMessage()
+                'jenis_usulan_pangkat' => $request->jenis_usulan,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             
         return redirect()->route('pegawai-unmul.usulan-kepangkatan.index')
@@ -671,7 +765,13 @@ class UsulanKepangkatanController extends Controller
      */
     protected function determineJenisUsulanPeriode($pegawai): string
     {
-        return 'usulan-kepangkatan';
+        $jenisUsulan = 'usulan-kepangkatan';
+        Log::info('determineJenisUsulanPeriode - Kepangkatan', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan' => $jenisUsulan
+        ]);
+        return $jenisUsulan;
     }
 
     // Method getLogs dihapus - sudah digabung ke UsulanPegawaiController

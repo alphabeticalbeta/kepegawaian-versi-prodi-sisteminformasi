@@ -304,6 +304,10 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 Route::get('/{periode}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'show'])
                     ->name('show');
 
+                // API route untuk menghitung usulan NUPTK per jenis
+                Route::get('/{periode}/usulan-nuptk-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getUsulanNuptkCount'])
+                    ->name('usulan-nuptk-count');
+
                 // API routes untuk histori periode
                 Route::get('/histori/{jenis}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getHistoriPeriode'])
                     ->name('histori');
@@ -341,7 +345,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('usulan-kepangkatan-count');
 
                 // API route untuk menghitung usulan NUPTK per jenis
-                Route::get('/{periodeUsulan}/usulan-nuptk-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'getUsulanNuptkCount'])
+                Route::get('/{periodeUsulan}/usulan-nuptk-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getUsulanNuptkCount'])
                     ->name('usulan-nuptk-count');
             });
 

@@ -31,8 +31,49 @@ class UsulanNuptkController extends Controller
             ->orderBy('tanggal_mulai', 'desc')
             ->get();
 
+        // Debug logging untuk troubleshooting
+        $allPeriods = PeriodeUsulan::where('jenis_usulan', $jenisUsulanPeriode)->get();
+        Log::info('NUPTK Access Check', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan_periode' => $jenisUsulanPeriode,
+            'periode_count' => $periodeUsulans->count(),
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            }),
+            'periode_details' => $periodeUsulans->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
+
         // Validasi akses berdasarkan periode usulan yang tersedia
         if ($periodeUsulans->count() == 0) {
+                    Log::warning('NUPTK Access Denied - No Available Periods', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan_periode' => $jenisUsulanPeriode,
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
+            
             return redirect()->route('pegawai-unmul.usulan-pegawai.dashboard')
                 ->with('error', 'Maaf, status kepegawaian Anda tidak memiliki akses ke halaman ini.');
         }
@@ -70,8 +111,49 @@ class UsulanNuptkController extends Controller
             ->orderBy('tanggal_mulai', 'desc')
             ->get();
 
+        // Debug logging untuk troubleshooting
+        $allPeriods = PeriodeUsulan::where('jenis_usulan', $jenisUsulanPeriode)->get();
+        Log::info('NUPTK Create Access Check', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan_periode' => $jenisUsulanPeriode,
+            'periode_count' => $periodeUsulans->count(),
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            }),
+            'periode_details' => $periodeUsulans->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
+
         // Validasi akses berdasarkan periode usulan yang tersedia
         if ($periodeUsulans->count() == 0) {
+                    Log::warning('NUPTK Create Access Denied - No Available Periods', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan_periode' => $jenisUsulanPeriode,
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
+            
             return redirect()->route('pegawai-unmul.usulan-pegawai.dashboard')
                 ->with('error', 'Maaf, status kepegawaian Anda tidak memiliki akses ke halaman ini.');
         }
@@ -106,7 +188,8 @@ class UsulanNuptkController extends Controller
             // Validate request
             $request->validate([
                 'periode_usulan_id' => 'required|exists:periode_usulans,id',
-                'jenis_nuptk' => 'required|in:dosen_tetap,dosen_tidak_tetap,pengajar_non_dosen,tenaga_kependidikan',
+                'jenis_nuptk' => 'required|in:dosen_tetap,dosen_tidak_tetap,pengajar_non_dosen,jabatan_fungsional_tertentu',
+                'alamat_lengkap' => 'nullable|string|max:500',
                 'dokumen_usulan.*' => 'nullable|file|mimes:pdf|max:1024'
             ]);
 
@@ -304,7 +387,9 @@ class UsulanNuptkController extends Controller
             // Handle different actions
             $action = $request->input('action');
             
-            if ($action === 'kirim_ke_kepegawaian') {
+            if ($action === 'simpan') {
+                return $this->handleSimpan($usulan, $pegawai);
+            } elseif ($action === 'kirim_ke_kepegawaian') {
                 return $this->handleKirimKeKepegawaian($usulan, $pegawai);
             } elseif ($action === 'kirim_perbaikan_ke_kepegawaian') {
                 return $this->handleKirimPerbaikanKeKepegawaian($usulan, $pegawai);
@@ -331,7 +416,8 @@ class UsulanNuptkController extends Controller
 
                 // Validate request
                 $request->validate([
-                    'jenis_nuptk' => 'required|in:dosen_tetap,dosen_tidak_tetap,pengajar_non_dosen,tenaga_kependidikan',
+                    'jenis_nuptk' => 'required|in:dosen_tetap,dosen_tidak_tetap,pengajar_non_dosen,jabatan_fungsional_tertentu',
+                    'alamat_lengkap' => 'nullable|string|max:500',
                     'data_usulan' => 'required|array',
                     'dokumen_usulan.*' => 'nullable|file|mimes:pdf|max:1024'
                 ]);
@@ -504,6 +590,54 @@ class UsulanNuptkController extends Controller
     }
 
     /**
+     * Handle dokumen upload untuk simpan
+     */
+    private function handleDokumenUploadSimpan($usulan, $request, $pegawai)
+    {
+        // List dokumen yang mungkin diupload
+        $dokumenFields = [
+            'ktp', 'kartu_keluarga', 'surat_keterangan_sehat', 
+            'surat_pernyataan_pimpinan', 'surat_pernyataan_dosen_tetap',
+            'surat_keterangan_aktif_tridharma', 'surat_izin_instansi_induk',
+            'surat_perjanjian_kerja', 'sk_tenaga_pengajar', 'nota_dinas'
+        ];
+
+        foreach ($dokumenFields as $field) {
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                if ($file && $file->isValid()) {
+                    // Validate file
+                    $this->validateUploadedFile($file, $field);
+
+                    // Generate unique filename
+                    $filename = time() . '_' . $field . '_' . $usulan->id . '.pdf';
+                    $path = 'dokumen/usulan/' . $usulan->id . '/' . $filename;
+
+                    // Store file
+                    Storage::disk('local')->put($path, file_get_contents($file));
+
+                    // Save to database
+                    UsulanDokumen::create([
+                        'usulan_id' => $usulan->id,
+                        'diupload_oleh_id' => $pegawai->id,
+                        'nama_dokumen' => $field,
+                        'path' => $path,
+                    ]);
+
+                    // Update data_usulan
+                    $dataUsulan = $usulan->data_usulan;
+                    $dataUsulan['dokumen_usulan'][$field] = [
+                        'path' => $path,
+                        'filename' => $filename,
+                        'uploaded_at' => now()->toISOString()
+                    ];
+                    $usulan->update(['data_usulan' => $dataUsulan]);
+                }
+            }
+        }
+    }
+
+    /**
      * Handle dokumen upload
      */
     private function handleDokumenUpload($usulan, $files, $pegawai)
@@ -636,25 +770,80 @@ class UsulanNuptkController extends Controller
             ->whereJsonContains('status_kepegawaian', $pegawai->status_kepegawaian)
             ->get();
 
+        $allPeriods = PeriodeUsulan::where('jenis_usulan', $jenisUsulanPeriode)->get();
+        Log::info('getAvailableNuptkTypes Check', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan_periode' => $jenisUsulanPeriode,
+            'periode_count' => $periodeUsulans->count(),
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
+
         if ($periodeUsulans->count() == 0) {
+                    Log::warning('No available periods for NUPTK types', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
             return [];
         }
 
         // Berdasarkan status kepegawaian, tentukan jenis NUPTK yang tersedia
         if (in_array($pegawai->status_kepegawaian, ['Dosen PNS', 'Dosen PPPK', 'Dosen Non ASN'])) {
             // Jenis NUPTK untuk Dosen
-            return [
+            $types = [
                 'dosen_tetap' => 'Dosen Tetap',
                 'dosen_tidak_tetap' => 'Dosen Tidak Tetap',
                 'pengajar_non_dosen' => 'Pengajar Non Dosen'
             ];
+            Log::info('Available NUPTK types for Dosen', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'types' => $types
+            ]);
+            return $types;
         } elseif ($pegawai->status_kepegawaian === 'Tenaga Kependidikan PNS') {
             // Jenis NUPTK untuk Tenaga Kependidikan
-            return [
-                'tenaga_kependidikan' => 'Tenaga Kependidikan'
+            $types = [
+                'jabatan_fungsional_tertentu' => 'Jabatan Fungsional Tertentu'
             ];
+            Log::info('Available NUPTK types for Tenaga Kependidikan PNS', [
+                'pegawai_id' => $pegawai->id,
+                'status_kepegawaian' => $pegawai->status_kepegawaian,
+                'types' => $types
+            ]);
+            return $types;
         }
 
+        Log::warning('No NUPTK types available for status kepegawaian', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'all_periods_count' => $allPeriods->count(),
+            'all_periods' => $allPeriods->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'nama_periode' => $p->nama_periode,
+                    'status_kepegawaian' => $p->status_kepegawaian,
+                    'status' => $p->status
+                ];
+            })
+        ]);
         return [];
     }
 
@@ -663,7 +852,83 @@ class UsulanNuptkController extends Controller
      */
     protected function determineJenisUsulanPeriode($pegawai): string
     {
-        return 'usulan-nuptk';
+        $jenisUsulan = 'usulan-nuptk';
+        Log::info('determineJenisUsulanPeriode', [
+            'pegawai_id' => $pegawai->id,
+            'status_kepegawaian' => $pegawai->status_kepegawaian,
+            'jenis_usulan' => $jenisUsulan
+        ]);
+        return $jenisUsulan;
+    }
+
+    /**
+     * Handle action simpan
+     */
+    protected function handleSimpan(Usulan $usulan, $pegawai)
+    {
+        try {
+            $request = request();
+            
+            // Validasi data form
+            $request->validate([
+                'jenis_nuptk' => 'required|in:dosen_tetap,dosen_tidak_tetap,pengajar_non_dosen,jabatan_fungsional_tertentu',
+                'alamat_lengkap' => 'nullable|string|max:500',
+                'nik' => 'nullable|string|max:16',
+                'nama_ibu_kandung' => 'nullable|string|max:255',
+                'status_kawin' => 'nullable|string|max:50',
+                'agama' => 'nullable|string|max:50',
+                'ktp' => 'nullable|file|mimes:pdf|max:1024',
+                'kartu_keluarga' => 'nullable|file|mimes:pdf|max:1024',
+                'surat_keterangan_sehat' => 'nullable|file|mimes:pdf|max:1024',
+                'surat_pernyataan_pimpinan' => 'nullable|file|mimes:pdf|max:1024',
+                'surat_pernyataan_dosen_tetap' => 'nullable|file|mimes:pdf|max:1024',
+                'surat_keterangan_aktif_tridharma' => 'nullable|file|mimes:pdf|max:1024',
+                'surat_izin_instansi_induk' => 'nullable|file|mimes:pdf|max:1024',
+                'surat_perjanjian_kerja' => 'nullable|file|mimes:pdf|max:1024',
+                'sk_tenaga_pengajar' => 'nullable|file|mimes:pdf|max:1024',
+                'nota_dinas' => 'nullable|file|mimes:pdf|max:1024'
+            ]);
+
+            // Kumpulkan data form ke dalam array data_usulan
+            $dataUsulan = array_merge($usulan->data_usulan ?? [], [
+                'nik' => $request->nik,
+                'nama_ibu_kandung' => $request->nama_ibu_kandung,
+                'status_kawin' => $request->status_kawin,
+                'agama' => $request->agama,
+                'alamat_lengkap' => $request->alamat_lengkap,
+            ]);
+
+            // Update data usulan
+            $usulan->update([
+                'jenis_nuptk' => $request->jenis_nuptk,
+                'data_usulan' => $dataUsulan
+            ]);
+
+            // Handle dokumen upload if any
+            $this->handleDokumenUploadSimpan($usulan, $request, Auth::user());
+
+            // Create log
+            UsulanLog::create([
+                'usulan_id' => $usulan->id,
+                'status_sebelumnya' => $usulan->getOriginal('status_usulan'),
+                'status_baru' => $usulan->status_usulan,
+                'catatan' => 'Usulan NUPTK disimpan',
+                'dilakukan_oleh_id' => Auth::id()
+            ]);
+
+            return redirect()->route('pegawai-unmul.usulan-nuptk.show', $usulan)
+                ->with('success', 'Usulan NUPTK berhasil disimpan.');
+
+        } catch (\Exception $e) {
+            Log::error('Error in handleSimpan', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('pegawai-unmul.usulan-nuptk.show', $usulan)
+                ->with('error', 'Terjadi kesalahan saat menyimpan usulan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -671,28 +936,77 @@ class UsulanNuptkController extends Controller
      */
     protected function handleKirimKeKepegawaian(Usulan $usulan, $pegawai)
     {
-        // Pastikan usulan masih draft
-        if ($usulan->status_usulan !== Usulan::STATUS_DRAFT_USULAN) {
+        try {
+
+            // Pastikan usulan masih draft
+            if ($usulan->status_usulan !== Usulan::STATUS_DRAFT_USULAN) {
+                Log::warning('Usulan tidak dalam status draft', [
+                    'usulan_id' => $usulan->id,
+                    'current_status' => $usulan->status_usulan
+                ]);
+                return redirect()->route('pegawai-unmul.usulan-nuptk.show', $usulan)
+                    ->with('error', 'Usulan tidak dapat dikirim pada status saat ini.');
+            }
+
+            // Simpan data form terlebih dahulu sebelum mengubah status
+            $request = request();
+            
+            // Validasi data form
+            $request->validate([
+                'jenis_nuptk' => 'required|in:dosen_tetap,dosen_tidak_tetap,pengajar_non_dosen,jabatan_fungsional_tertentu',
+                'alamat_lengkap' => 'nullable|string|max:500',
+                'nik' => 'nullable|string|max:16',
+                'nama_ibu_kandung' => 'nullable|string|max:255',
+                'status_kawin' => 'nullable|string|max:50',
+                'agama' => 'nullable|string|max:50',
+                'dokumen_usulan.*' => 'nullable|file|mimes:pdf|max:1024'
+            ]);
+
+            // Kumpulkan data form ke dalam array data_usulan
+            $dataUsulan = array_merge($usulan->data_usulan ?? [], [
+                'nik' => $request->nik,
+                'nama_ibu_kandung' => $request->nama_ibu_kandung,
+                'status_kawin' => $request->status_kawin,
+                'agama' => $request->agama,
+                'alamat_lengkap' => $request->alamat_lengkap,
+            ]);
+
+            // Update data usulan
+            $usulan->update([
+                'jenis_nuptk' => $request->jenis_nuptk,
+                'data_usulan' => $dataUsulan,
+                'status_usulan' => Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS
+            ]);
+
+            // Handle dokumen upload if any
+            if ($request->hasFile('dokumen_usulan')) {
+                $this->handleDokumenUpload($usulan, $request->file('dokumen_usulan'), Auth::user());
+            }
+
+
+            // Create log
+            UsulanLog::create([
+                'usulan_id' => $usulan->id,
+                'status_sebelumnya' => Usulan::STATUS_DRAFT_USULAN,
+                'status_baru' => Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
+                'catatan' => 'Usulan NUPTK dikirim ke Kepegawaian Universitas',
+                'dilakukan_oleh_id' => Auth::id()
+            ]);
+
+            
             return redirect()->route('pegawai-unmul.usulan-nuptk.show', $usulan)
-                ->with('error', 'Usulan tidak dapat dikirim pada status saat ini.');
+                ->with('success', 'Usulan NUPTK berhasil dikirim ke Kepegawaian Universitas.');
+
+        } catch (\Exception $e) {
+            Log::error('Error in handleKirimKeKepegawaian', [
+                'usulan_id' => $usulan->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('pegawai-unmul.usulan-nuptk.show', $usulan)
+                ->with('error', 'Terjadi kesalahan saat mengirim usulan: ' . $e->getMessage());
         }
-
-        // Update status
-        $usulan->update([
-            'status_usulan' => Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS
-        ]);
-
-        // Create log
-        UsulanLog::create([
-            'usulan_id' => $usulan->id,
-            'status_sebelumnya' => Usulan::STATUS_DRAFT_USULAN,
-            'status_baru' => Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
-            'catatan' => 'Usulan NUPTK dikirim ke Kepegawaian Universitas',
-            'dilakukan_oleh_id' => Auth::id()
-        ]);
-
-        return redirect()->route('pegawai-unmul.usulan-nuptk.show', $usulan)
-            ->with('success', 'Usulan NUPTK berhasil dikirim ke Kepegawaian Universitas.');
     }
 
     /**
