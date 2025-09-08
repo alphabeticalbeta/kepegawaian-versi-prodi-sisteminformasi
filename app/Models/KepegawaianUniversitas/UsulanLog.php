@@ -139,21 +139,21 @@ class UsulanLog extends Model
             Usulan::STATUS_USULAN_DIREKOMENDASI_DARI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800 border-purple-300',
             Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS => 'bg-purple-100 text-purple-800 border-purple-300',
             Usulan::STATUS_USULAN_DIREKOMENDASIKAN_OLEH_TIM_SENAT => 'bg-purple-100 text-purple-800 border-purple-300',
-            Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER => 'bg-blue-100 text-blue-800 border-blue-300',
+            Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_TIM_SISTER => 'bg-blue-100 text-blue-800 border-blue-300',
             Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER => 'bg-red-100 text-red-800 border-red-300',
-            
+
             // Draft status constants
             Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800 border-gray-300',
             Usulan::STATUS_DRAFT_PERBAIKAN_ADMIN_FAKULTAS => 'bg-amber-100 text-amber-800 border-amber-300',
             Usulan::STATUS_DRAFT_PERBAIKAN_KEPEGAWAIAN_UNIVERSITAS => 'bg-red-100 text-red-800 border-red-300',
             Usulan::STATUS_DRAFT_PERBAIKAN_PENILAI_UNIVERSITAS => 'bg-orange-100 text-orange-800 border-orange-300',
             Usulan::STATUS_DRAFT_PERBAIKAN_TIM_SISTER => 'bg-red-100 text-red-800 border-red-300',
-            
+
             // Legacy status constants (fallback)
             Usulan::STATUS_MENUNGGU_HASIL_PENILAIAN_TIM_PENILAI => 'bg-orange-100 text-orange-800 border-orange-300',
             Usulan::STATUS_DIREKOMENDASIKAN => 'bg-purple-100 text-purple-800 border-purple-300',
             Usulan::STATUS_TIDAK_DIREKOMENDASIKAN => 'bg-red-100 text-red-800 border-red-300',
-            
+
             default => 'bg-gray-100 text-gray-800 border-gray-300'
         };
     }
@@ -254,7 +254,7 @@ class UsulanLog extends Model
         $statusBaru = $this->status_baru;
         $statusSebelumnya = $this->status_sebelumnya;
         $status = $this->status;
-        
+
         // Convert arrays to strings if needed
         if (is_array($statusBaru)) {
             $statusBaru = json_encode($statusBaru);
@@ -265,12 +265,12 @@ class UsulanLog extends Model
         if (is_array($status)) {
             $status = json_encode($status);
         }
-        
+
         // Convert null to empty string
         $statusBaru = $statusBaru ?? '';
         $statusSebelumnya = $statusSebelumnya ?? '';
         $status = $status ?? '';
-        
+
         if ($this->isInitialLog()) {
             return "Usulan dibuat dengan status {$statusBaru}";
         }

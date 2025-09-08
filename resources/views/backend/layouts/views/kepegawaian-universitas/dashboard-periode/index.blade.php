@@ -215,7 +215,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                                     <div class="flex items-center">
-                                        <span class="font-semibold text-blue-600">{{ $periode->usulans_count }}</span>
+                                        <span class="font-semibold text-blue-600">{{ $periode->usulans_submitted_count }}</span>
                                         <span class="text-slate-500 ml-1">pelamar</span>
                                     </div>
                                 </td>
@@ -261,7 +261,7 @@
                                         </a>
 
                                         <!-- Delete -->
-                                        @if($periode->usulans_count == 0)
+                                        @if($periode->usulans_submitted_count == 0)
                                             <form action="{{ route('backend.kepegawaian-universitas.periode-usulan.destroy', $periode) }}"
                                                   method="POST"
                                                   class="inline-block"

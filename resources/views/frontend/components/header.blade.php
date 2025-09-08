@@ -44,13 +44,13 @@
                         <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </a>
                     <div class="absolute left-0 w-56 bg-white text-black rounded-md shadow-lg hidden group-hover:block z-10 pt-1">
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Keputusan</a>
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Pedoman</a>
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Peraturan</a>
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Surat Edaran</a>
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Surat Kementerian</a>
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Surat Rektor Universitas Mulawarman</a>
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Undang-Undang</a>
+                        <a href="{{ route('keputusan') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Keputusan</a>
+                        <a href="{{ route('pedoman') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Pedoman</a>
+                        <a href="{{ route('peraturan') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Peraturan</a>
+                        <a href="{{ route('surat-edaran') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Surat Edaran</a>
+                        <a href="{{ route('surat-kementerian') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Surat Kementerian</a>
+                        <a href="{{ route('surat-rektor-unmul') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Surat Rektor Universitas Mulawarman</a>
+                        <a href="{{ route('undang-undang') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Undang-Undang</a>
                     </div>
                 </li>
 
@@ -60,8 +60,8 @@
                         <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </a>
                     <div class="absolute right-0 w-48 bg-white text-black rounded-md shadow-lg hidden group-hover:block z-10 pt-1">
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Berita</a>
-                        <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">Pengumuman</a>
+                        <a href="{{ route('berita') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Berita</a>
+                        <a href="{{ route('pengumuman') }}" class="block px-4 py-2 text-sm hover:bg-gray-100">Pengumuman</a>
                     </div>
                 </li>
 

@@ -127,13 +127,13 @@ class ProfileController extends Controller
         // 1. Validasi field yang diizinkan
         $allowedFields = array_keys($this->getDocumentFields($pegawai));
         if (!in_array($field, $allowedFields)) {
-            abort(404, 'Jenis dokumen tidak valid.');
+            abort(404, 'Jenis dokumen tidak valid. Field: ' . $field . ', Allowed: ' . implode(', ', $allowedFields));
         }
 
         // 2. Cek apakah file path ada di database
         $filePath = $pegawai->$field;
         if (!$filePath) {
-            abort(404, 'File tidak ditemukan');
+            abort(404, 'File tidak ditemukan di database. Field: ' . $field . ', Value: ' . ($filePath ?? 'null'));
         }
 
         // 3. Determine correct disk and check file existence

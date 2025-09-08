@@ -18,5 +18,6 @@ Route::get('/test-admin-keuangan', [App\Http\Controllers\Backend\AdminKeuangan\D
 Route::get('/test-penilai', [App\Http\Controllers\Backend\PenilaiUniversitas\DashboardController::class, 'index']);
 Route::get('/test-tim-senat', [App\Http\Controllers\Backend\TimSenat\DashboardController::class, 'index']);
 
+
 require __DIR__.'/frontend.php';
 require __DIR__.'/backend.php';

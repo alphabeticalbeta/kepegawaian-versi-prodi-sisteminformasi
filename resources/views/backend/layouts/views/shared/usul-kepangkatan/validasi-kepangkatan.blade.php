@@ -58,10 +58,10 @@
                 $statusColors = [
                     // Draft statuses (for Pegawai role)
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN => 'bg-gray-100 text-gray-800 border-gray-300',
-                    
+
                     // Kepegawaian Universitas statuses (for kepangkatan)
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-                    
+
                     // BKN statuses (for kepangkatan)
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN => 'bg-indigo-100 text-indigo-800 border-indigo-300',
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN => 'bg-orange-100 text-orange-800 border-orange-300',
@@ -72,7 +72,7 @@
                     \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS
                 ];
                 $statusColor = $statusColors[$usulan->status_usulan] ?? 'bg-gray-100 text-gray-800 border-gray-300';
-                
+
                 // Define view-only statuses
                  $viewOnlyStatuses = [
                      \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
@@ -105,7 +105,7 @@
                             Mode View Only
                         </div>
                         <div class="text-sm text-orange-700">
-                            <strong>Perhatian:</strong> Usulan saat ini dalam status yang tidak memungkinkan perubahan validasi. 
+                            <strong>Perhatian:</strong> Usulan saat ini dalam status yang tidak memungkinkan perubahan validasi.
                             Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit.
                         </div>
                     </div>
@@ -184,17 +184,17 @@
                             $gelarDepan = $usulan->pegawai->gelar_depan ?? '';
                             $namaLengkap = $usulan->pegawai->nama_lengkap ?? '';
                             $gelarBelakang = $usulan->pegawai->gelar_belakang ?? '';
-                            
+
                             $namaLengkapDisplay = '';
-                            
+
                             // Tambahkan gelar depan jika ada dan bukan "-"
                             if (!empty($gelarDepan) && $gelarDepan !== '-') {
                                 $namaLengkapDisplay .= $gelarDepan . ' ';
                             }
-                            
+
                             // Tambahkan nama lengkap
                             $namaLengkapDisplay .= $namaLengkap;
-                            
+
                             // Tambahkan gelar belakang jika ada dan bukan "-"
                             if (!empty($gelarBelakang) && $gelarBelakang !== '-') {
                                 $namaLengkapDisplay .= ' ' . $gelarBelakang;
@@ -222,11 +222,11 @@
                             $unitKerjaDisplay = '';
                             if ($usulan->pegawai->unitKerja) {
                                 $unitKerjaDisplay = $usulan->pegawai->unitKerja->nama;
-                                
+
                                 // Tambahkan sub unit kerja jika ada
                                 if ($usulan->pegawai->unitKerja->subUnitKerja) {
                                     $unitKerjaDisplay .= ' - ' . $usulan->pegawai->unitKerja->subUnitKerja->nama;
-                                    
+
                                     // Tambahkan unit kerja utama jika ada
                                     if ($usulan->pegawai->unitKerja->subUnitKerja->unitKerja) {
                                         $unitKerjaDisplay = $usulan->pegawai->unitKerja->subUnitKerja->unitKerja->nama . ' - ' . $unitKerjaDisplay;
@@ -252,13 +252,13 @@ document.addEventListener('DOMContentLoaded', function() {
     @if(session('success') && session('reload'))
         // Show success notification
         showSuccessNotification("{{ session('success') }}");
-        
+
         // Reload page after 1.5 seconds
         setTimeout(() => {
             window.location.reload();
         }, 1500);
     @endif
-    
+
     // Function to show success notification
     function showSuccessNotification(message) {
         // Create notification element
@@ -272,10 +272,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="text-green-800 font-medium">${message}</span>
             </div>
         `;
-        
+
         // Add to page
         document.body.appendChild(notification);
-        
+
         // Auto remove after 5 seconds
         setTimeout(() => {
             notification.style.opacity = '0';
@@ -298,7 +298,7 @@ function submitAction(actionType, catatan) {
 
     const form = document.getElementById('validationForm');
     const actionInput = document.querySelector('input[name="action_type"]');
-    
+
     if (actionInput) {
         actionInput.value = actionType;
     }
@@ -309,6 +309,11 @@ function submitAction(actionType, catatan) {
         text: 'Sedang menyimpan validasi',
         allowOutsideClick: false,
         showConfirmButton: false,
+        customClass: {
+            popup: 'dark:bg-gray-800 dark:text-white',
+            title: 'dark:text-white',
+            content: 'dark:text-gray-200'
+        },
         willOpen: () => {
             Swal.showLoading();
         }
@@ -344,9 +349,9 @@ function submitAction(actionType, catatan) {
                         <div class="mb-4">
                             <i class="fas fa-check-circle text-6xl text-green-500"></i>
                         </div>
-                        <p class="text-lg font-semibold text-gray-800 mb-2">${data.message}</p>
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                            <p class="text-sm text-blue-800">
+                        <p class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">${data.message}</p>
+                        <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mt-4">
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
                                 <i class="fas fa-info-circle mr-2"></i>
                                 Data validasi telah berhasil disimpan.
                             </p>
@@ -356,7 +361,13 @@ function submitAction(actionType, catatan) {
                 icon: 'success',
                 confirmButtonText: 'Lanjutkan',
                 confirmButtonColor: '#10b981',
-                allowOutsideClick: false
+                allowOutsideClick: false,
+                customClass: {
+                    popup: 'dark:bg-gray-800 dark:text-white',
+                    title: 'dark:text-white',
+                    content: 'dark:text-gray-200',
+                    confirmButton: 'dark:bg-green-600 dark:hover:bg-green-700'
+                }
             }).then((result) => {
                 // Reload halaman setelah save berhasil
                 setTimeout(() => {
@@ -376,14 +387,20 @@ function submitAction(actionType, catatan) {
     })
     .catch(error => {
         console.error('Error:', error);
-        
+
         // Show error notification
         Swal.fire({
             title: '❌ Error!',
             text: 'Terjadi kesalahan jaringan. Silakan coba lagi.',
             icon: 'error',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#ef4444'
+            confirmButtonColor: '#ef4444',
+            customClass: {
+                popup: 'dark:bg-gray-800 dark:text-white',
+                title: 'dark:text-white',
+                content: 'dark:text-gray-200',
+                confirmButton: 'dark:bg-red-600 dark:hover:bg-red-700'
+            }
         });
     });
 }
@@ -410,7 +427,7 @@ if (typeof Swal === 'undefined') {
 // Function to change usulan status
 function changeStatus(newStatus) {
     console.log('Changing status to:', newStatus);
-    
+
     // Show confirmation dialog for ALL status changes
     Swal.fire({
         title: 'Konfirmasi Kirim Usulan',
@@ -419,9 +436,9 @@ function changeStatus(newStatus) {
                 <div class="mb-4">
                     <i class="fas fa-exclamation-triangle text-6xl text-yellow-500"></i>
                 </div>
-                <p class="text-lg font-semibold text-gray-800 mb-2">Apakah Anda yakin ingin mengirim usulan?</p>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                    <p class="text-sm text-blue-800">
+                <p class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Apakah Anda yakin ingin mengirim usulan?</p>
+                <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mt-4">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
                         <strong>Status Usulan:</strong> ${newStatus}
                     </p>
                 </div>
@@ -433,7 +450,14 @@ function changeStatus(newStatus) {
         cancelButtonText: 'Batal',
         confirmButtonColor: '#10b981',
         cancelButtonColor: '#6b7280',
-        reverseButtons: true
+        reverseButtons: true,
+        customClass: {
+            popup: 'dark:bg-gray-800 dark:text-white',
+            title: 'dark:text-white',
+            content: 'dark:text-gray-200',
+            confirmButton: 'dark:bg-green-600 dark:hover:bg-green-700',
+            cancelButton: 'dark:bg-gray-600 dark:hover:bg-gray-700'
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             // Show loading
@@ -442,6 +466,11 @@ function changeStatus(newStatus) {
                 text: 'Sedang mengubah status usulan',
                 allowOutsideClick: false,
                 showConfirmButton: false,
+                customClass: {
+                    popup: 'dark:bg-gray-800 dark:text-white',
+                    title: 'dark:text-white',
+                    content: 'dark:text-gray-200'
+                },
                 willOpen: () => {
                     Swal.showLoading();
                 }
@@ -480,9 +509,9 @@ function processStatusChangeRequest(newStatus) {
                         <div class="mb-4">
                             <i class="fas fa-check-circle text-6xl text-green-500"></i>
                         </div>
-                        <p class="text-lg font-semibold text-gray-800 mb-2">${data.message}</p>
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                            <p class="text-sm text-blue-800">
+                        <p class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">${data.message}</p>
+                        <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mt-4">
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
                                 <i class="fas fa-info-circle mr-2"></i>
                                 ${getStatusChangeMessage(newStatus)}
                             </p>
@@ -492,7 +521,13 @@ function processStatusChangeRequest(newStatus) {
                 icon: 'success',
                 confirmButtonText: 'Lanjutkan',
                 confirmButtonColor: '#10b981',
-                allowOutsideClick: false
+                allowOutsideClick: false,
+                customClass: {
+                    popup: 'dark:bg-gray-800 dark:text-white',
+                    title: 'dark:text-white',
+                    content: 'dark:text-gray-200',
+                    confirmButton: 'dark:bg-green-600 dark:hover:bg-green-700'
+                }
             }).then((result) => {
                 // Reload halaman setelah status berhasil diubah
                 setTimeout(() => {
@@ -512,14 +547,20 @@ function processStatusChangeRequest(newStatus) {
     })
     .catch(error => {
         console.error('Error:', error);
-        
+
         // Show error notification
         Swal.fire({
             title: '❌ Error!',
             text: 'Terjadi kesalahan jaringan. Silakan coba lagi.',
             icon: 'error',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#ef4444'
+            confirmButtonColor: '#ef4444',
+            customClass: {
+                popup: 'dark:bg-gray-800 dark:text-white',
+                title: 'dark:text-white',
+                content: 'dark:text-gray-200',
+                confirmButton: 'dark:bg-red-600 dark:hover:bg-red-700'
+            }
         });
     });
 }
@@ -532,7 +573,7 @@ function getStatusChangeMessage(newStatus) {
         '{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN }}': 'Status usulan berhasil diubah ke: Belum Direkomendasikan Dari BKN',
         '{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN }}': 'Status usulan berhasil diubah ke: Usulan Direkomendasikan BKN'
     };
-    
+
     return statusMessages[newStatus] || `Status usulan berhasil diubah ke: ${newStatus}`;
 }
 </script>

@@ -5,19 +5,19 @@
         $viewOnlyStatuses = [
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS,
-            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER,
+            \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_TIM_SISTER,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_TIM_SISTER
         ];
-        
+
         // Status yang dapat diedit (tidak view-only) - hanya status draft dan permintaan perbaikan
         $editableStatuses = [
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS,
             \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER
         ];
-        
+
         if (in_array($usulan->status_usulan, $editableStatuses)) {
             $isViewOnly = false;  // Dapat diedit
         } else {
@@ -27,48 +27,39 @@
 
     @if(!$isViewOnly)
         {{-- Action buttons hanya muncul jika bukan view-only --}}
-        <div class="flex flex-wrap gap-3 justify-start items-center">
+        <div class="flex flex-wrap gap-3 justify-end items-center">
             {{-- Simpan Usulan (Selalu Aktif jika Edit) --}}
-            <button type="submit" name="action" value="simpan" 
-                    class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
-                <i data-lucide="save" class="w-4 h-4"></i>
+            <button type="submit" name="action" value="simpan"
+                    class="inline-flex items-center gap-3 px-6 py-3 text-base font-medium bg-gray-600 text-white rounded-lg hover:bg-gray-200 hover:text-gray-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
+                <i data-lucide="save" class="w-5 h-5"></i>
                 Simpan Usulan
             </button>
 
             {{-- Kirim Usulan Ke Kepegawaian Universitas --}}
             @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_DRAFT_USULAN || is_null($usulan->status_usulan))
-                <button type="button" 
+                <button type="button"
                         onclick="submitAction('kirim_ke_kepegawaian')"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim ke Kepegawaian
+                        class="inline-flex items-center gap-3 px-6 py-3 text-base font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                    Kirim Usulan ke Kepegawaian
                 </button>
             @endif
 
             {{-- Kirim Usulan Perbaikan Ke Kepegawaian Universitas --}}
             @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS)
                 <button type="button" onclick="submitAction('kirim_perbaikan_ke_kepegawaian')"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    Kirim Perbaikan
+                        class="inline-flex items-center gap-3 px-6 py-3 text-base font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-black rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    Kirim Usulan Perbaikan Ke Kepegawaian
                 </button>
             @endif
 
             {{-- Kirim Usulan Perbaikan Dari Tim Sister ke Kepegawaian Universitas --}}
             @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_TIM_SISTER)
                 <button type="button" onclick="submitAction('kirim_perbaikan_tim_sister_ke_kepegawaian')"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    Kirim dari Sister
-                </button>
-            @endif
-
-            {{-- Kirim Usulan Perbaikan Ke Tim Sister --}}
-            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_TIM_SISTER)
-                <button type="button" onclick="submitAction('kirim_perbaikan_ke_tim_sister')"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                    Kirim ke Sister
+                        class="inline-flex items-center gap-3 px-6 py-3 text-base font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 whitespace-nowrap">
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    Kirim Usulan Perbaikan Dari Tim Sister ke Kepegawaian
                 </button>
             @endif
         </div>
@@ -127,7 +118,7 @@ const actionConfigs = {
 function submitAction(action) {
     try {
         console.log('submitAction called with action:', action);
-        
+
         // Check if SweetAlert2 is available
         if (typeof Swal === 'undefined') {
             console.log('SweetAlert2 not available, using confirm dialog');
@@ -136,10 +127,10 @@ function submitAction(action) {
             }
             return;
         }
-        
+
         const config = actionConfigs[action];
         console.log('Action config:', config);
-        
+
         if (!config) {
             console.error('Action config not found for:', action);
             // Use global showError if available, otherwise use fallback
@@ -188,7 +179,7 @@ function submitAction(action) {
                 processAction(action);
             }
         });
-        
+
     } catch (error) {
         // Fallback to processAction directly
         processAction(action);
@@ -197,45 +188,45 @@ function submitAction(action) {
 
 function processAction(action) {
     try {
-        
+
         // Gunakan form utama yang sudah ada untuk NUPTK (form dengan id="formAction")
         let actionForm = document.querySelector('form input[id="formAction"]')?.closest('form');
         let actionInput = document.getElementById('formAction');
-        
+
         // Fallback: jika tidak ditemukan, cari form yang mengandung button action
         if (!actionForm || !actionInput) {
             actionForm = document.querySelector('form[action*="usulan-nuptk"]');
             actionInput = actionForm?.querySelector('input[name="action"]');
         }
-        
-        
+
+
         if (actionForm && actionInput) {
             // Set global variable untuk tracking
             window.pendingAction = action;
-            
+
             // Set action dan submit form utama
             actionInput.value = action;
-            
+
             // Close loading SweetAlert2 jika ada
             if (typeof Swal !== 'undefined') {
                 Swal.close();
             }
-            
-            
+
+
             // Submit form utama tanpa mencegah redirect
             actionForm.submit();
         } else {
             // Fallback: buat form dinamis jika form utama tidak ditemukan
             createDynamicForm(action);
         }
-        
+
     } catch (error) {
-        
+
         // Close loading if SweetAlert2 is available
         if (typeof Swal !== 'undefined') {
             Swal.close();
         }
-        
+
         // Show error message
         if (typeof window.showError === 'function') {
             window.showError('Terjadi kesalahan saat memproses aksi. Silakan coba lagi.');
@@ -253,7 +244,7 @@ function createDynamicForm(action) {
         if (existingForm) {
             existingForm.remove();
         }
-        
+
         // Create new form untuk NUPTK
         const actionForm = document.createElement('form');
         actionForm.id = 'actionForm';
@@ -261,39 +252,39 @@ function createDynamicForm(action) {
         actionForm.method = 'POST';
         actionForm.enctype = 'multipart/form-data';
         actionForm.style.display = 'none';
-        
+
         // Add CSRF token
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = '_token';
         csrfInput.value = '{{ csrf_token() }}';
         actionForm.appendChild(csrfInput);
-        
+
         // Add method override
         const methodInput = document.createElement('input');
         methodInput.type = 'hidden';
         methodInput.name = '_method';
         methodInput.value = 'PUT';
         actionForm.appendChild(methodInput);
-        
+
         // Add action input
         const actionValue = document.createElement('input');
         actionValue.type = 'hidden';
         actionValue.name = 'action';
         actionValue.value = action;
         actionForm.appendChild(actionValue);
-        
+
         // Add jenis_nuptk untuk NUPTK
         const jenisNuptkInput = document.createElement('input');
         jenisNuptkInput.type = 'hidden';
         jenisNuptkInput.name = 'jenis_nuptk';
         jenisNuptkInput.value = '{{ $usulan->jenis_nuptk ?? "" }}';
         actionForm.appendChild(jenisNuptkInput);
-        
+
         // Add form to body and submit
         document.body.appendChild(actionForm);
         actionForm.submit();
-        
+
     } catch (error) {
         alert('Terjadi kesalahan saat membuat form. Silakan coba lagi.');
     }
@@ -306,11 +297,11 @@ function createDynamicForm(action) {
 document.addEventListener('DOMContentLoaded', function() {
     // Hanya tangani form utama (yang memiliki input dengan id="formAction")
     const mainForm = document.querySelector('form input[id="formAction"]')?.closest('form');
-    
+
     if (mainForm) {
         mainForm.addEventListener('submit', function(e) {
             const actionInput = this.querySelector('input[name="action"]');
-            
+
             // If there's a pending action, use it
             if (window.pendingAction && actionInput) {
                 actionInput.value = window.pendingAction;
@@ -318,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Add global variable to track the action
     window.pendingAction = null;
 });

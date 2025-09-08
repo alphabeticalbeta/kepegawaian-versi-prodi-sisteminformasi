@@ -9,16 +9,15 @@
             Total: {{ $usulans->count() }} pengusul
         </span>
     </div>
-    
+
     @if($usulans->count() > 0)
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-slate-600">
             <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                 <tr>
                     <th scope="col" class="px-6 py-3 text-center">No</th>
-                    <th scope="col" class="px-6 py-3">Nama Pengusul</th>
-                    <th scope="col" class="px-6 py-3">NIP</th>
-                    <th scope="col" class="px-6 py-3">Unit Kerja</th>
+                    <th scope="col" class="px-6 py-3">Nama dan NIP Pegawai</th>
+                    <th scope="col" class="px-6 py-3">Fakultas dan Prodi</th>
                     <th scope="col" class="px-6 py-3 text-center">Status</th>
                     <th scope="col" class="px-6 py-3 text-center">Tanggal Pengajuan</th>
                     <th scope="col" class="px-6 py-3 text-center">Aksi</th>
@@ -30,23 +29,17 @@
                     <td class="px-6 py-4 text-center font-medium">{{ $index + 1 }}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
-                            <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user text-slate-600 text-sm"></i>
-                            </div>
                             <div>
                                 <div class="font-medium text-slate-900">{{ $usulan->pegawai->nama_lengkap ?? 'N/A' }}</div>
-                                <div class="text-xs text-slate-500">{{ $usulan->pegawai->jenis_pegawai ?? 'N/A' }}</div>
+                                <div class="font-medium text-slate-900">NIP: {{ $usulan->pegawai->nip ?? 'N/A' }}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 font-mono text-sm">{{ $usulan->pegawai->nip ?? 'N/A' }}</td>
                     <td class="px-6 py-4">
                         @if($usulan->pegawai && $usulan->pegawai->unitKerja)
                             <div class="text-sm">
-                                <div class="font-medium">{{ $usulan->pegawai->unitKerja->nama ?? 'N/A' }}</div>
-                                @if($usulan->pegawai->unitKerja->subUnitKerja)
-                                    <div class="text-xs text-slate-500">{{ $usulan->pegawai->unitKerja->subUnitKerja->nama ?? 'N/A' }}</div>
-                                @endif
+                                <div class="font-medium">{{ $usulan->pegawai->unitKerja->subUnitKerja->unitKerja->nama ?? 'N/A' }}</div>
+                                <div class="text-xs text-slate-500">{{ $usulan->pegawai->unitKerja->nama ?? 'N/A' }}</div>
                             </div>
                         @else
                             <span class="text-slate-400">N/A</span>
@@ -70,7 +63,7 @@
                         {{ $usulan->created_at ? \Carbon\Carbon::parse($usulan->created_at)->format('d M Y') : 'N/A' }}
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <a href="{{ route('backend.kepegawaian-universitas.usulan.validasi-kepangkatan', $usulan->id) }}" 
+                        <a href="{{ route('backend.kepegawaian-universitas.usulan.validasi-kepangkatan', $usulan->id) }}"
                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
                             <i class="fas fa-eye mr-1"></i>
                             Detail

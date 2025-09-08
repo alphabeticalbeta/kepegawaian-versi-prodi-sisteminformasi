@@ -12,6 +12,102 @@
     {{-- Favicon --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+    {{-- Dark Mode Script - Load Immediately --}}
+    <script>
+        // Define toggleDarkMode function globally immediately
+        window.toggleDarkMode = function() {
+            console.log('toggleDarkMode called');
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+
+            // Update icon without reinitializing all Lucide icons
+            const icon = document.getElementById('dark-mode-icon');
+            if (icon) {
+                if (isDark) {
+                    icon.innerHTML = '<i data-lucide="sun"></i>';
+                } else {
+                    icon.innerHTML = '<i data-lucide="moon"></i>';
+                }
+                // Only reinitialize the specific icon, not all icons
+                if (window.lucide && icon.querySelector('[data-lucide]')) {
+                    lucide.createIcons(icon);
+                }
+            }
+
+            console.log('Dark mode toggled:', isDark);
+        };
+
+        // Initialize dark mode immediately
+        (function() {
+            const darkMode = localStorage.getItem('darkMode');
+            console.log('Dark mode value from localStorage:', darkMode);
+
+            // Only apply dark mode if explicitly set to 'true'
+            if (darkMode === 'true') {
+                document.documentElement.classList.add('dark');
+                console.log('Dark mode applied');
+            } else {
+                document.documentElement.classList.remove('dark');
+                console.log('Light mode applied');
+                // Set default to light mode if not set
+                if (darkMode === null || darkMode === undefined) {
+                    localStorage.setItem('darkMode', 'false');
+                    console.log('Default set to light mode');
+                }
+            }
+        })();
+
+        // Add event listener for dark mode toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.getElementById('dark-mode-toggle');
+            if (toggleButton) {
+                toggleButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.toggleDarkMode === 'function') {
+                        window.toggleDarkMode();
+                    } else {
+                        console.log('toggleDarkMode function not available');
+                    }
+                });
+                console.log('Dark mode button event listener added');
+            } else {
+                console.log('Dark mode button not found');
+            }
+
+            // Initialize icon
+            const icon = document.getElementById('dark-mode-icon');
+            if (icon) {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    icon.innerHTML = '<i data-lucide="sun"></i>';
+                } else {
+                    icon.innerHTML = '<i data-lucide="moon"></i>';
+                }
+                // Initialize only the specific icon to avoid infinite loop
+                if (window.lucide && icon.querySelector('[data-lucide]')) {
+                    lucide.createIcons(icon);
+                }
+            }
+        });
+
+        // Emergency reset function for dark mode issues
+        window.resetDarkMode = function() {
+            localStorage.removeItem('darkMode');
+            localStorage.setItem('darkMode', 'false');
+            document.documentElement.classList.remove('dark');
+            location.reload();
+        };
+
+        // Clear any corrupted dark mode data
+        window.clearDarkModeData = function() {
+            localStorage.removeItem('darkMode');
+            localStorage.removeItem('theme');
+            document.documentElement.classList.remove('dark');
+            console.log('Dark mode data cleared');
+        };
+    </script>
+
     {{-- Vite Integration - CSS dan JS --}}
     @vite(['resources/css/app.css', 'resources/js/admin-fakultas/index.js'])
 

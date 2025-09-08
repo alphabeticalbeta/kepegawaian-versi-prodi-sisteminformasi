@@ -93,7 +93,7 @@
                     </div>
                 @endif
 
-                @if($usulan->status_usulan === UsulanModel::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER)
+                @if($usulan->status_usulan === UsulanModel::STATUS_USULAN_SUDAH_DIKIRIM_KE_TIM_SISTER)
                     {{-- Sister processing status --}}
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
@@ -512,7 +512,7 @@
                         </button>
                     </div>
                 </div>
-            @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_SUDAH_DIKIRIM_KE_SISTER)
+            @elseif($usulan->status_usulan === UsulanModel::STATUS_USULAN_SUDAH_DIKIRIM_KE_TIM_SISTER)
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <div class="flex items-center">
                         <i data-lucide="send" class="w-4 h-4 text-blue-600 mr-2"></i>

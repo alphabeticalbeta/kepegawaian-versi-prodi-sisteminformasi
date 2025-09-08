@@ -23,6 +23,7 @@
                 ['route' => route('pegawai-unmul.usulan-jabatan.index'), 'icon' => 'file-user', 'label' => 'Usulan Jabatan', 'pattern' => 'pegawai-unmul.usulan-jabatan.*'],
                 ['route' => route('pegawai-unmul.usulan-kepangkatan.index'), 'icon' => 'trending-up', 'label' => 'Usulan Kepangkatan', 'pattern' => 'pegawai-unmul.usulan-kepangkatan.*'],
                 ['route' => route('pegawai-unmul.usulan-nuptk.index'), 'icon' => 'user-check', 'label' => 'Usulan NUPTK', 'pattern' => 'pegawai-unmul.usulan-nuptk.*'],
+                ['route' => route('pegawai-unmul.usulan-tugas-belajar.index'), 'icon' => 'book-open', 'label' => 'Usulan Tugas Belajar', 'pattern' => 'pegawai-unmul.usulan-tugas-belajar.*'],
                 ['route' => route('pegawai-unmul.usulan-laporan-lkd.index'), 'icon' => 'file-bar-chart-2', 'label' => 'Usulan Laporan LKD', 'pattern' => 'pegawai-unmul.usulan-laporan-lkd.*'],
                 ['route' => route('pegawai-unmul.usulan-presensi.index'), 'icon' => 'clipboard-check', 'label' => 'Usulan Presensi', 'pattern' => 'pegawai-unmul.usulan-presensi.*'],
                 ['route' => route('pegawai-unmul.usulan-penyesuaian-masa-kerja.index'), 'icon' => 'clock', 'label' => 'Usulan Penyesuaian Masa Kerja', 'pattern' => 'pegawai-unmul.usulan-penyesuaian-masa-kerja.*'],
@@ -33,7 +34,6 @@
                 ['route' => route('pegawai-unmul.usulan-pencantuman-gelar.index'), 'icon' => 'graduation-cap', 'label' => 'Usulan Pencantuman Gelar', 'pattern' => 'pegawai-unmul.usulan-pencantuman-gelar.*'],
                 ['route' => route('pegawai-unmul.usulan-id-sinta-sister.index'), 'icon' => 'link', 'label' => 'Usulan ID SINTA ke SISTER', 'pattern' => 'pegawai-unmul.usulan-id-sinta-sister.*'],
                 ['route' => route('pegawai-unmul.usulan-satyalancana.index'), 'icon' => 'medal', 'label' => 'Usulan Satyalancana', 'pattern' => 'pegawai-unmul.usulan-satyalancana.*'],
-                ['route' => route('pegawai-unmul.usulan-tugas-belajar.index'), 'icon' => 'book-open', 'label' => 'Usulan Tugas Belajar', 'pattern' => 'pegawai-unmul.usulan-tugas-belajar.*'],
                 ['route' => route('pegawai-unmul.usulan-pengaktifan-kembali.index'), 'icon' => 'user-plus', 'label' => 'Usulan Pengaktifan Kembali', 'pattern' => 'pegawai-unmul.usulan-pengaktifan-kembali.*'],
             ];
             $isUsulanActive = collect($usulanMenus)->contains(fn($menu) => request()->routeIs($menu['pattern']));

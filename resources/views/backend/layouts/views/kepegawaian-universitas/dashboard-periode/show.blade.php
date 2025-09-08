@@ -39,11 +39,14 @@
     {{-- Include Daftar Pengusul NUPTK --}}
     @include('backend.layouts.views.kepegawaian-universitas.usulan.daftar-pengusul.daftar-pengusul-nuptk')
 
+    {{-- Include Daftar Pengusul Tugas Belajar --}}
+    @include('backend.layouts.views.kepegawaian-universitas.usulan.daftar-pengusul.daftar-pengusul-tubel')
+
     {{-- Include Modal NUPTK --}}
     @include('backend.layouts.views.periode-usulan.modal-nuptk.modal-nuptk', ['jenisUsulan' => $periode->jenis_usulan])
 
     {{-- Recent Usulans - Hanya tampil jika tidak ada filter --}}
-    @if(!isset($filter) || ($filter !== 'jenis_usulan_pangkat' && $filter !== 'jenis_nuptk'))
+    @if(!isset($filter) || ($filter !== 'jenis_usulan_pangkat' && $filter !== 'jenis_nuptk' && $filter !== 'jenis_tugas_belajar'))
     <!-- Recent Usulans -->
     <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30">
         <div class="p-6 border-b border-slate-200">

@@ -402,23 +402,23 @@
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                @if($periode->jenis_usulan == 'Semua Usulan Aktif') bg-yellow-100 text-yellow-800
-                                @elseif($periode->jenis_usulan == 'jabatan-dosen-regular') bg-indigo-100 text-indigo-800
-                                @elseif($periode->jenis_usulan == 'jabatan-dosen-pengangkatan') bg-cyan-100 text-cyan-800
-                                @elseif($periode->jenis_usulan == 'usulan-nuptk') bg-green-100 text-green-800
-                                @elseif($periode->jenis_usulan == 'usulan-laporan-lkd') bg-blue-100 text-blue-800
-                                @elseif($periode->jenis_usulan == 'usulan-presensi') bg-pink-100 text-pink-800
-                                @elseif($periode->jenis_usulan == 'usulan-id-sinta-sister') bg-teal-100 text-teal-800
-                                @elseif($periode->jenis_usulan == 'usulan-satyalancana') bg-orange-100 text-orange-800
-                                @elseif($periode->jenis_usulan == 'usulan-tugas-belajar') bg-cyan-100 text-cyan-800
-                                @elseif($periode->jenis_usulan == 'usulan-pengaktifan-kembali') bg-emerald-100 text-emerald-800
-                                @elseif($periode->jenis_usulan == 'usulan-penyesuaian-masa-kerja') bg-amber-100 text-amber-800
-                                @elseif($periode->jenis_usulan == 'usulan-ujian-dinas-ijazah') bg-lime-100 text-lime-800
-                                @elseif($periode->jenis_usulan == 'usulan-laporan-serdos') bg-rose-100 text-rose-800
-                                @elseif($periode->jenis_usulan == 'usulan-pensiun') bg-slate-100 text-slate-800
-                                @elseif($periode->jenis_usulan == 'usulan-kepangkatan') bg-violet-100 text-violet-800
-                                @elseif($periode->jenis_usulan == 'usulan-pencantuman-gelar') bg-fuchsia-100 text-fuchsia-800
-                                @else bg-gray-100 text-gray-800 @endif">
+                                @if($periode->jenis_usulan == 'Semua Usulan Aktif') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                @elseif($periode->jenis_usulan == 'jabatan-dosen-regular') bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200
+                                @elseif($periode->jenis_usulan == 'jabatan-dosen-pengangkatan') bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200
+                                @elseif($periode->jenis_usulan == 'usulan-nuptk') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                @elseif($periode->jenis_usulan == 'usulan-laporan-lkd') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                @elseif($periode->jenis_usulan == 'usulan-presensi') bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200
+                                @elseif($periode->jenis_usulan == 'usulan-id-sinta-sister') bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200
+                                @elseif($periode->jenis_usulan == 'usulan-satyalancana') bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200
+                                @elseif($periode->jenis_usulan == 'usulan-tugas-belajar') bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200
+                                @elseif($periode->jenis_usulan == 'usulan-pengaktifan-kembali') bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200
+                                @elseif($periode->jenis_usulan == 'usulan-penyesuaian-masa-kerja') bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200
+                                @elseif($periode->jenis_usulan == 'usulan-ujian-dinas-ijazah') bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200
+                                @elseif($periode->jenis_usulan == 'usulan-laporan-serdos') bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200
+                                @elseif($periode->jenis_usulan == 'usulan-pensiun') bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200
+                                @elseif($periode->jenis_usulan == 'usulan-kepangkatan') bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200
+                                @elseif($periode->jenis_usulan == 'usulan-pencantuman-gelar') bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200
+                                @else bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 @endif">
                                 @if($periode->jenis_usulan == 'Semua Usulan Aktif')
                                     Semua Usulan Aktif
                                 @elseif($periode->jenis_usulan == 'jabatan-dosen-regular')
@@ -478,31 +478,37 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
-                                {{ $periode->usulans_count ?? 0 }}
+                                {{ $periode->usulans_submitted_count ?? 0 }}
                             </td>
                             <td class="px-6 py-4">
-                                @if(($periode->usulans_count ?? 0) > 0)
+                                @if(($periode->usulans_submitted_count ?? 0) > 0)
                                     @if($jenisUsulan === 'kepangkatan')
                                         <button onclick="openModalLihatPengusulKepangkatan({{ $periode->id }})"
-                                               class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                               class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 dark:text-blue-300 dark:bg-blue-900 dark:hover:bg-blue-800 dark:hover:text-blue-200 transition-all duration-200 shadow-sm hover:shadow-md">
                                             <i class="fas fa-users mr-1"></i>
-                                            Lihat {{ $periode->usulans_count }} Pengusul
+                                            Lihat {{ $periode->usulans_submitted_count }} Pengusul
                                         </button>
                                     @elseif($jenisUsulan === 'nuptk' || $jenisUsulan === 'usulan-nuptk')
                                         <button onclick="openModalLihatPengusulNuptk({{ $periode->id }})"
-                                               class="inline-flex items-center px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-full hover:bg-green-100 hover:text-green-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                               class="inline-flex items-center px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-full hover:bg-green-100 hover:text-green-700 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 dark:hover:text-green-200 transition-all duration-200 shadow-sm hover:shadow-md">
                                             <i class="fas fa-users mr-1"></i>
-                                            Lihat {{ $periode->usulans_count }} Pengusul
+                                            Lihat {{ $periode->usulans_submitted_count }} Pengusul
+                                        </button>
+                                    @elseif($jenisUsulan === 'tugas-belajar' || $jenisUsulan === 'usulan-tugas-belajar')
+                                        <button onclick="openModalLihatPengusulTugasBelajar({{ $periode->id }})"
+                                               class="inline-flex items-center px-3 py-1 text-xs font-medium text-cyan-600 bg-cyan-50 rounded-full hover:bg-cyan-100 hover:text-cyan-700 dark:text-cyan-300 dark:bg-cyan-900 dark:hover:bg-cyan-800 dark:hover:text-cyan-200 transition-all duration-200 shadow-sm hover:shadow-md">
+                                            <i class="fas fa-users mr-1"></i>
+                                            Lihat {{ $periode->usulans_submitted_count }} Pengusul
                                         </button>
                                     @else
                                         <a href="{{ route('backend.kepegawaian-universitas.dashboard-periode.show', $periode) }}"
-                                           class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                                           class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 hover:text-blue-700 dark:text-blue-300 dark:bg-blue-900 dark:hover:bg-blue-800 dark:hover:text-blue-200 transition-all duration-200 shadow-sm hover:shadow-md">
                                             <i class="fas fa-users mr-1"></i>
                                             Lihat {{ $periode->usulans_submitted_count }} Pengusul
                                         </a>
                                     @endif
                                 @else
-                                    <span class="text-xs text-gray-500">Belum ada pengusul yang dikirim</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Belum ada pengusul yang dikirim</span>
                                 @endif
                             </td>
                         <td class="px-6 py-4">
@@ -522,10 +528,10 @@
                                 </a>
 
                                 <!-- Delete Button - Disabled if has usulans -->
-                                @if(($periode->usulans_count ?? 0) > 0)
+                                @if(($periode->usulans_submitted_count ?? 0) > 0)
                                     <button disabled
                                             class="action-button p-2 rounded-lg text-gray-400 bg-gray-50 cursor-not-allowed"
-                                            title="Tidak dapat dihapus karena ada {{ $periode->usulans_count }} usulan yang masuk">
+                                            title="Tidak dapat dihapus karena ada {{ $periode->usulans_submitted_count }} usulan yang masuk">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 @else
@@ -894,10 +900,16 @@ window.confirmDelete = function(periodeId, periodeName, event) {
 {{-- Include Modal NUPTK --}}
 @include('backend.layouts.views.periode-usulan.modal-nuptk.modal-nuptk')
 
+{{-- Include Modal Tugas Belajar --}}
+@include('backend.layouts.views.periode-usulan.modal-tugas-belajar.modal-tugas-belajar', ['jenisUsulan' => $jenisUsulan])
+
 {{-- Include JavaScript Modal Kepangkatan --}}
 <script src="{{ asset('js/modal-kepangkatan.js') }}"></script>
 
 {{-- Include JavaScript Modal NUPTK --}}
 <script src="{{ asset('js/modal-nuptk.js') }}"></script>
+
+{{-- Include JavaScript Modal Tugas Belajar --}}
+<script src="{{ asset('js/modal-tugas-belajar.js') }}"></script>
 
 

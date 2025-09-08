@@ -91,32 +91,32 @@ class SharedUtils {
 
         // Show success message
         window.showSuccess = function(message) {
-            this.showAlert(message, 'success');
+            window.showAlert(message, 'success');
         };
 
         // Show error message
         window.showError = function(message) {
-            this.showAlert(message, 'error');
+            window.showAlert(message, 'error');
         };
 
         // Show warning message
         window.showWarning = function(message) {
-            this.showAlert(message, 'warning');
+            window.showAlert(message, 'warning');
         };
 
         // Show info message
         window.showInfo = function(message) {
-            this.showAlert(message, 'info');
+            window.showAlert(message, 'info');
         };
 
         // Generic alert function
         window.showAlert = function(message, type = 'info') {
             const alertDiv = document.createElement('div');
-            alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm ${this.getAlertClasses(type)}`;
+            alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm ${window.getAlertClasses(type)}`;
             alertDiv.innerHTML = `
                 <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0">
-                        ${this.getAlertIcon(type)}
+                        ${window.getAlertIcon(type)}
                     </div>
                     <div class="flex-1">
                         <p class="text-sm font-medium">${message}</p>

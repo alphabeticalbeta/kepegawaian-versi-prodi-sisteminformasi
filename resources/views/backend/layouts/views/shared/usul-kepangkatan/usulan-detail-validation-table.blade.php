@@ -2,7 +2,7 @@
 <form action="{{ route('backend.kepegawaian-universitas.usulan.save-validation', $usulan->id) }}" method="POST" id="validationForm">
     @csrf
     <input type="hidden" name="action_type" value="save_only">
-    
+
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-5">
             <h2 class="text-xl font-bold text-white flex items-center">
@@ -62,8 +62,8 @@
                             Status: Permintaan Perbaikan ke Pegawai
                         </div>
                         <div class="text-sm text-red-700">
-                            <strong>Perhatian:</strong> Usulan telah dikembalikan ke pegawai untuk perbaikan. 
-                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            <strong>Perhatian:</strong> Usulan telah dikembalikan ke pegawai untuk perbaikan.
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit.
                             Pegawai harus memperbaiki data yang tidak sesuai sebelum dapat diajukan kembali.
                         </div>
                     </div>
@@ -158,8 +158,8 @@
                             Status: Permintaan Perbaikan dari BKN
                         </div>
                         <div class="text-sm text-red-700">
-                            <strong>Perhatian:</strong> Usulan telah dikembalikan dari BKN ke pegawai untuk perbaikan. 
-                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            <strong>Perhatian:</strong> Usulan telah dikembalikan dari BKN ke pegawai untuk perbaikan.
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit.
                             Pegawai harus memperbaiki data yang tidak sesuai sebelum dapat diajukan kembali ke BKN.
                         </div>
                     </div>
@@ -253,8 +253,8 @@
                             Status: Usulan Belum Direkomendasi BKN
                         </div>
                         <div class="text-sm text-red-700">
-                            <strong>Perhatian:</strong> Usulan telah ditolak oleh BKN dan tidak direkomendasikan. 
-                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            <strong>Perhatian:</strong> Usulan telah ditolak oleh BKN dan tidak direkomendasikan.
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit.
                             Pegawai harus memperbaiki data yang tidak sesuai sebelum dapat diajukan kembali.
                         </div>
                     </div>
@@ -271,8 +271,8 @@
                             Status: Usulan Direkomendasikan BKN
                         </div>
                         <div class="text-sm text-green-700">
-                            <strong>Selamat:</strong> Usulan telah direkomendasikan oleh BKN dan disetujui. 
-                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            <strong>Selamat:</strong> Usulan telah direkomendasikan oleh BKN dan disetujui.
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit.
                             Usulan telah berhasil melewati tahap validasi BKN.
                         </div>
                     </div>
@@ -289,8 +289,8 @@
                             Status: SK Sudah Terbit
                         </div>
                         <div class="text-sm text-emerald-700">
-                            <strong>Selamat:</strong> SK (Surat Keputusan) telah terbit dan usulan telah selesai diproses. 
-                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit. 
+                            <strong>Selamat:</strong> SK (Surat Keputusan) telah terbit dan usulan telah selesai diproses.
+                            Semua field validasi sekarang dalam mode <strong>View Only</strong> dan tidak dapat diedit.
                             Proses usulan kepangkatan telah berhasil diselesaikan.
                         </div>
                     </div>
@@ -361,7 +361,7 @@
                                     $isInvalid = $fieldValidation['status'] === 'tidak_sesuai';
 
                                     // Check if current role can edit
-                                     $canEdit = $currentRole === 'Kepegawaian Universitas' && 
+                                     $canEdit = $currentRole === 'Kepegawaian Universitas' &&
                                                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS &&
                                                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
                                                 $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
@@ -383,8 +383,8 @@
                                 @endphp
                                 <tr class="hover:bg-gray-50 {{ $isInvalid ? 'bg-red-50' : '' }}">
                                     <td class="px-6 py-4">
-                                        <div class="text-base font-semibold text-gray-900">{{ $fieldLabel }}</div>
-                                        <div class="text-sm text-gray-500">
+                                        <div class="text-sm font-medium text-gray-600 mb-1">{{ $fieldLabel }}</div>
+                                        <div class="text-lg font-semibold text-gray-900">
                                             @php
                                                 $value = '';
                                                 if ($groupKey === 'data_pribadi') {
@@ -420,9 +420,9 @@
                                                 } elseif ($groupKey === 'dokumen_profil') {
                                                     if ($usulan->pegawai->$fieldKey) {
                                                         $route = route('backend.kepegawaian-universitas.usulan.show-pegawai-document', [$usulan->id, $fieldKey]);
-                                                        $value = '<a href="' . e($route) . '" target="_blank" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"><i data-lucide="eye" class="w-4 h-4 mr-2"></i>Lihat Dokumen</a>';
+                                                        $value = '<a href="' . e($route) . '" target="_blank" class="inline-flex items-center px-4 py-2.5 text-base font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"><i data-lucide="eye" class="w-5 h-5 mr-2"></i>Lihat Dokumen</a>';
                                                     } else {
-                                                        $value = '<span class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg"><i data-lucide="file-x" class="w-4 h-4 mr-2"></i>Dokumen tidak tersedia</span>';
+                                                        $value = '<span class="inline-flex items-center px-4 py-2.5 text-base font-medium text-gray-500 bg-gray-100 rounded-lg border border-gray-200"><i data-lucide="file-x" class="w-5 h-5 mr-2"></i>Dokumen tidak tersedia</span>';
                                                     }
                                                 } elseif ($groupKey === 'dokumen_usulan') {
                                                     // Check multiple possible locations for document path
@@ -443,9 +443,9 @@
 
                                                     if ($docPath) {
                                                         $route = route('backend.kepegawaian-universitas.usulan.show-document', [$usulan->id, $fieldKey]);
-                                                        $value = '<a href="' . e($route) . '" target="_blank" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"><i data-lucide="file-text" class="w-4 h-4 mr-2"></i>Lihat Dokumen</a>';
+                                                        $value = '<a href="' . e($route) . '" target="_blank" class="inline-flex items-center px-4 py-2.5 text-base font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"><i data-lucide="file-text" class="w-5 h-5 mr-2"></i>Lihat Dokumen</a>';
                                                     } else {
-                                                        $value = '<span class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg"><i data-lucide="file-x" class="w-4 h-4 mr-2"></i>Dokumen tidak tersedia</span>';
+                                                        $value = '<span class="inline-flex items-center px-4 py-2.5 text-base font-medium text-gray-500 bg-gray-100 rounded-lg border border-gray-200"><i data-lucide="file-x" class="w-5 h-5 mr-2"></i>Dokumen tidak tersedia</span>';
                                                     }
                                                 }
                                             @endphp
@@ -455,7 +455,7 @@
                                     <td class="px-6 py-4">
                                         @if($canEdit)
                                             <select name="validation[{{ $groupKey }}][{{ $fieldKey }}][status]"
-                                                    class="validation-status block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base px-4 py-3"
+                                                    class="validation-status block w-full border-2 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-lg font-semibold px-4 py-3 bg-white"
                                                     data-group="{{ $groupKey }}"
                                                     data-field="{{ $fieldKey }}">
                                                 <option value="sesuai" {{ $fieldValidation['status'] === 'sesuai' ? 'selected' : '' }}>Sesuai</option>
@@ -464,8 +464,8 @@
 
                                             @if($currentRole === 'Kepegawaian Universitas' && $penilaiInvalidStatus)
                                                 <div class="mt-2">
-                                                    <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-orange-100 text-orange-800">
-                                                        <i data-lucide="alert-triangle" class="w-4 h-4 mr-2"></i>
+                                                    <span class="inline-flex items-center px-4 py-2.5 rounded-lg text-base font-bold bg-orange-100 text-orange-800 border-2 border-orange-200 shadow-sm">
+                                                        <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
                                                         Penilai: {{ ucwords(str_replace('_', ' ', $penilaiInvalidStatus)) }}
                                                     </span>
                                                 </div>
@@ -473,13 +473,13 @@
                                         @else
                                             <div class="flex items-center">
                                                 @if($fieldValidation['status'] === 'sesuai')
-                                                    <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                                                        <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>
+                                                    <span class="inline-flex items-center px-4 py-2.5 rounded-lg text-base font-bold bg-green-100 text-green-800 border-2 border-green-200 shadow-sm">
+                                                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
                                                         Sesuai
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-red-100 text-red-800">
-                                                        <i data-lucide="x-circle" class="w-4 h-4 mr-2"></i>
+                                                    <span class="inline-flex items-center px-4 py-2.5 rounded-lg text-base font-bold bg-red-100 text-red-800 border-2 border-red-200 shadow-sm">
+                                                        <i data-lucide="x-circle" class="w-5 h-5 mr-2"></i>
                                                         Tidak Sesuai
                                                     </span>
                                                 @endif
@@ -489,7 +489,7 @@
                                     <td class="px-6 py-4">
                                         @if($canEdit)
                                             <textarea name="validation[{{ $groupKey }}][{{ $fieldKey }}][keterangan]"
-                                                      class="validation-keterangan block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base px-4 py-3 {{ $fieldValidation['status'] !== 'tidak_sesuai' ? 'bg-gray-100' : '' }}"
+                                                      class="validation-keterangan block w-full border-2 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base px-4 py-3 {{ $fieldValidation['status'] !== 'tidak_sesuai' ? 'bg-gray-100' : 'bg-white' }}"
                                                       rows="3"
                                                       placeholder="Keterangan (wajib jika tidak sesuai)"
                                                       {{ $fieldValidation['status'] !== 'tidak_sesuai' ? 'disabled' : '' }}>{{ $fieldValidation['keterangan'] ?? '' }}</textarea>
@@ -503,13 +503,13 @@
                                                 </div>
                                             @endif
                                         @else
-                                            <div class="text-sm text-gray-600">
+                                            <div class="text-base font-medium text-gray-800 leading-relaxed">
                                                 {{ $fieldValidation['keterangan'] ?? '-' }}
 
                                                 @if($currentRole === 'Kepegawaian Universitas' && $penilaiInvalidKeterangan)
                                                     <div class="mt-1">
-                                                        <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-orange-100 text-orange-800">
-                                                            <i data-lucide="alert-triangle" class="w-4 h-4 mr-2"></i>
+                                                        <span class="inline-flex items-center px-4 py-2.5 rounded-lg text-base font-bold bg-orange-100 text-orange-800 border-2 border-orange-200 shadow-sm">
+                                                            <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
                                                             Penilai: {{ $penilaiInvalidKeterangan }}
                                                         </span>
                                                     </div>
@@ -521,11 +521,11 @@
                             @endforeach
                         @endif
                     @endforeach
-                    
+
                     @if($currentRole === 'Kepegawaian Universitas' || $currentRole === 'Pegawai')
                         @php
                             $generalNote = $displayValidation['keterangan_umum'] ?? '';
-                            $canEditGeneralNote = $currentRole === 'Kepegawaian Universitas' && 
+                            $canEditGeneralNote = $currentRole === 'Kepegawaian Universitas' &&
                                                   $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS &&
                                                   $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
                                                   $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
@@ -541,7 +541,7 @@
                                         <span class="text-lg font-semibold text-gray-800">Keterangan Umum</span>
                                     </div>
                                     @if($canEditGeneralNote)
-                                        <textarea name="keterangan_umum" 
+                                        <textarea name="keterangan_umum"
                                                 class="block w-11/12 mx-auto border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base px-6 py-4"
                                                 rows="6"
                                                 placeholder="Keterangan umum untuk usulan ini">{{ $generalNote }}</textarea>
@@ -561,11 +561,11 @@
     @if($currentRole === 'Kepegawaian Universitas')
         <div class="flex flex-wrap gap-4 items-center justify-between mt-6">
             {{-- Status Change Buttons --}}
-            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS || 
+            @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_KEPEGAWAIAN_UNIVERSITAS ||
                  $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_KEPEGAWAIAN_UNIVERSITAS)
             <div class="flex gap-3">
                 {{-- Button Permintaan Perbaikan ke Pegawai --}}
-                <button type="button" 
+                <button type="button"
                         onclick="saveAndChangeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS }}')"
                         class="flex items-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
@@ -573,7 +573,7 @@
                 </button>
 
                 {{-- Button Tidak Direkomendasikan --}}
-                <button type="button" 
+                <button type="button"
                         onclick="saveAndChangeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS }}')"
                         class="flex items-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     <i data-lucide="x-circle" class="w-4 h-4 mr-2"></i>
@@ -581,7 +581,7 @@
                 </button>
 
                 {{-- Button Kirim ke BKN --}}
-                <button type="button" 
+                <button type="button"
                         onclick="saveAndChangeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN }}')"
                         class="flex items-center px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     <i data-lucide="send" class="w-4 h-4 mr-2"></i>
@@ -594,7 +594,7 @@
             @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_SUDAH_DIKIRIM_KE_BKN  || $usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_PERBAIKAN_DARI_PEGAWAI_KE_BKN)
             <div class="flex gap-3">
                 {{-- Button Permintaan Perbaikan Ke Pegawai Dari BKN --}}
-                <button type="button" 
+                <button type="button"
                         onclick="saveAndChangeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN }}')"
                         class="flex items-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
@@ -602,7 +602,7 @@
                 </button>
 
                 {{-- Button Belum Direkomendasikan Dari BKN --}}
-                <button type="button" 
+                <button type="button"
                         onclick="saveAndChangeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN }}')"
                         class="flex items-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     <i data-lucide="x-circle" class="w-4 h-4 mr-2"></i>
@@ -610,7 +610,7 @@
                 </button>
 
                                 {{-- Button Usulan Direkomendasi BKN --}}
-                <button type="button" 
+                <button type="button"
                         onclick="saveAndChangeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN }}')"
                         class="flex items-center px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>
@@ -623,7 +623,7 @@
         @if($usulan->status_usulan === \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)
         <div class="flex gap-3">
             {{-- Button SK Sudah Terbit --}}
-            <button type="button" 
+            <button type="button"
                     onclick="changeStatus('{{ \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT }}')"
                     class="flex items-center px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                 <i data-lucide="award" class="w-4 h-4 mr-2"></i>
@@ -633,13 +633,13 @@
         @endif
 
             {{-- Save Validation Button --}}
-            @if($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS && 
+            @if($usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_KEPEGAWAIAN_UNIVERSITAS &&
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_PERMINTAAN_PERBAIKAN_KE_PEGAWAI_DARI_BKN &&
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN &&
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN &&
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_SK_TERBIT &&
                  $usulan->status_usulan !== \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)
-            <button type="submit" id="saveValidationBtn" 
+            <button type="submit" id="saveValidationBtn"
                     class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                 <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
                 Simpan Validasi
@@ -658,7 +658,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const group = this.dataset.group;
             const field = this.dataset.field;
             const status = this.value;
-            
+
             // Find corresponding keterangan textarea
             const keteranganTextarea = document.querySelector(`textarea[name="validation[${group}][${field}][keterangan]"]`);
             if (keteranganTextarea) {
@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (saveValidationBtn) {
         saveValidationBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             // Use submitAction function like in jabatan module
             if (typeof submitAction === 'function') {
                 submitAction('save_only', '');
@@ -701,6 +701,11 @@ document.addEventListener('DOMContentLoaded', function() {
             title: 'Memproses Permintaan Perbaikan',
             text: loadingText,
             allowOutsideClick: false,
+            customClass: {
+                popup: 'dark:bg-gray-800 dark:text-white',
+                title: 'dark:text-white',
+                content: 'dark:text-gray-200'
+            },
             didOpen: () => {
                 Swal.showLoading();
             }
@@ -729,7 +734,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     title: 'Gagal Menyimpan',
                     text: data.message || 'Terjadi kesalahan saat menyimpan validasi',
-                    icon: 'error'
+                    icon: 'error',
+                    customClass: {
+                        popup: 'dark:bg-gray-800 dark:text-white',
+                        title: 'dark:text-white',
+                        content: 'dark:text-gray-200',
+                        confirmButton: 'dark:bg-red-600 dark:hover:bg-red-700'
+                    }
                 });
             }
         })
@@ -738,7 +749,13 @@ document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 title: 'Gagal Menyimpan',
                 text: 'Terjadi kesalahan saat menyimpan validasi',
-                icon: 'error'
+                icon: 'error',
+                customClass: {
+                    popup: 'dark:bg-gray-800 dark:text-white',
+                    title: 'dark:text-white',
+                    content: 'dark:text-gray-200',
+                    confirmButton: 'dark:bg-red-600 dark:hover:bg-red-700'
+                }
             });
         });
     };

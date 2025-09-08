@@ -104,7 +104,7 @@ class DashboardPeriodeController extends Controller
     public function getHistoriPeriode(Request $request)
     {
         $jenisUsulan = $request->get('jenis');
-        
+
         // Mapping jenis usulan dari sidebar ke nama periode
         $jenisMapping = [
             'nuptk' => 'Usulan NUPTK',
@@ -148,14 +148,14 @@ class DashboardPeriodeController extends Controller
     public function setPeriodeAktif(Request $request)
     {
         $periodeId = $request->get('periode_id');
-        
+
         if ($periodeId) {
             $periode = PeriodeUsulan::find($periodeId);
             if ($periode) {
                 session(['periode_aktif_id' => $periodeId]);
                 session(['periode_aktif_nama' => $periode->nama_periode]);
                 session(['periode_aktif_jenis' => $periode->jenis_usulan]);
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Periode aktif berhasil diatur',
@@ -173,7 +173,7 @@ class DashboardPeriodeController extends Controller
     public function clearPeriodeAktif(Request $request)
     {
         session()->forget(['periode_aktif_id', 'periode_aktif_nama', 'periode_aktif_jenis']);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Periode aktif berhasil dihapus'
@@ -188,17 +188,26 @@ class DashboardPeriodeController extends Controller
         // Ambil filter dari request
         $filter = $request->get('filter');
         $filterValue = $request->get('value');
-        
+
         // Query dasar untuk usulan
         $usulansQuery = $periode->usulans();
-        
+
         // Terapkan filter jika ada
         if ($filter === 'jenis_usulan_pangkat' && $filterValue) {
             $usulansQuery->whereJsonContains('data_usulan->jenis_usulan_pangkat', $filterValue);
         } elseif ($filter === 'jenis_nuptk' && $filterValue) {
             $usulansQuery->where('jenis_nuptk', $filterValue);
+        } elseif ($filter === 'jenis_tugas_belajar' && $filterValue) {
+            // Filter berdasarkan jenis pegawai untuk tugas belajar
+            $usulansQuery->whereHas('pegawai', function($query) use ($filterValue) {
+                if ($filterValue === 'dosen') {
+                    $query->where('jenis_pegawai', 'Dosen');
+                } elseif ($filterValue === 'tenaga_kependidikan') {
+                    $query->where('jenis_pegawai', 'Tenaga Kependidikan');
+                }
+            });
         }
-        
+
         // Ambil usulan dengan filter
         $usulans = $usulansQuery->with([
             'pegawai:id,nama_lengkap,nip,jenis_pegawai,unit_kerja_id',
@@ -207,7 +216,7 @@ class DashboardPeriodeController extends Controller
             'pegawai.unitKerja.subUnitKerja.unitKerja:id,nama',
             'jabatanTujuan:id,jabatan'
         ])->get();
-        
+
         // Hitung statistik berdasarkan usulan yang sudah difilter
         $stats = [
             'total_usulan' => $usulans->count(),
@@ -218,7 +227,7 @@ class DashboardPeriodeController extends Controller
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
             ])->count(),
-            
+
             // Tambahan statistik untuk status baru
             'usulan_direkomendasikan_kepegawaian_universitas' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             'usulan_direkomendasikan_bkn' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)->count(),
@@ -226,7 +235,7 @@ class DashboardPeriodeController extends Controller
             'usulan_direkomendasikan_sister' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER)->count(),
             'usulan_tidak_direkomendasikan_kepegawaian_universitas' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             'usulan_tidak_direkomendasikan_bkn' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN)->count(),
-            'usulan_tidak_direkomendasikan_sister' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER)->count(),
+            'usulan_tidak_direkomendasikan_sister' => $usulans->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_TIM_SISTER)->count(),
         ];
 
         // Usulan by status for chart (berdasarkan data yang sudah difilter)
@@ -299,6 +308,33 @@ class DashboardPeriodeController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Gagal mengambil data jumlah pengusul NUPTK'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get count of Tugas Belajar usulans by jenis
+     */
+    public function getUsulanTugasBelajarCount(PeriodeUsulan $periode)
+    {
+        try {
+            $counts = [
+                'dosen' => $periode->usulans()->whereHas('pegawai', function($query) {
+                    $query->where('jenis_pegawai', 'Dosen');
+                })->count(),
+                'tenaga_kependidikan' => $periode->usulans()->whereHas('pegawai', function($query) {
+                    $query->where('jenis_pegawai', 'Tenaga Kependidikan');
+                })->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'counts' => $counts
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gagal mengambil data jumlah pengusul Tugas Belajar'
             ], 500);
         }
     }

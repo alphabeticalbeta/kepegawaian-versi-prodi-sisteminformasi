@@ -4,15 +4,26 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ProfilController extends Controller
 {
-    public function visiMisi()
+    /**
+     * Display visi and misi page
+     *
+     * @return View
+     */
+    public function visiMisi(): View
     {
         return view('frontend.layouts.profil.visi-misi');
     }
 
-    public function strukturOrganisasi()
+    /**
+     * Display struktur organisasi page
+     *
+     * @return View
+     */
+    public function strukturOrganisasi(): View
     {
         return view('frontend.layouts.profil.struktur-organisasi');
     }

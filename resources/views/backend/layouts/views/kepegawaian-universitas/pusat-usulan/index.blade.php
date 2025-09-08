@@ -79,13 +79,13 @@
                                         <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Tutup</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-center font-bold text-gray-800">{{ $periode->usulans_count }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-gray-800">{{ $periode->usulans_submitted_count }}</td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center items-center gap-4">
                                         <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.pendaftar', $periode->id) }}" class="font-medium text-blue-600 hover:text-blue-900" title="Lihat Pendaftar" class="font-medium text-blue-600 hover:text-blue-900" title="Lihat Pendaftar">Lihat</a>
                                         <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.edit', $periode->id) }}" class="font-medium text-indigo-600 hover:text-indigo-900" title="Edit Periode">Edit</a>
 
-                                        @if($periode->usulans_count > 0)
+                                        @if($periode->usulans_submitted_count > 0)
                                             <span class="font-medium text-gray-400 cursor-not-allowed" title="Tidak dapat dihapus karena sudah ada pendaftar">Hapus</span>
                                         @else
                                             <form action="{{ route('backend.kepegawaian-universitas.periode-usulan.destroy', $periode->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menghapus data ini?');">

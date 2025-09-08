@@ -120,6 +120,23 @@ class UsulanKepangkatanController extends Controller
                           ->with(['periodeUsulan'])
                           ->get();
 
+        // Logika filter yang benar:
+        // 1. Periode BUKA: Tampilkan semua (sesuai status kepegawaian)
+        // 2. Periode TUTUP: Hanya tampilkan jika pegawai pernah submit usulan
+
+        $periodeBuka = $periodeUsulans->where('status', 'Buka');
+        $periodeTutup = $periodeUsulans->where('status', 'Tutup');
+
+        // Get periode IDs yang pernah submit usulan (bukan draft)
+        $periodeIdsWithSubmittedUsulan = $usulans->where('status_usulan', '!=', 'draft usulan')
+                                                ->pluck('periode_usulan_id')
+                                                ->toArray();
+
+        // Filter periode tutup: hanya yang pernah submit usulan
+        $periodeTutupWithUsulan = $periodeTutup->whereIn('id', $periodeIdsWithSubmittedUsulan);
+
+        // Gabungkan hasil: periode buka + periode tutup yang pernah submit
+        $periodeUsulans = $periodeBuka->merge($periodeTutupWithUsulan);
 
         // Get status kepegawaian dari pegawai
         $statusKepegawaian = $pegawai->status_kepegawaian ?? null;
@@ -133,16 +150,16 @@ class UsulanKepangkatanController extends Controller
     public function store(Request $request)
     {
         $pegawai = Auth::user();
-        
+
         // Validate request
         $request->validate([
             'periode_id' => 'required|exists:periode_usulans,id',
             'jenis_usulan' => 'required|in:Dosen PNS,Jabatan Administrasi,Jabatan Fungsional Tertentu,Jabatan Struktural',
         ]);
-        
+
         // Get periode usulan
         $periodeUsulan = PeriodeUsulan::findOrFail($request->periode_id);
-        
+
         // Validate if periode is open and accessible for this pegawai
         if ($periodeUsulan->status !== 'Buka') {
             Log::warning('Kepangkatan Store - Periode Closed', [
@@ -154,7 +171,7 @@ class UsulanKepangkatanController extends Controller
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.index')
                              ->with('error', 'Periode usulan sudah ditutup.');
         }
-        
+
         if (!in_array($pegawai->status_kepegawaian, $periodeUsulan->status_kepegawaian ?? [])) {
             Log::warning('Kepangkatan Store - Access Denied', [
                 'pegawai_id' => $pegawai->id,
@@ -166,13 +183,13 @@ class UsulanKepangkatanController extends Controller
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.index')
                              ->with('error', 'Anda tidak memiliki akses untuk periode ini.');
         }
-        
+
         // Check if pegawai already has active usulan for this periode
         $existingUsulan = $pegawai->usulans()
                                  ->where('periode_usulan_id', $request->periode_id)
                                  ->where('jenis_usulan', 'usulan-kepangkatan')
                                  ->first();
-        
+
         if ($existingUsulan) {
             Log::info('Kepangkatan Store - Existing Usulan Found', [
                 'pegawai_id' => $pegawai->id,
@@ -183,7 +200,7 @@ class UsulanKepangkatanController extends Controller
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $existingUsulan->id)
                              ->with('info', 'Anda sudah memiliki usulan untuk periode ini.');
         }
-        
+
         try {
             // Create usulan dengan jenis yang dipilih
             $usulan = Usulan::create([
@@ -205,7 +222,7 @@ class UsulanKepangkatanController extends Controller
                 'usulan_id' => $usulan->id,
                 'jenis_usulan_pangkat' => $request->jenis_usulan
             ]);
-            
+
             // Log aktivitas
             UsulanLog::create([
                 'usulan_id' => $usulan->id,
@@ -216,7 +233,7 @@ class UsulanKepangkatanController extends Controller
                 'keterangan' => 'Usulan kepangkatan dibuat dengan jenis: ' . $request->jenis_usulan,
                 'catatan' => 'Usulan berhasil dibuat'
             ]);
-            
+
             Log::info('Kepangkatan Store - Success', [
                 'pegawai_id' => $pegawai->id,
                 'status_kepegawaian' => $pegawai->status_kepegawaian,
@@ -227,7 +244,7 @@ class UsulanKepangkatanController extends Controller
 
             return redirect()->route('pegawai-unmul.usulan-kepangkatan.create-kepangkatan', $usulan->id)
                              ->with('success', 'Usulan Kepangkatan berhasil dibuat. Silakan lengkapi data dan dokumen pendukung.');
-                             
+
         } catch (\Exception $e) {
             Log::error('Kepangkatan Store - Failed to Create Usulan', [
                 'pegawai_id' => $pegawai->id,
@@ -237,7 +254,7 @@ class UsulanKepangkatanController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
         return redirect()->route('pegawai-unmul.usulan-kepangkatan.index')
                              ->with('error', 'Terjadi kesalahan saat membuat usulan. Silakan coba lagi.');
         }
@@ -327,7 +344,7 @@ class UsulanKepangkatanController extends Controller
         // Check if pangkat tujuan is valid (higher hierarchy than current)
         $currentPangkat = $usulan->pegawai->pangkat;
         $pangkatTujuan = \App\Models\KepegawaianUniversitas\Pangkat::find($request->pangkat_tujuan_id);
-        
+
         if (!$pangkatTujuan) {
             return back()->withErrors(['pangkat_tujuan_id' => 'Pangkat tujuan tidak ditemukan.']);
         }
@@ -347,13 +364,13 @@ class UsulanKepangkatanController extends Controller
         $updateData = [
             'pangkat_tujuan_id' => $request->pangkat_tujuan_id,
         ];
-        
+
         // Hanya ubah status ke Draft jika status saat ini null atau sudah Draft
         if (is_null($usulan->status_usulan) || $usulan->status_usulan === Usulan::STATUS_DRAFT_USULAN) {
             $updateData['status_usulan'] = Usulan::STATUS_DRAFT_USULAN;
         }
         // Jika status sudah ada (misalnya Permintaan Perbaikan), status TIDAK diubah
-        
+
         $usulan->update($updateData);
 
         // Update dokumen_usulan in data_usulan
@@ -381,7 +398,7 @@ class UsulanKepangkatanController extends Controller
         // Check if pangkat tujuan is valid (higher hierarchy than current)
         $currentPangkat = $usulan->pegawai->pangkat;
         $pangkatTujuan = \App\Models\KepegawaianUniversitas\Pangkat::find($request->pangkat_tujuan_id);
-        
+
         if (!$pangkatTujuan) {
             return back()->withErrors(['pangkat_tujuan_id' => 'Pangkat tujuan tidak ditemukan.']);
         }
@@ -445,7 +462,7 @@ class UsulanKepangkatanController extends Controller
         // Check if pangkat tujuan is valid (higher hierarchy than current)
         $currentPangkat = $usulan->pegawai->pangkat;
         $pangkatTujuan = \App\Models\KepegawaianUniversitas\Pangkat::find($request->pangkat_tujuan_id);
-        
+
         if (!$pangkatTujuan) {
             return back()->withErrors(['pangkat_tujuan_id' => 'Pangkat tujuan tidak ditemukan.']);
         }
@@ -509,7 +526,7 @@ class UsulanKepangkatanController extends Controller
         // Check if pangkat tujuan is valid (higher hierarchy than current)
         $currentPangkat = $usulan->pegawai->pangkat;
         $pangkatTujuan = \App\Models\KepegawaianUniversitas\Pangkat::find($request->pangkat_tujuan_id);
-        
+
         if (!$pangkatTujuan) {
             return back()->withErrors(['pangkat_tujuan_id' => 'Pangkat tujuan tidak ditemukan.']);
         }
@@ -663,9 +680,9 @@ class UsulanKepangkatanController extends Controller
     private function getDocumentKeys($usulan): array
     {
         $jenisUsulanPangkat = $usulan->data_usulan['jenis_usulan_pangkat'] ?? '';
-        
+
         $baseKeys = [];
-        
+
         if ($jenisUsulanPangkat === 'Dosen PNS') {
             $baseKeys = ['dokumen_ukom_sk_jabatan'];
         } elseif ($jenisUsulanPangkat === 'Jabatan Administrasi') {
@@ -675,7 +692,7 @@ class UsulanKepangkatanController extends Controller
         } elseif ($jenisUsulanPangkat === 'Jabatan Struktural') {
             $baseKeys = ['surat_pelantikan_berita_acara', 'surat_pencantuman_gelar', 'sertifikat_diklat_pim_pkm'];
         }
-        
+
         return $baseKeys;
     }
 

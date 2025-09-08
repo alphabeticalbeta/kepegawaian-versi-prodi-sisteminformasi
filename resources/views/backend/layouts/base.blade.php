@@ -20,10 +20,7 @@
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('darkMode', isDark);
 
-            // Force repaint
-            document.body.offsetHeight;
-
-            // Update icon
+            // Update icon without reinitializing all Lucide icons
             const icon = document.getElementById('dark-mode-icon');
             if (icon) {
                 if (isDark) {
@@ -31,45 +28,42 @@
                 } else {
                     icon.innerHTML = '<i data-lucide="moon"></i>';
                 }
-                // Reinitialize Lucide icons
-                if (window.lucide) {
-                    lucide.createIcons();
+                // Only reinitialize the specific icon, not all icons
+                if (window.lucide && icon.querySelector('[data-lucide]')) {
+                    lucide.createIcons(icon);
                 }
             }
-
-            // Force style update
-            setTimeout(() => {
-                const body = document.body;
-                const mainContent = document.getElementById('main-content');
-                if (body) {
-                    body.style.backgroundColor = isDark ? '#111827' : '#f1f5f9';
-                    body.style.color = isDark ? '#f9fafb' : '#1f2937';
-                }
-                if (mainContent) {
-                    mainContent.style.backgroundColor = isDark ? '#111827' : '#f1f5f9';
-                }
-                console.log('Forced style update applied');
-            }, 100);
 
             console.log('Dark mode toggled:', isDark);
         };
 
         // Initialize dark mode immediately
         (function() {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            if (darkMode) {
+            const darkMode = localStorage.getItem('darkMode');
+            console.log('Dark mode value from localStorage:', darkMode);
+
+            // Only apply dark mode if explicitly set to 'true'
+            if (darkMode === 'true') {
                 document.documentElement.classList.add('dark');
+                console.log('Dark mode applied');
             } else {
                 document.documentElement.classList.remove('dark');
+                console.log('Light mode applied');
+                // Set default to light mode if not set
+                if (darkMode === null || darkMode === undefined) {
+                    localStorage.setItem('darkMode', 'false');
+                    console.log('Default set to light mode');
+                }
             }
-            console.log('Dark mode initialized:', darkMode);
         })();
 
         // Add event listener for dark mode toggle
         document.addEventListener('DOMContentLoaded', function() {
             const toggleButton = document.getElementById('dark-mode-toggle');
             if (toggleButton) {
-                toggleButton.addEventListener('click', function() {
+                toggleButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (typeof window.toggleDarkMode === 'function') {
                         window.toggleDarkMode();
                     } else {
@@ -90,12 +84,28 @@
                 } else {
                     icon.innerHTML = '<i data-lucide="moon"></i>';
                 }
-                // Initialize Lucide icons
-                if (window.lucide) {
-                    lucide.createIcons();
+                // Initialize only the specific icon to avoid infinite loop
+                if (window.lucide && icon.querySelector('[data-lucide]')) {
+                    lucide.createIcons(icon);
                 }
             }
         });
+
+        // Emergency reset function for dark mode issues
+        window.resetDarkMode = function() {
+            localStorage.removeItem('darkMode');
+            localStorage.setItem('darkMode', 'false');
+            document.documentElement.classList.remove('dark');
+            location.reload();
+        };
+
+        // Clear any corrupted dark mode data
+        window.clearDarkModeData = function() {
+            localStorage.removeItem('darkMode');
+            localStorage.removeItem('theme');
+            document.documentElement.classList.remove('dark');
+            console.log('Dark mode data cleared');
+        };
     </script>
 
     {{-- Vite Integration - CSS dan JS --}}
@@ -137,25 +147,45 @@
             background-color: #1f2937 !important;
         }
 
-        /* Dark mode for text colors */
-        .dark .text-gray-900 {
-            color: #f9fafb !important;
-        }
-
-        .dark .text-gray-800 {
-            color: #f1f5f9 !important;
-        }
-
-        .dark .text-gray-700 {
-            color: #e2e8f0 !important;
-        }
-
-        .dark .text-gray-600 {
-            color: #cbd5e1 !important;
-        }
-
-        .dark .text-gray-500 {
-            color: #94a3b8 !important;
+        /* Dark mode for text colors - All text white */
+        .dark .text-gray-900,
+        .dark .text-gray-800,
+        .dark .text-gray-700,
+        .dark .text-gray-600,
+        .dark .text-gray-500,
+        .dark .text-gray-400,
+        .dark .text-gray-300,
+        .dark .text-gray-200,
+        .dark .text-gray-100,
+        .dark .text-black,
+        .dark .text-slate-900,
+        .dark .text-slate-800,
+        .dark .text-slate-700,
+        .dark .text-slate-600,
+        .dark .text-slate-500,
+        .dark .text-slate-400,
+        .dark .text-slate-300,
+        .dark .text-slate-200,
+        .dark .text-slate-100,
+        .dark .text-zinc-900,
+        .dark .text-zinc-800,
+        .dark .text-zinc-700,
+        .dark .text-zinc-600,
+        .dark .text-zinc-500,
+        .dark .text-zinc-400,
+        .dark .text-zinc-300,
+        .dark .text-zinc-200,
+        .dark .text-zinc-100,
+        .dark .text-neutral-900,
+        .dark .text-neutral-800,
+        .dark .text-neutral-700,
+        .dark .text-neutral-600,
+        .dark .text-neutral-500,
+        .dark .text-neutral-400,
+        .dark .text-neutral-300,
+        .dark .text-neutral-200,
+        .dark .text-neutral-100 {
+            color: #ffffff !important;
         }
 
         /* Dark mode for borders */
@@ -202,14 +232,360 @@
             color: #ffffff !important;
         }
 
+        /* Dark mode for gradient backgrounds */
+        .dark .bg-gradient-to-br {
+            background: linear-gradient(to bottom right, #1e293b, #334155, #475569) !important;
+        }
+
+        .dark .from-blue-50 {
+            background-color: #1e293b !important;
+        }
+
+        .dark .via-indigo-50 {
+            background-color: #334155 !important;
+        }
+
+        .dark .to-purple-50 {
+            background-color: #475569 !important;
+        }
+
+        /* Dark mode for custom gradient boxes */
+        .dark .bg-gradient-to-br.from-blue-50.via-indigo-50.to-purple-50 {
+            background: linear-gradient(to bottom right, #1e293b, #334155, #475569) !important;
+        }
+
+        /* Dark mode for border colors in gradients */
+        .dark .border-blue-100 {
+            border-color: #475569 !important;
+        }
+
+        .dark .border-indigo-100 {
+            border-color: #4c1d95 !important;
+        }
+
+        .dark .border-purple-100 {
+            border-color: #581c87 !important;
+        }
+
+        /* Dark mode for additional background colors */
+        .dark .bg-gray-50 {
+            background-color: #374151 !important;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #4b5563 !important;
+        }
+
+        /* Dark mode for shadows */
+        .dark .shadow-xl {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .dark .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important;
+        }
+
         /* Ensure transitions work */
         body, #main-content, .bg-slate-100, .bg-white, .bg-gray-50, .bg-gray-100 {
             transition: background-color 0.3s ease, color 0.3s ease !important;
         }
 
-        /* Force repaint for dark mode */
-        .dark * {
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+        /* Dark mode for status badges */
+        .dark .bg-green-100 {
+            background-color: #064e3b !important;
+        }
+
+        .dark .bg-yellow-100 {
+            background-color: #78350f !important;
+        }
+
+        .dark .bg-red-100 {
+            background-color: #7f1d1d !important;
+        }
+
+        .dark .bg-blue-100 {
+            background-color: #1e3a8a !important;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #374151 !important;
+        }
+
+        .dark .text-green-800 {
+            color: #10b981 !important;
+        }
+
+        .dark .text-yellow-800 {
+            color: #f59e0b !important;
+        }
+
+        .dark .text-red-800 {
+            color: #ef4444 !important;
+        }
+
+        .dark .text-blue-800 {
+            color: #3b82f6 !important;
+        }
+
+        .dark .text-gray-800 {
+            color: #d1d5db !important;
+        }
+
+        /* Dark mode for form elements */
+        .dark input[type="text"],
+        .dark input[type="email"],
+        .dark input[type="password"],
+        .dark textarea,
+        .dark select {
+            background-color: #374151 !important;
+            border-color: #4b5563 !important;
+            color: #f9fafb !important;
+        }
+
+        .dark input[type="text"]:focus,
+        .dark input[type="email"]:focus,
+        .dark input[type="password"]:focus,
+        .dark textarea:focus,
+        .dark select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+
+        /* Dark mode for modals */
+        .dark .modal-content {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+
+        .dark .modal-header {
+            border-bottom-color: #374151 !important;
+        }
+
+        /* Dark mode for all text elements */
+        .dark p,
+        .dark h1,
+        .dark h2,
+        .dark h3,
+        .dark h4,
+        .dark h5,
+        .dark h6,
+        .dark span,
+        .dark div,
+        .dark a,
+        .dark label,
+        .dark small,
+        .dark strong,
+        .dark em,
+        .dark b,
+        .dark i,
+        .dark u,
+        .dark mark,
+        .dark del,
+        .dark ins,
+        .dark sub,
+        .dark sup,
+        .dark code,
+        .dark pre,
+        .dark blockquote,
+        .dark cite,
+        .dark abbr,
+        .dark address,
+        .dark dfn,
+        .dark kbd,
+        .dark samp,
+        .dark var,
+        .dark time {
+            color: #ffffff !important;
+        }
+
+        /* Dark mode for links */
+        .dark a {
+            color: #60a5fa !important;
+        }
+
+        .dark a:hover {
+            color: #93c5fd !important;
+        }
+
+        /* Dark mode for headings */
+        .dark h1,
+        .dark h2,
+        .dark h3,
+        .dark h4,
+        .dark h5,
+        .dark h6 {
+            color: #ffffff !important;
+        }
+
+        /* Dark mode hover fixes - Force white text on hover */
+        .dark *:hover {
+            color: #ffffff !important;
+        }
+
+        .dark a:hover {
+            color: #93c5fd !important;
+        }
+
+        .dark button:hover,
+        .dark .btn:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .nav-link:hover,
+        .dark .dropdown-item:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .table-hover tbody tr:hover td,
+        .dark .table-hover tbody tr:hover th {
+            color: #ffffff !important;
+        }
+
+        .dark .card:hover,
+        .dark .card-body:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .list-group-item:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .badge:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .alert:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .modal:hover,
+        .dark .modal-content:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .form-control:hover,
+        .dark .form-select:hover {
+            color: #f9fafb !important;
+        }
+
+        .dark .sidebar a:hover,
+        .dark .sidebar .nav-link:hover {
+            color: #ffffff !important;
+        }
+
+        .dark .header a:hover,
+        .dark .header .nav-link:hover {
+            color: #ffffff !important;
+        }
+
+        /* Dark mode hover background fixes */
+        .dark .btn:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-primary:hover {
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-secondary:hover {
+            background-color: #4b5563 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-success:hover {
+            background-color: #059669 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-danger:hover {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-warning:hover {
+            background-color: #d97706 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-info:hover {
+            background-color: #0891b2 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-light:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .btn-dark:hover {
+            background-color: #111827 !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark mode table hover fixes */
+        .dark .table-hover tbody tr:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .table-hover tbody tr:hover td,
+        .dark .table-hover tbody tr:hover th {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark mode card hover fixes */
+        .dark .card:hover {
+            background-color: #1f2937 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .card-body:hover {
+            background-color: #1f2937 !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark mode list hover fixes */
+        .dark .list-group-item:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark mode nav hover fixes */
+        .dark .nav-link:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        .dark .dropdown-item:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark mode sidebar hover fixes */
+        .dark .sidebar a:hover,
+        .dark .sidebar .nav-link:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark mode header hover fixes */
+        .dark .header a:hover,
+        .dark .header .nav-link:hover {
+            background-color: #374151 !important;
+            color: #ffffff !important;
+        }
+
+        /* Smooth transitions for dark mode */
+        .dark body,
+        .dark #main-content,
+        .dark .bg-slate-100,
+        .dark .bg-white,
+        .dark .bg-gray-50,
+        .dark .bg-gray-100 {
+            transition: background-color 0.3s ease, color 0.3s ease !important;
         }
     </style>
 

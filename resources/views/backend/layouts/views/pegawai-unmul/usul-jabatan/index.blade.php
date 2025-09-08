@@ -29,17 +29,25 @@
 
     {{-- Header --}}
     <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">
-                    Periode Usulan Jabatan
-                </h1>
-                <p class="mt-2 text-gray-600">
-                    Daftar periode usulan jabatan yang tersedia untuk status kepegawaian Anda ({{ $pegawai->status_kepegawaian }}).
-                    @if($pegawai->jabatan_saat_usul)
-                        <br><span class="text-sm text-gray-500">Jabatan saat ini: <strong>{{ $pegawai->jabatan_saat_usul }}</strong></span>
-                    @endif
-                </p>
+        <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5"></div>
+            <div class="relative flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-md flex-shrink-0">
+                        <i data-lucide="briefcase" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-2xl text-black font-bold leading-tight">
+                            Periode Usulan Jabatan
+                        </h1>
+                        <p class="text-black text-sm mt-1 leading-tight">
+                            Daftar periode usulan jabatan yang tersedia untuk status kepegawaian Anda ({{ $pegawai->status_kepegawaian }}).
+                            @if($pegawai->jabatan_saat_usul)
+                                <br><span class="text-sm text-gray-500">Jabatan saat ini: <strong>{{ $pegawai->jabatan_saat_usul }}</strong></span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -71,7 +79,7 @@
                 <div class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p class="text-xs text-yellow-800">
                         <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
-                        <strong>Filter Aktif:</strong> 
+                        <strong>Filter Aktif:</strong>
                         @if($pegawai->jabatan_saat_usul === 'Tenaga Pengajar')
                             Hanya menampilkan periode "Pengangkatan Pertama Dosen" (untuk Tenaga Pengajar → Asisten Ahli)
                         @elseif(in_array($pegawai->jabatan_saat_usul, ['Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar']))
@@ -92,11 +100,10 @@
                             <th scope="col" class="px-6 py-4 align-middle">No</th>
                             <th scope="col" class="px-6 py-4 align-middle">Nama Periode</th>
                             <th scope="col" class="px-6 py-4 align-middle">Jenis Usulan Jabatan</th>
-                            <th scope="col" class="px-6 py-4 align-middle">Tanggal Pembukaan</th>
-                            <th scope="col" class="px-6 py-4 align-middle">Tanggal Penutupan</th>
-                            <th scope="col" class="px-6 py-4 align-middle">Tanggal Awal Perbaikan</th>
-                            <th scope="col" class="px-6 py-4 align-middle">Tanggal Akhir Perbaikan</th>
+                            <th scope="col" class="px-6 py-4 align-middle">Periode Usulan</th>
+                            <th scope="col" class="px-6 py-4 align-middle">Periode Perbaikan</th>
                             <th scope="col" class="px-6 py-4 align-middle">Status Periode</th>
+                            <th scope="col" class="px-6 py-4 align-middle">Status Usulan</th>
                             <th scope="col" class="px-6 py-4 align-middle">Aksi</th>
                         </tr>
                     </thead>
@@ -126,7 +133,7 @@
                                             default => $periode->jenis_usulan
                                         };
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
                                         {{ $periode->jenis_usulan === 'jabatan-dosen-regular' ? 'bg-blue-100 text-blue-800' : '' }}
                                         {{ $periode->jenis_usulan === 'jabatan-dosen-pengangkatan' ? 'bg-purple-100 text-purple-800' : '' }}
                                         {{ $periode->jenis_usulan === 'jabatan-tenaga-kependidikan' ? 'bg-orange-100 text-orange-800' : '' }}
@@ -136,16 +143,28 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 align-middle">
-                                    {{ $periode->tanggal_mulai ? $periode->tanggal_mulai->isoFormat('D MMMM YYYY') : '-' }}
+                                    <div class="text-left">
+                                        <div class="font-medium text-gray-900">
+                                            <i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>
+                                            {{ $periode->tanggal_mulai ? $periode->tanggal_mulai->isoFormat('D MMM YYYY') : '-' }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            <i data-lucide="calendar-x" class="w-3 h-3 inline mr-1"></i>
+                                            {{ $periode->tanggal_selesai ? $periode->tanggal_selesai->isoFormat('D MMM YYYY') : '-' }}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 align-middle">
-                                    {{ $periode->tanggal_selesai ? $periode->tanggal_selesai->isoFormat('D MMMM YYYY') : '-' }}
-                                </td>
-                                <td class="px-6 py-4 align-middle">
-                                    {{ $periode->tanggal_mulai_perbaikan ? $periode->tanggal_mulai_perbaikan->isoFormat('D MMMM YYYY') : '-' }}
-                                </td>
-                                <td class="px-6 py-4 align-middle">
-                                    {{ $periode->tanggal_selesai_perbaikan ? $periode->tanggal_selesai_perbaikan->isoFormat('D MMMM YYYY') : '-' }}
+                                    <div class="text-left">
+                                        <div class="font-medium text-gray-900">
+                                            <i data-lucide="edit" class="w-3 h-3 inline mr-1"></i>
+                                            {{ $periode->tanggal_mulai_perbaikan ? $periode->tanggal_mulai_perbaikan->isoFormat('D MMM YYYY') : '-' }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            <i data-lucide="edit-3" class="w-3 h-3 inline mr-1"></i>
+                                            {{ $periode->tanggal_selesai_perbaikan ? $periode->tanggal_selesai_perbaikan->isoFormat('D MMM YYYY') : '-' }}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-center align-middle">
                                     @if($isPeriodClosed)
@@ -164,6 +183,56 @@
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
                                             Periode Aktif
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-center align-middle">
+                                    @if($existingUsulan)
+                                        @php
+                                            $statusClass = match($existingUsulan->status_usulan) {
+                                                'Draft Usulan' => 'bg-yellow-100 text-yellow-800',
+                                                'Usulan Dikirim ke Admin Fakultas' => 'bg-blue-100 text-blue-800',
+                                                'Usulan Dikirim ke Kepegawaian Universitas' => 'bg-indigo-100 text-indigo-800',
+                                                'Usulan Dikirim ke Penilai Universitas' => 'bg-purple-100 text-purple-800',
+                                                'Usulan Dikirim ke Tim Sister' => 'bg-pink-100 text-pink-800',
+                                                'Usulan Disetujui' => 'bg-green-100 text-green-800',
+                                                'Usulan Ditolak' => 'bg-red-100 text-red-800',
+                                                'Draft Perbaikan Admin Fakultas' => 'bg-orange-100 text-orange-800',
+                                                'Draft Perbaikan Kepegawaian Universitas' => 'bg-orange-100 text-orange-800',
+                                                'Draft Perbaikan Penilai Universitas' => 'bg-orange-100 text-orange-800',
+                                                'Draft Perbaikan Tim Sister' => 'bg-orange-100 text-orange-800',
+                                                'Permintaan Perbaikan dari Admin Fakultas' => 'bg-amber-100 text-amber-800',
+                                                'Permintaan Perbaikan dari Penilai Universitas' => 'bg-amber-100 text-amber-800',
+                                                'Permintaan Perbaikan Usulan dari Tim Sister' => 'bg-amber-100 text-amber-800',
+                                                default => 'bg-gray-100 text-gray-800'
+                                            };
+
+                                            $statusIcon = match($existingUsulan->status_usulan) {
+                                                'Draft Usulan' => 'file-text',
+                                                'Usulan Dikirim ke Admin Fakultas' => 'send',
+                                                'Usulan Dikirim ke Kepegawaian Universitas' => 'send',
+                                                'Usulan Dikirim ke Penilai Universitas' => 'send',
+                                                'Usulan Dikirim ke Tim Sister' => 'send',
+                                                'Usulan Disetujui' => 'check-circle',
+                                                'Usulan Ditolak' => 'x-circle',
+                                                'Draft Perbaikan Admin Fakultas' => 'edit',
+                                                'Draft Perbaikan Kepegawaian Universitas' => 'edit',
+                                                'Draft Perbaikan Penilai Universitas' => 'edit',
+                                                'Draft Perbaikan Tim Sister' => 'edit',
+                                                'Permintaan Perbaikan dari Admin Fakultas' => 'alert-triangle',
+                                                'Permintaan Perbaikan dari Penilai Universitas' => 'alert-triangle',
+                                                'Permintaan Perbaikan Usulan dari Tim Sister' => 'alert-triangle',
+                                                default => 'help-circle'
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
+                                            <i data-lucide="{{ $statusIcon }}" class="w-3 h-3 mr-1"></i>
+                                            {{ $existingUsulan->status_usulan ?? 'Belum Ada Status' }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                            <i data-lucide="minus" class="w-3 h-3 mr-1"></i>
+                                            Belum Ada Usulan
                                         </span>
                                     @endif
                                 </td>

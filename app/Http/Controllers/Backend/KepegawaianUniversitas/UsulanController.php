@@ -97,7 +97,7 @@ class UsulanController extends Controller
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_ADMIN_FAKULTAS,
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DISETUJUI_KEPEGAWAIAN_UNIVERSITAS
             ])->count(),
-            
+
             // Tambahan statistik untuk status baru
             'usulan_direkomendasikan_kepegawaian_universitas' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             'usulan_direkomendasikan_bkn' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)->count(),
@@ -105,7 +105,7 @@ class UsulanController extends Controller
             'usulan_direkomendasikan_sister' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER)->count(),
             'usulan_tidak_direkomendasikan_kepegawaian_universitas' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             'usulan_tidak_direkomendasikan_bkn' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN)->count(),
-            'usulan_tidak_direkomendasikan_sister' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER)->count(),
+            'usulan_tidak_direkomendasikan_sister' => $periode->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_TIM_SISTER)->count(),
         ];
 
         return view('backend.layouts.views.kepegawaian-universitas.usulan.index', compact(
@@ -262,7 +262,7 @@ class UsulanController extends Controller
         // gunakan logika lama sebagai fallback
         if ($periodes->count() === 0) {
             \Log::warning('UsulanController - No periode found with DashboardPeriodeController logic, using fallback');
-            
+
             $tahunSekarang = \Carbon\Carbon::now()->year;
             $activePeriode = \App\Models\KepegawaianUniversitas\PeriodeUsulan::where('jenis_usulan', $namaUsulan)
                 ->where('tahun_periode', $tahunSekarang)
@@ -284,7 +284,7 @@ class UsulanController extends Controller
         } else {
             // Ambil periode yang aktif (status Buka) atau periode terbaru
             $activePeriode = $periodes->where('status', 'Buka')->first();
-            
+
             if (!$activePeriode) {
                 // Jika tidak ada periode aktif, ambil periode terbaru
                 $activePeriode = $periodes->first();

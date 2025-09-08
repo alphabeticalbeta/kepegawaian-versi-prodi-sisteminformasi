@@ -5,22 +5,22 @@
             // Get current active menu
             const currentUrl = window.location.pathname + window.location.search;
             const currentJenis = new URLSearchParams(window.location.search).get('jenis');
-            
+
             // Determine which dropdown should be open
             let activeDropdown = null;
-            
+
             // Check if we're on a usulan page
             if (currentUrl.includes('/periode-usulan') || currentUrl.includes('/usulan/')) {
                 activeDropdown = 'dropdown-usulan';
-                
+
                 // If it's a jabatan type, also open the nested dropdown
                 if (currentJenis && ['jabatan-dosen-regular', 'jabatan-dosen-pengangkatan'].includes(currentJenis)) {
                     localStorage.setItem('sidebar-active-nested', 'dropdown-jabatan-nested');
                 }
             }
             // Check if we're on a master data page
-            else if (currentUrl.includes('/data-pegawai') || currentUrl.includes('/role-pegawai') || 
-                     currentUrl.includes('/unitkerja') || currentUrl.includes('/pangkat') || 
+            else if (currentUrl.includes('/data-pegawai') || currentUrl.includes('/role-pegawai') ||
+                     currentUrl.includes('/unitkerja') || currentUrl.includes('/pangkat') ||
                      currentUrl.includes('/jabatan')) {
                 activeDropdown = 'dropdown-master';
             }
@@ -28,12 +28,12 @@
             else if (currentUrl.includes('/dashboard')) {
                 activeDropdown = 'dashboard';
             }
-            
+
             // Store active dropdown in localStorage
             if (activeDropdown) {
                 localStorage.setItem('sidebar-active-dropdown', activeDropdown);
             }
-            
+
             // Open the active dropdown on page load
             setTimeout(() => {
                 const activeDropdownId = localStorage.getItem('sidebar-active-dropdown');
@@ -41,7 +41,7 @@
                     const dropdown = document.getElementById(activeDropdownId);
                     if (dropdown) {
                         dropdown.classList.remove('hidden');
-                        
+
                         // Update button state
                         const button = document.querySelector(`[data-collapse-toggle="${activeDropdownId}"]`);
                         if (button) {
@@ -53,14 +53,14 @@
                         }
                     }
                 }
-                
+
                 // Open nested dropdown if needed
                 const activeNested = localStorage.getItem('sidebar-active-nested');
                 if (activeNested) {
                     const nestedDropdown = document.getElementById(activeNested);
                     if (nestedDropdown) {
                         nestedDropdown.classList.remove('hidden');
-                        
+
                         // Update nested button state
                         const nestedButton = document.querySelector(`[data-collapse-toggle="${activeNested}"]`);
                         if (nestedButton) {
@@ -150,7 +150,7 @@
             </button>
                 <div id="dropdown-usulan" class="dropdown-menu {{ $isUsulanActive ? '' : 'hidden' }} space-y-1 pl-4 mt-1">
                 {{-- Dropdown untuk Usulan Jabatan --}}
-                @php 
+                @php
                     $isJabatanActive = in_array(request()->get('jenis'), ['jabatan-dosen-regular', 'jabatan-dosen-pengangkatan']);
                 @endphp
                 <div class="relative nested-dropdown-container">
@@ -190,12 +190,19 @@
                         <span class="font-medium sidebar-text">Usulan Kepangkatan</span>
                     </a>
                 </div>
-                
+
                 <div class="relative">
                     <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'nuptk']) }}"
                        class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'nuptk' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
                         <i data-lucide="user-check" class="w-5 h-5 mr-3 flex-shrink-0"></i>
                         <span class="font-medium sidebar-text">Usulan NUPTK</span>
+                    </a>
+                </div>
+                <div class="relative">
+                    <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'tugas-belajar']) }}"
+                       class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'tugas-belajar' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
+                        <i data-lucide="book-open" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                        <span class="font-medium sidebar-text">Usulan Tugas Belajar</span>
                     </a>
                 </div>
                 <div class="relative">
@@ -263,13 +270,6 @@
                     </a>
                 </div>
                 <div class="relative">
-                    <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'tugas-belajar']) }}"
-                       class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'tugas-belajar' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
-                        <i data-lucide="book-open" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                        <span class="font-medium sidebar-text">Usulan Tugas Belajar</span>
-                    </a>
-                </div>
-                <div class="relative">
                     <a href="{{ route('backend.kepegawaian-universitas.periode-usulan.index', ['jenis' => 'pengaktifan-kembali']) }}"
                        class="flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition {{ request()->get('jenis') == 'pengaktifan-kembali' ? 'bg-blue-100 text-blue-700 font-semibold' : '' }}">
                         <i data-lucide="user-plus" class="w-5 h-5 mr-3 flex-shrink-0"></i>
@@ -279,7 +279,7 @@
             </div>
         </div>
     </nav>
-    
+
     <script>
         // Enhanced dropdown management
         document.addEventListener('DOMContentLoaded', function() {
@@ -288,25 +288,25 @@
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     const targetId = this.getAttribute('data-collapse-toggle');
                     const target = document.getElementById(targetId);
                     const isNested = this.hasAttribute('data-nested');
-                    
+
                     if (target) {
                         const isHidden = target.classList.contains('hidden');
-                        
+
                         if (isHidden) {
                             // Open dropdown
                             target.classList.remove('hidden');
                             this.setAttribute('aria-expanded', 'true');
-                            
+
                             // Rotate chevron
                             const chevron = this.querySelector('[data-lucide="chevron-down"]');
                             if (chevron) {
                                 chevron.style.transform = 'rotate(180deg)';
                             }
-                            
+
                             // Store state
                             if (isNested) {
                                 localStorage.setItem('sidebar-active-nested', targetId);
@@ -319,13 +319,13 @@
                             // Close dropdown
                             target.classList.add('hidden');
                             this.setAttribute('aria-expanded', 'false');
-                            
+
                             // Reset chevron
                             const chevron = this.querySelector('[data-lucide="chevron-down"]');
                             if (chevron) {
                                 chevron.style.transform = 'rotate(0deg)';
                             }
-                            
+
                             // Clear state
                             if (isNested) {
                                 localStorage.removeItem('sidebar-active-nested');
@@ -338,24 +338,24 @@
                     }
                 });
             });
-            
+
             // Handle navigation clicks to update active state
             document.querySelectorAll('nav a').forEach(link => {
                 link.addEventListener('click', function() {
                     const href = this.getAttribute('href');
                     const jenis = new URLSearchParams(href.split('?')[1] || '').get('jenis');
-                    
+
                     // Update active dropdown based on link
                     if (href.includes('/periode-usulan') || href.includes('/usulan/')) {
                         localStorage.setItem('sidebar-active-dropdown', 'dropdown-usulan');
-                        
+
                         if (jenis && ['jabatan-dosen-regular', 'jabatan-dosen-pengangkatan'].includes(jenis)) {
                             localStorage.setItem('sidebar-active-nested', 'dropdown-jabatan-nested');
                         } else {
                             localStorage.removeItem('sidebar-active-nested');
                         }
-                    } else if (href.includes('/data-pegawai') || href.includes('/role-pegawai') || 
-                              href.includes('/unitkerja') || href.includes('/pangkat') || 
+                    } else if (href.includes('/data-pegawai') || href.includes('/role-pegawai') ||
+                              href.includes('/unitkerja') || href.includes('/pangkat') ||
                               href.includes('/jabatan')) {
                         localStorage.setItem('sidebar-active-dropdown', 'dropdown-master');
                         localStorage.removeItem('sidebar-active-nested');

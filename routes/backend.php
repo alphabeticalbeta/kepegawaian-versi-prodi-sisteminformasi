@@ -116,15 +116,6 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::get('/dashboard', [App\Http\Controllers\Backend\AdminUniversitas\DashboardController::class, 'index'])
                 ->name('dashboard');
 
-            // Periode Usulan Management
-            Route::resource('/periode-usulan', App\Http\Controllers\Backend\AdminUniversitas\PeriodeUsulanController::class)
-                ->parameters(['periode-usulan' => 'periode']);
-
-            // Dashboard Usulan (Dashboard for each period)
-            Route::get('/dashboard-usulan', [App\Http\Controllers\Backend\AdminUniversitas\DashboardUsulanController::class, 'index'])
-                ->name('dashboard-usulan.index');
-            Route::get('/dashboard-usulan/{periode}', [App\Http\Controllers\Backend\AdminUniversitas\DashboardUsulanController::class, 'show'])
-                ->name('dashboard-usulan.show');
         });
 
     // ======================================================================
@@ -308,6 +299,10 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 Route::get('/{periode}/usulan-nuptk-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getUsulanNuptkCount'])
                     ->name('usulan-nuptk-count');
 
+                // API route untuk menghitung usulan Tugas Belajar per jenis
+                Route::get('/{periode}/usulan-tugas-belajar-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getUsulanTugasBelajarCount'])
+                    ->name('usulan-tugas-belajar-count');
+
                 // API routes untuk histori periode
                 Route::get('/histori/{jenis}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getHistoriPeriode'])
                     ->name('histori');
@@ -339,7 +334,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 // Pendaftar route (STANDARDIZED)
                 Route::get('/{periodeUsulan}/pendaftar', [App\Http\Controllers\Backend\KepegawaianUniversitas\PusatUsulanController::class, 'showPendaftar'])
                     ->name('pendaftar');
-                
+
                 // API route untuk menghitung usulan kepangkatan per jenis
                 Route::get('/{periodeUsulan}/usulan-kepangkatan-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\PeriodeUsulanController::class, 'getUsulanKepangkatanCount'])
                     ->name('usulan-kepangkatan-count');
@@ -347,6 +342,10 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                 // API route untuk menghitung usulan NUPTK per jenis
                 Route::get('/{periodeUsulan}/usulan-nuptk-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getUsulanNuptkCount'])
                     ->name('usulan-nuptk-count');
+
+                // API route untuk menghitung usulan Tugas Belajar per jenis
+                Route::get('/{periodeUsulan}/usulan-tugas-belajar-count', [App\Http\Controllers\Backend\KepegawaianUniversitas\DashboardPeriodeController::class, 'getUsulanTugasBelajarCount'])
+                    ->name('usulan-tugas-belajar-count');
             });
 
             // =====================================================
@@ -403,7 +402,13 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('validasi-nuptk');
                 Route::post('/{usulan}/validasi-nuptk', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'saveNuptkValidation'])
                     ->name('save-validasi-nuptk');
-                
+
+                // Validasi Tugas Belajar Routes
+                Route::get('/{usulan}/validasi-tubel', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'showTubelValidation'])
+                    ->name('validasi-tubel');
+                Route::post('/{usulan}/validasi-tubel', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'saveTubelValidation'])
+                    ->name('save-validasi-tubel');
+
                 // Change Status Route
                 Route::post('/{usulan}/change-status', [App\Http\Controllers\Backend\KepegawaianUniversitas\UsulanValidationController::class, 'changeStatus'])
                     ->name('change-status');
@@ -614,18 +619,20 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::prefix('usulan-tugas-belajar')->name('usulan-tugas-belajar.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'create'])
-                    ->name('create');
                 Route::post('/', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'store'])
                     ->name('store');
                 Route::get('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'show'])
                     ->name('show');
+                Route::get('/{usulan}/create-tugas-belajar', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'createTugasBelajar'])
+                    ->name('create-tugas-belajar');
                 Route::get('/{usulan}/edit', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'edit'])
                     ->name('edit');
                 Route::put('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'update'])
                     ->name('update');
                 Route::delete('/{usulan}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'destroy'])
                     ->name('destroy');
+                Route::get('/{usulan}/show-document/{field}', [App\Http\Controllers\Backend\PegawaiUnmul\UsulanTugasBelajarController::class, 'showDocument'])
+                    ->name('show-document');
 
                 // API routes (STANDARDIZED)
                 // Route logs dihapus - digabung ke route utama

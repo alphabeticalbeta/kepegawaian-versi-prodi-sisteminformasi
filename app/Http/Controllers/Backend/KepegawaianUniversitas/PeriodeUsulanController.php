@@ -28,7 +28,7 @@ class PeriodeUsulanController extends Controller
     public function index(Request $request)
     {
         $jenisUsulan = $request->query('jenis');
-        
+
         // Mapping jenis usulan dari sidebar ke nama periode yang benar (sesuai data di database)
         $jenisMapping = [
             'nuptk' => 'usulan-nuptk',
@@ -47,17 +47,17 @@ class PeriodeUsulanController extends Controller
             'tugas-belajar' => 'usulan-tugas-belajar',
             'pengaktifan-kembali' => 'usulan-pengaktifan-kembali'
         ];
-        
+
         $query = PeriodeUsulan::withCount(['usulans', 'usulansSubmitted']);
-        
+
         // Filter berdasarkan jenis usulan jika parameter diberikan
         if ($jenisUsulan && $jenisUsulan !== 'all') {
             $namaUsulan = $jenisMapping[$jenisUsulan] ?? $jenisUsulan;
             $query->where('jenis_usulan', $namaUsulan);
         }
-        
+
         $periodeUsulans = $query->orderBy('created_at', 'desc')->paginate(10);
-        
+
         // Tambahkan parameter jenis ke pagination links
         if ($jenisUsulan) {
             $periodeUsulans->appends(['jenis' => $jenisUsulan]);
@@ -251,7 +251,7 @@ class PeriodeUsulanController extends Controller
                 'status' => $periodeUsulan->status ?? 'NULL',
             ]
         ]);
-        
+
         return view('backend.layouts.views.periode-usulan.form', [
             'periode' => $periodeUsulan,
             'nama_usulan' => $periodeUsulan->jenis_usulan
@@ -278,24 +278,24 @@ class PeriodeUsulanController extends Controller
                 'tanggal_selesai' => $periodeUsulan->tanggal_selesai ?? 'NULL',
             ]
         ]);
-        
+
         // Cek apakah perlu validasi overlap
         $needsOverlapValidation = false;
-        
+
         // Cek apakah tanggal berubah (bandingkan dalam format yang sama)
         $requestTanggalMulai = $request->input('tanggal_mulai');
         $requestTanggalSelesai = $request->input('tanggal_selesai');
-        
+
         // Pastikan tanggal tidak null sebelum format
         $currentTanggalMulai = $periodeUsulan->tanggal_mulai ? $periodeUsulan->tanggal_mulai->format('Y-m-d') : null;
         $currentTanggalSelesai = $periodeUsulan->tanggal_selesai ? $periodeUsulan->tanggal_selesai->format('Y-m-d') : null;
-        
+
         // Cek apakah tanggal berubah
         $tanggalBerubah = ($requestTanggalMulai != $currentTanggalMulai || $requestTanggalSelesai != $currentTanggalSelesai);
-        
+
         // Cek apakah status berubah dari Tutup ke Buka
         $statusBerubahKeBuka = ($request->input('status') == 'Buka' && $periodeUsulan->status == 'Tutup');
-        
+
         // Debug logging untuk validasi
         \Log::info('PeriodeUsulan Update Validation Check', [
             'tanggal_berubah' => $tanggalBerubah,
@@ -310,16 +310,16 @@ class PeriodeUsulanController extends Controller
                 'selesai' => $currentTanggalSelesai
             ]
         ]);
-        
+
         // Hanya perlu validasi overlap jika ada perubahan yang signifikan
         if ($tanggalBerubah || $statusBerubahKeBuka) {
             $needsOverlapValidation = true;
         }
-        
 
-        
 
-        
+
+
+
         $validationRules = [
             'nama_periode'            => ['required', 'string', 'max:255'],
             'jenis_usulan'            => ['required', 'string', 'max:255'],
@@ -335,7 +335,7 @@ class PeriodeUsulanController extends Controller
             'status'                  => ['required', 'in:Buka,Tutup'],
             'senat_min_setuju' => ['nullable', 'integer', 'min:0'],
         ];
-        
+
         // Hanya tambahkan validasi overlap jika diperlukan
         if ($needsOverlapValidation) {
             $validationRules['tanggal_mulai'][] = new NoDateRangeOverlap(
@@ -366,12 +366,12 @@ class PeriodeUsulanController extends Controller
 
         try {
             $validated = $request->validate($validationRules);
-            
+
             // Debug logging untuk validation success
             \Log::info('PeriodeUsulan Update Validation Success', [
                 'validated_data' => $validated
             ]);
-            
+
                     DB::transaction(function () use ($request, $periodeUsulan) {
             $periodeUsulan->nama_periode      = $request->input('nama_periode');
             $periodeUsulan->jenis_usulan      = $request->input('jenis_usulan');
@@ -382,7 +382,7 @@ class PeriodeUsulanController extends Controller
             $periodeUsulan->tanggal_selesai_perbaikan = $request->input('tanggal_selesai_perbaikan');
             $periodeUsulan->status            = $request->input('status');
             $periodeUsulan->senat_min_setuju  = (int) $request->input('senat_min_setuju', $periodeUsulan->senat_min_setuju ?? 0);
-                
+
                                 // Debug logging untuk data yang akan disimpan
                 \Log::info('PeriodeUsulan Update Data to Save', [
                     'data' => [
@@ -579,7 +579,7 @@ class PeriodeUsulanController extends Controller
 
             foreach ($usulans as $usulan) {
                 $jenisUsulanPangkat = $usulan->data_usulan['jenis_usulan_pangkat'] ?? null;
-                
+
                 if ($jenisUsulanPangkat) {
                     switch ($jenisUsulanPangkat) {
                         case 'Dosen PNS':
@@ -639,7 +639,7 @@ class PeriodeUsulanController extends Controller
 
             foreach ($usulans as $usulan) {
                 $jenisNuptk = $usulan->jenis_nuptk ?? null;
-                
+
                 if ($jenisNuptk && isset($counts[$jenisNuptk])) {
                     $counts[$jenisNuptk]++;
                 }
@@ -656,6 +656,60 @@ class PeriodeUsulanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat menghitung usulan NUPTK'
+            ], 500);
+        }
+    }
+
+    /**
+     * API untuk mendapatkan count usulan Tugas Belajar per jenis
+     */
+    public function getUsulanTugasBelajarCount(PeriodeUsulan $periodeUsulan)
+    {
+        try {
+            // Pastikan periode ini adalah jenis tugas belajar
+            if ($periodeUsulan->jenis_usulan !== 'usulan-tugas-belajar') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Periode ini bukan jenis usulan tugas belajar'
+                ], 400);
+            }
+
+            // Ambil semua usulan dari periode ini
+            $usulans = $periodeUsulan->usulans()->get();
+
+            // Hitung berdasarkan jenis_pegawai
+            $counts = [
+                'dosen' => 0,
+                'tenaga_kependidikan' => 0
+            ];
+
+            foreach ($usulans as $usulan) {
+                // Ambil jenis pegawai dari relasi pegawai
+                $jenisPegawai = $usulan->pegawai->jenis_pegawai ?? null;
+
+                if ($jenisPegawai) {
+                    switch ($jenisPegawai) {
+                        case 'Dosen':
+                            $counts['dosen']++;
+                            break;
+                        case 'Tenaga Kependidikan':
+                            $counts['tenaga_kependidikan']++;
+                            break;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'counts' => $counts,
+                'total' => $usulans->count()
+            ]);
+
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghitung usulan tugas belajar'
             ], 500);
         }
     }

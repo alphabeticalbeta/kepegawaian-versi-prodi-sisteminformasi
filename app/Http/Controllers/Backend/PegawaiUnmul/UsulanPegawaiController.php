@@ -38,7 +38,7 @@ class UsulanPegawaiController extends Controller
             'usulan_diajukan' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIKIRIM_KE_ADMIN_FAKULTAS)->count(),
             'usulan_disetujui' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS)->count(),
                             'usulan_ditolak' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
-            
+
             // Tambahan statistik untuk status baru
             'usulan_direkomendasikan_kepegawaian_universitas' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             'usulan_direkomendasikan_bkn' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_BKN)->count(),
@@ -46,7 +46,7 @@ class UsulanPegawaiController extends Controller
             'usulan_direkomendasikan_sister' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_DIREKOMENDASIKAN_SISTER)->count(),
             'usulan_tidak_direkomendasikan_kepegawaian_universitas' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS)->count(),
             'usulan_tidak_direkomendasikan_bkn' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_BKN)->count(),
-            'usulan_tidak_direkomendasikan_sister' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_SISTER)->count(),
+            'usulan_tidak_direkomendasikan_sister' => $pegawai->usulans()->where('status_usulan', \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_TIM_SISTER)->count(),
         ];
 
         // Periode usulan yang sedang aktif
@@ -238,7 +238,7 @@ class UsulanPegawaiController extends Controller
         $hasActiveUsulan = $pegawai->usulans()
             ->where('jenis_usulan', 'usulan-nuptk')
             ->whereNotIn('status_usulan', [
-                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS, 
+                \App\Models\KepegawaianUniversitas\Usulan::STATUS_USULAN_DIREKOMENDASI_PENILAI_UNIVERSITAS,
                 \App\Models\KepegawaianUniversitas\Usulan::STATUS_TIDAK_DIREKOMENDASIKAN_KEPEGAWAIAN_UNIVERSITAS
             ])
             ->exists();
@@ -402,7 +402,7 @@ class UsulanPegawaiController extends Controller
     {
         try {
             $pegawai = Auth::user();
-            
+
             // Verify this usulan belongs to the authenticated user
             if ($usulan->pegawai_id !== $pegawai->id) {
                 return response()->json([
@@ -410,7 +410,7 @@ class UsulanPegawaiController extends Controller
                     'message' => 'Unauthorized access to this usulan'
                 ], 403);
             }
-            
+
             // Get logs for this usulan
             $logs = $usulan->logs()
                 ->with('dilakukanOleh:id,nama_lengkap')
@@ -461,12 +461,12 @@ class UsulanPegawaiController extends Controller
     {
         try {
             $pegawai = Auth::user();
-            
+
             // Verify this usulan belongs to the authenticated user
             if ($usulan->pegawai_id !== $pegawai->id) {
                 abort(403, 'Unauthorized access to this usulan');
             }
-            
+
             // Get logs for this usulan
             $logs = $usulan->logs()
                 ->with('dilakukanOleh:id,nama_lengkap')
