@@ -199,6 +199,41 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
                     ->name('api.sub-sub-unit-kerja');
             });
 
+            // Sub Unit Kerja (STANDARDIZED)
+            Route::prefix('sub-unitkerja')->name('sub-unitkerja.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'index'])
+                    ->name('index');
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'create'])
+                    ->name('create');
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'store'])
+                    ->name('store');
+                Route::get('/{subUnitKerja}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'edit'])
+                    ->name('edit');
+                Route::put('/{subUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'update'])
+                    ->name('update');
+                Route::delete('/{subUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubUnitKerjaController::class, 'destroy'])
+                    ->name('destroy');
+            });
+
+            // Sub Sub Unit Kerja (STANDARDIZED)
+            Route::prefix('sub-sub-unitkerja')->name('sub-sub-unitkerja.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'index'])
+                    ->name('index');
+                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'create'])
+                    ->name('create');
+                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'store'])
+                    ->name('store');
+                Route::get('/{subSubUnitKerja}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'edit'])
+                    ->name('edit');
+                Route::put('/{subSubUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'update'])
+                    ->name('update');
+                Route::delete('/{subSubUnitKerja}', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'destroy'])
+                    ->name('destroy');
+
+                // API routes (STANDARDIZED)
+                Route::get('/api/sub-unit-kerjas', [App\Http\Controllers\Backend\KepegawaianUniversitas\SubSubUnitKerjaController::class, 'getSubUnitKerjas'])
+                    ->name('api.sub-unit-kerjas');
+            });
 
             // Jabatan (STANDARDIZED)
             Route::prefix('jabatan')->name('jabatan.')->group(function () {
