@@ -570,14 +570,26 @@ let totalPages = 1;
 let totalData = 0;
 let currentSearch = '';
 
+// Escape HTML function for security
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM Content Loaded - Starting initialization');
-
     initializeForm();
     initializeRichTextEditor();
     loadInformasiData();
-    console.log('✅ Initialization completed');
 });
 
 // Initialize form
@@ -585,7 +597,6 @@ function initializeForm() {
     const form = document.getElementById('informasiForm');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
-        console.log('✅ Form event listener added');
     }
 
     // Initialize search input with real-time filtering
@@ -602,7 +613,6 @@ function initializeForm() {
                 loadInformasiData(1);
             }
         }, 300));
-        console.log('✅ Search input event listener added');
     }
 
     // Initialize filter dropdowns with real-time filtering
@@ -614,21 +624,18 @@ function initializeForm() {
         filterJenis.addEventListener('change', function() {
             loadInformasiData(1); // Reset to page 1 when filtering
         });
-        console.log('✅ Filter Jenis event listener added');
     }
 
     if (filterStatus) {
         filterStatus.addEventListener('change', function() {
             loadInformasiData(1); // Reset to page 1 when filtering
         });
-        console.log('✅ Filter Status event listener added');
     }
 
     if (filterSpecial) {
         filterSpecial.addEventListener('change', function() {
             loadInformasiData(1); // Reset to page 1 when filtering
         });
-        console.log('✅ Filter Special event listener added');
     }
 }
 
@@ -669,8 +676,6 @@ function initializeRichTextEditor() {
         editorElement.addEventListener('paste', function(e) {
             setTimeout(updateHiddenContent, 100);
         });
-
-        console.log('✅ Rich text editor initialized');
     }
 }
 
@@ -741,7 +746,7 @@ function togglePengumumanFields() {
 // Generate nomor surat
 async function generateNomorSurat() {
     try {
-        const response = await fetch('/admin-universitas/informasi/generate-nomor-surat', {
+        const response = await fetch('/informasi-simple/generate-nomor-surat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -759,10 +764,9 @@ async function generateNomorSurat() {
         if (result.success) {
             document.getElementById('nomor_surat').value = result.nomor_surat;
         } else {
-            showInformasiError('Gagal generate nomor surat: ' + result.message);
+            showInformasiError('Gagal generate nomor surat');
         }
     } catch (error) {
-        console.error('Error generating nomor surat:', error);
         showInformasiError('Terjadi kesalahan saat generate nomor surat');
     }
 }
@@ -782,7 +786,7 @@ async function loadInformasiData(page = 1) {
             special: document.getElementById('filterSpecial')?.value || ''
         });
 
-        const response = await fetch(`/admin-universitas/informasi/data?${params}`, {
+        const response = await fetch(`/informasi-simple/data?${params}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -792,25 +796,11 @@ async function loadInformasiData(page = 1) {
 
         if (response.ok) {
             const result = await response.json();
-            console.log('API Response:', result);
 
             if (result.success) {
                 // Store data globally for edit functionality
                 informasiData = result.data;
                 window.currentInformasiData = result.data;
-                console.log('Data loaded:', result.data.length, 'items');
-                console.log('Pagination info:', {
-                    current_page: result.current_page,
-                    last_page: result.last_page,
-                    total: result.total
-                });
-
-                // Check if pagination should be shown
-                if (result.last_page > 1) {
-                    console.log('Should show pagination - last_page > 1');
-                } else {
-                    console.log('Should hide pagination - last_page <= 1');
-                }
 
                 // Add delay for smooth animation
                 setTimeout(() => {
@@ -820,7 +810,7 @@ async function loadInformasiData(page = 1) {
                 }, 200);
             } else {
                 hideTableLoading();
-                showInformasiError('Gagal memuat data: ' + result.message);
+                showInformasiError('Gagal memuat data');
             }
         } else {
             hideTableLoading();
@@ -828,7 +818,6 @@ async function loadInformasiData(page = 1) {
         }
     } catch (error) {
         hideTableLoading();
-        console.error('Error loading informasi data:', error);
         showInformasiError('Terjadi kesalahan saat memuat data');
     }
 }
@@ -838,7 +827,6 @@ function displayInformasiData() {
     const tbody = document.getElementById('informasiTableBody');
 
     if (!tbody) {
-        console.error('❌ Table body not found!');
         return;
     }
 
@@ -873,13 +861,13 @@ function displayInformasiData() {
                 </span>
             </td>
             <td class="px-4 py-3">
-                <div class="text-sm font-medium text-gray-900" title="${item.judul}">
-                    ${item.judul}
+                <div class="text-sm font-medium text-gray-900" title="${escapeHtml(item.judul)}">
+                    ${escapeHtml(item.judul)}
                 </div>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-center">
                 <div class="text-sm text-gray-900">
-                    ${item.nomor_surat || '-'}
+                    ${escapeHtml(item.nomor_surat) || '-'}
                 </div>
             </td>
             <td class="px-4 py-3 whitespace-nowrap">
@@ -905,18 +893,18 @@ function displayInformasiData() {
             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-center">
                 ${item.lampiran && item.lampiran.length > 0 ?
                     item.lampiran.map((file, index) =>
-                        `<a href="/lampiran/${file.path}" target="_blank" class="inline-flex items-center px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 mr-1" title="Buka ${file.name}"><i data-lucide="paperclip" class="h-3 w-3 mr-1"></i>Lihat Dokumen${item.lampiran.length > 1 ? ' ' + (index + 1) : ''}</a>`
+                        `<a href="/lampiran/${escapeHtml(file.path)}" target="_blank" class="inline-flex items-center px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 mr-1" title="Buka ${escapeHtml(file.name)}"><i data-lucide="paperclip" class="h-3 w-3 mr-1"></i>Lihat Dokumen${item.lampiran.length > 1 ? ' ' + (index + 1) : ''}</a>`
                     ).join('')
                     : '<span class="text-gray-400 text-xs">-</span>'}
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-center">
-                <button onclick="editInformasi(${item.id})"
+                <button onclick="editInformasi(${escapeHtml(item.id)})"
                         class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg mr-2"
                         title="Edit">
                     <i data-lucide="edit" class="h-4 w-4 mr-2"></i>
                     Edit
                 </button>
-                <button onclick="deleteInformasi(${item.id})"
+                <button onclick="deleteInformasi(${escapeHtml(item.id)})"
                         class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 shadow-md hover:shadow-lg"
                         title="Hapus">
                     <i data-lucide="trash-2" class="h-4 w-4 mr-2"></i>
@@ -1029,10 +1017,10 @@ function displayCurrentFiles(item) {
         const filename = item.thumbnail.split('/').pop();
 
         // Use the same route as lampiran for thumbnail access
-        const thumbnailUrl = `/lampiran/${filename}`;
+        const thumbnailUrl = `/lampiran/${escapeHtml(filename)}`;
 
         thumbnailPreview.src = thumbnailUrl;
-        thumbnailName.textContent = filename;
+        thumbnailName.textContent = escapeHtml(filename);
         thumbnailDownload.href = thumbnailUrl;
 
         thumbnailDiv.classList.remove('hidden');
@@ -1064,10 +1052,10 @@ function displayCurrentFiles(item) {
                     </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">${file.name}</p>
+                    <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(file.name)}</p>
                     <p class="text-xs text-gray-500">${formatFileSize(file.size)}</p>
                 </div>
-                <a href="/lampiran/${file.path}" target="_blank"
+                <a href="/lampiran/${escapeHtml(file.path)}" target="_blank"
                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     <i data-lucide="download" class="h-3 w-3 mr-1"></i>
                     Download
@@ -1102,22 +1090,14 @@ function editInformasi(id) {
     const item = informasiData.find(item => item.id === id);
     if (!item) return;
 
-    // Debug: Log item data
-    console.log('Edit item data:', item);
-    console.log('Penulis:', item.penulis);
-    console.log('Lampiran:', item.lampiran);
-    console.log('Thumbnail:', item.thumbnail);
-    console.log('Tanggal Publish:', item.tanggal_publish);
-    console.log('Tanggal Surat:', item.tanggal_surat);
-    console.log('Nomor Surat:', item.nomor_surat);
-    console.log('Jenis:', item.jenis);
+    // Edit item data
 
     currentEditId = id;
     document.getElementById('modalTitle').textContent = 'Edit Informasi';
     document.getElementById('editId').value = item.id;
     document.getElementById('jenis').value = item.jenis;
     document.getElementById('judul').value = item.judul;
-    document.getElementById('editor').innerHTML = item.konten;
+    document.getElementById('editor').innerHTML = escapeHtml(item.konten);
     document.getElementById('konten').value = item.konten;
     document.getElementById('status').value = item.status;
 
@@ -1132,19 +1112,14 @@ function editInformasi(id) {
     const tanggalField = document.getElementById('tanggal_publish');
     const tanggalBerakhirField = document.getElementById('tanggal_berakhir');
 
-    console.log('Penulis field found:', penulisField);
-    console.log('Tags field found:', tagsField);
-    console.log('Tanggal field found:', tanggalField);
-    console.log('Tanggal Berakhir field found:', tanggalBerakhirField);
+    // Field validation
 
     if (penulisField) {
         penulisField.value = item.penulis || '';
-        console.log('Penulis value set to:', penulisField.value);
     }
 
     if (tagsField) {
         tagsField.value = item.tags ? item.tags.join(', ') : '';
-        console.log('Tags value set to:', tagsField.value);
     }
 
     // Handle tanggal_publish format
@@ -1152,7 +1127,6 @@ function editInformasi(id) {
         // Convert from "2025-09-07T17:41:00.000000Z" to "2025-09-07T17:41"
         const dateStr = item.tanggal_publish.replace('T', 'T').substring(0, 16);
         tanggalField.value = dateStr;
-        console.log('Tanggal value set to:', tanggalField.value);
     } else if (tanggalField) {
         tanggalField.value = '';
     }
@@ -1162,7 +1136,6 @@ function editInformasi(id) {
         // Convert from "2025-09-07T17:41:00.000000Z" to "2025-09-07T17:41"
         const dateStr = item.tanggal_berakhir.replace('T', 'T').substring(0, 16);
         tanggalBerakhirField.value = dateStr;
-        console.log('Tanggal Berakhir value set to:', tanggalBerakhirField.value);
     } else if (tanggalBerakhirField) {
         tanggalBerakhirField.value = '';
     }
@@ -1172,33 +1145,23 @@ function editInformasi(id) {
 
     // Handle pengumuman fields
     if (item.jenis === 'pengumuman') {
-        console.log('Processing pengumuman fields...');
         const nomorSuratField = document.getElementById('nomor_surat');
         const tanggalSuratField = document.getElementById('tanggal_surat');
 
-        console.log('Nomor Surat field found:', nomorSuratField);
-        console.log('Tanggal Surat field found:', tanggalSuratField);
-
         if (nomorSuratField) {
             nomorSuratField.value = item.nomor_surat || '';
-            console.log('Nomor Surat value set to:', nomorSuratField.value);
         }
 
         if (tanggalSuratField) {
-            console.log('Tanggal Surat raw data:', item.tanggal_surat);
             // Handle tanggal_surat format
             if (item.tanggal_surat) {
                 // Convert from "2025-09-07T00:00:00.000000Z" to "2025-09-07" (date format)
                 const dateStr = item.tanggal_surat.substring(0, 10);
                 tanggalSuratField.value = dateStr;
-                console.log('Tanggal Surat value set to:', tanggalSuratField.value);
             } else {
                 tanggalSuratField.value = '';
-                console.log('Tanggal Surat is empty, field cleared');
             }
         }
-    } else {
-        console.log('Not a pengumuman, skipping pengumuman fields');
     }
 
     // Display current files
@@ -1237,7 +1200,7 @@ function deleteInformasi(id) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch(`/admin-universitas/informasi/${id}`, {
+            fetch(`/informasi-simple/${escapeHtml(id)}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1251,13 +1214,12 @@ function deleteInformasi(id) {
             .then(result => {
                 if (result.success) {
                     loadInformasiData();
-                    showInformasiSuccess(result.message);
+                    showInformasiSuccess('Data berhasil dihapus');
                 } else {
-                    showInformasiError(result.message);
+                    showInformasiError('Terjadi kesalahan saat menghapus data');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 showInformasiError('Terjadi kesalahan saat menghapus data');
             });
         }
@@ -1273,7 +1235,7 @@ function handleFormSubmit(event) {
 
     const formData = new FormData(event.target);
     const isEdit = currentEditId !== null;
-    const url = isEdit ? `/admin-universitas/informasi/${currentEditId}` : '/admin-universitas/informasi';
+    const url = isEdit ? `/informasi-simple/${escapeHtml(currentEditId)}` : '/informasi-simple';
 
     if (isEdit) {
         formData.append('_method', 'PUT');
@@ -1300,22 +1262,17 @@ function handleFormSubmit(event) {
         if (result.success) {
             closeModal();
             loadInformasiData();
-            showInformasiSuccess(result.message);
+            showInformasiSuccess('Data berhasil disimpan');
         } else {
             // Handle validation errors
             if (result.errors) {
-                let errorMessage = 'Validasi gagal:\n';
-                for (const field in result.errors) {
-                    errorMessage += `• ${result.errors[field][0]}\n`;
-                }
-                showInformasiError(errorMessage);
+                showInformasiError('Validasi gagal. Silakan periksa kembali data yang dimasukkan.');
             } else {
-                showInformasiError(result.message);
+                showInformasiError('Terjadi kesalahan saat menyimpan data');
             }
         }
     })
     .catch(error => {
-        console.error('Error:', error);
         showInformasiError('Terjadi kesalahan saat menyimpan data');
     })
     .finally(() => {
@@ -1392,30 +1349,19 @@ function updatePagination(data) {
     totalPages = data.last_page;
     totalData = data.total;
 
-    console.log('updatePagination called with:', {
-        currentPage,
-        totalPages,
-        totalData
-    });
+    // Update pagination
 
     const container = document.getElementById('paginationContainer');
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevPageBtn');
     const nextBtn = document.getElementById('nextPageBtn');
 
-    console.log('Pagination elements found:', {
-        container: !!container,
-        pageNumbers: !!pageNumbers,
-        prevBtn: !!prevBtn,
-        nextBtn: !!nextBtn
-    });
+    // Pagination elements validation
 
     // Show/hide pagination
     if (totalPages > 1) {
-        console.log('Showing pagination - totalPages > 1');
         container.classList.add('show');
     } else {
-        console.log('Hiding pagination - totalPages <= 1');
         container.classList.remove('show');
     }
 
@@ -1423,7 +1369,7 @@ function updatePagination(data) {
     const startItem = (currentPage - 1) * 10 + 1;
     const endItem = Math.min(currentPage * 10, totalData);
     document.getElementById('paginationInfo').textContent =
-        `Menampilkan ${startItem}-${endItem} dari ${totalData} data`;
+        `Menampilkan ${escapeHtml(startItem)}-${escapeHtml(endItem)} dari ${escapeHtml(totalData)} data`;
 
     // Update page numbers
     pageNumbers.innerHTML = '';

@@ -197,6 +197,15 @@
 // Global variables
 let currentImageData = null;
 
+// Escape HTML function for XSS protection
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
     loadCurrentImage();
@@ -207,12 +216,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load current image
 async function loadCurrentImage() {
     try {
-        const response = await fetch('/api/struktur-organisasi', {
+        const response = await fetch('/struktur-organisasi/data', {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            credentials: 'same-origin'
         });
 
         if (response.ok) {
@@ -226,7 +237,6 @@ async function loadCurrentImage() {
             showNoImageMessage();
         }
     } catch (error) {
-        console.error('Error loading current image:', error);
         showNoImageMessage();
     }
 }
@@ -236,7 +246,7 @@ function displayCurrentImage(data) {
     const container = document.getElementById('currentImageContainer');
     container.innerHTML = `
         <div class="relative inline-block">
-            <img src="${data.image_url}" alt="Struktur Organisasi" class="image-preview">
+            <img src="${escapeHtml(data.image_url)}" alt="Struktur Organisasi" class="image-preview">
             <div class="image-actions">
                 <button type="button" onclick="editImage()" class="p-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg" title="Edit">
                     <i data-lucide="edit" class="h-4 w-4"></i>
@@ -246,7 +256,7 @@ function displayCurrentImage(data) {
                 </button>
             </div>
         </div>
-        ${data.description ? `<p class="text-sm text-gray-600 mt-2">${data.description}</p>` : ''}
+        ${data.description ? `<p class="text-sm text-gray-600 mt-2">${escapeHtml(data.description)}</p>` : ''}
     `;
 
     currentImageData = data;
@@ -365,27 +375,20 @@ function handleFormSubmit(e) {
         return;
     }
 
-    // Debug: Log form data
-    console.log('Form data:', formData);
-    console.log('File:', fileInput.files[0]);
-
     // Show loading
     showSubmitLoading(true);
 
     // Make API call
-    fetch('/api/struktur-organisasi', {
+    fetch('/struktur-organisasi/store', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'X-Requested-With': 'XMLHttpRequest'
         },
+        credentials: 'same-origin',
         body: formData
     })
     .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        console.log('Response ok:', response.ok);
-
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -393,18 +396,16 @@ function handleFormSubmit(e) {
         return response.json();
     })
     .then(result => {
-        console.log('API Result:', result);
         if (result.success) {
-            showSuccess(result.message);
+            showSuccess('Gambar berhasil diupload');
             loadCurrentImage();
             resetForm();
         } else {
-            showError(result.message || 'Upload gagal');
+            showError('Upload gagal');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showError('Terjadi kesalahan saat mengupload gambar: ' + error.message);
+        showError('Terjadi kesalahan saat mengupload gambar');
     })
     .finally(() => {
         showSubmitLoading(false);
@@ -436,24 +437,24 @@ function deleteImage() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch('/api/struktur-organisasi', {
+            fetch('/struktur-organisasi/delete', {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'X-Requested-With': 'XMLHttpRequest'
-                }
+                },
+                credentials: 'same-origin'
             })
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    showSuccess(result.message);
+                    showSuccess('Gambar berhasil dihapus');
                     loadCurrentImage();
                 } else {
-                    showError(result.message);
+                    showError('Gagal menghapus gambar');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 showError('Terjadi kesalahan saat menghapus gambar');
             });
         }

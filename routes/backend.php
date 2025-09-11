@@ -116,6 +116,7 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::get('/dashboard', [App\Http\Controllers\Backend\AdminUniversitas\DashboardController::class, 'index'])
                 ->name('dashboard');
 
+
         });
 
     // ======================================================================
@@ -142,18 +143,34 @@ Route::middleware(['web', 'auth:pegawai'])->group(function () {
             Route::prefix('data-pegawai')->name('data-pegawai.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'index'])
                     ->name('index');
-                Route::get('/create', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'create'])
+                Route::get('/create', [App\Http\Controllers\Backend\PegawaiUnmul\ProfileController::class, 'show'])
                     ->name('create');
-                Route::post('/', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'store'])
+                Route::post('/', [App\Http\Controllers\Backend\PegawaiUnmul\ProfileController::class, 'store'])
                     ->name('store');
-                Route::get('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'show'])
-                    ->name('show');
-                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'edit'])
-                    ->name('edit');
-                Route::put('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'update'])
+                // Route show dihapus karena menggunakan shared profile page
+                Route::get('/{pegawai}/edit', [App\Http\Controllers\Backend\PegawaiUnmul\ProfileController::class, 'show'])
+                    ->name('edit')
+                    ->defaults('edit', '1');
+                Route::put('/{pegawai}', [App\Http\Controllers\Backend\PegawaiUnmul\ProfileController::class, 'update'])
                     ->name('update');
                 Route::delete('/{pegawai}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'destroy'])
                     ->name('destroy');
+
+                // Export/Import routes
+                Route::get('/export', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'export'])
+                    ->name('export');
+                Route::post('/import', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'import'])
+                    ->name('import');
+                Route::get('/template', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'downloadTemplate'])
+                    ->name('template');
+                Route::post('/preview-import', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'previewImport'])
+                    ->name('preview-import');
+
+                // Bulk operations routes
+                Route::post('/bulk-delete', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'bulkDelete'])
+                    ->name('bulk-delete');
+                Route::post('/bulk-update', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'bulkUpdate'])
+                    ->name('bulk-update');
 
                 // Document routes (STANDARDIZED)
                 Route::get('/{pegawai}/dokumen/{field}', [App\Http\Controllers\Backend\KepegawaianUniversitas\DataPegawaiController::class, 'showDocument'])

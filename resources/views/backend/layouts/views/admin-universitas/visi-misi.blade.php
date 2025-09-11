@@ -114,6 +114,12 @@
         <div class="mx-auto max-w-7xl pt-5 mt-5">
             <!-- Data Table -->
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <!-- Table Header -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">Data Visi dan Misi</h2>
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
@@ -179,12 +185,19 @@
                     <!-- Jenis -->
                     <div>
                         <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">
-                            Jenis
+                            Jenis <span class="text-red-500">*</span>
                         </label>
-                        <div class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                            <span id="jenisDisplay" class="font-medium">-</span>
+                        <!-- Select dropdown for create mode -->
+                        <select id="jenis" name="jenis" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            <option value="">Pilih Jenis</option>
+                            <option value="visi">Visi</option>
+                            <option value="misi">Misi</option>
+                        </select>
+                        <!-- Read-only display for edit mode -->
+                        <div id="jenisDisplay" class="hidden w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg">
+                            <span id="jenisText" class="text-gray-700 font-medium"></span>
                         </div>
-                        <input type="hidden" id="jenis" name="jenis" required>
                     </div>
 
                     <!-- Konten -->
@@ -301,159 +314,68 @@ let editor = null;
 // Data array (will be loaded from API)
 let visiMisiData = [];
 
+// Escape HTML function for XSS protection
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM Content Loaded - Starting initialization');
-
-    // Test basic functionality first
-    console.log('Testing basic functionality...');
     const tbody = document.getElementById('visiMisiTableBody');
-    console.log('Table body found:', tbody);
 
     if (tbody) {
-        console.log('✅ Table body exists, proceeding with data load');
-        loadVisiMisiDataFromAPI();
-    } else {
-        console.error('❌ Table body not found!');
+        loadVisiMisiDataFromServer();
     }
 
     initializeForm();
     initializeRichTextEditor();
-    console.log('✅ Initialization completed');
 });
 
-// Load data from API
-async function loadVisiMisiDataFromAPI() {
-    console.log('🚀 Starting to load data from API...');
+// Load data from server using API
+async function loadVisiMisiDataFromServer() {
     try {
-        const response = await fetch('/api/visi-misi', {
+        const response = await fetch('/admin-universitas/visi-misi/data', {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            credentials: 'same-origin'
         });
-
-        console.log('📡 API Response status:', response.status);
-        console.log('📡 API Response ok:', response.ok);
 
         if (response.ok) {
             const result = await response.json();
-            console.log('📊 API Response data:', result);
 
             if (result.success && result.data) {
                 visiMisiData = result.data;
-                console.log('✅ Loaded visi misi data from API:', visiMisiData);
-                console.log('✅ Data count:', visiMisiData.length);
             } else {
-                console.log('⚠️ No data from API, using fallback data');
-                // Fallback to sample data if no data from API
-                visiMisiData = [
-                    {
-                        id: 1,
-                        jenis: 'visi',
-                        konten: '<p><strong>Menjadi universitas terkemuka di Indonesia</strong> yang unggul dalam pengembangan ilmu pengetahuan, teknologi, dan seni untuk kesejahteraan masyarakat.</p>',
-                        status: 'aktif',
-                        created_at: '2024-01-15 10:30:00'
-                    },
-                    {
-                        id: 2,
-                        jenis: 'misi',
-                        konten: '<ol><li>Menyelenggarakan <em>pendidikan tinggi yang berkualitas</em> dan relevan dengan kebutuhan masyarakat</li><li>Mengembangkan penelitian yang inovatif dan bermanfaat</li><li>Melaksanakan pengabdian kepada masyarakat yang berkelanjutan</li><li>Membangun tata kelola universitas yang baik dan akuntabel</li></ol>',
-                        status: 'aktif',
-                        created_at: '2024-01-15 10:35:00'
-                    }
-                ];
+                visiMisiData = [];
             }
         } else {
-            console.error('❌ API failed, using fallback data');
-            // Fallback to sample data if API fails
-            visiMisiData = [
-                {
-                    id: 1,
-                    jenis: 'visi',
-                    konten: '<p><strong>Menjadi universitas terkemuka di Indonesia</strong> yang unggul dalam pengembangan ilmu pengetahuan, teknologi, dan seni untuk kesejahteraan masyarakat.</p>',
-                    status: 'aktif',
-                    created_at: '2024-01-15 10:30:00'
-                },
-                {
-                    id: 2,
-                    jenis: 'misi',
-                    konten: '<ol><li>Menyelenggarakan <em>pendidikan tinggi yang berkualitas</em> dan relevan dengan kebutuhan masyarakat</li><li>Mengembangkan penelitian yang inovatif dan bermanfaat</li><li>Melaksanakan pengabdian kepada masyarakat yang berkelanjutan</li><li>Membangun tata kelola universitas yang baik dan akuntabel</li></ol>',
-                    status: 'aktif',
-                    created_at: '2024-01-15 10:35:00'
-                }
-            ];
+            visiMisiData = [];
         }
     } catch (error) {
-        console.error('❌ Error loading data from API:', error);
-        // Fallback to sample data if API fails
-        visiMisiData = [
-            {
-                id: 1,
-                jenis: 'visi',
-                konten: '<p><strong>Menjadi universitas terkemuka di Indonesia</strong> yang unggul dalam pengembangan ilmu pengetahuan, teknologi, dan seni untuk kesejahteraan masyarakat.</p>',
-                status: 'aktif',
-                created_at: '2024-01-15 10:30:00'
-            },
-            {
-                id: 2,
-                jenis: 'misi',
-                konten: '<ol><li>Menyelenggarakan <em>pendidikan tinggi yang berkualitas</em> dan relevan dengan kebutuhan masyarakat</li><li>Mengembangkan penelitian yang inovatif dan bermanfaat</li><li>Melaksanakan pengabdian kepada masyarakat yang berkelanjutan</li><li>Membangun tata kelola universitas yang baik dan akuntabel</li></ol>',
-                status: 'aktif',
-                created_at: '2024-01-15 10:35:00'
-            }
-        ];
+        visiMisiData = [];
     }
 
-    console.log('📋 Final data to load:', visiMisiData);
-    console.log('📋 Data length:', visiMisiData.length);
-
-    // Test if data is valid
-    if (visiMisiData && visiMisiData.length > 0) {
-        console.log('✅ Data is valid, proceeding to load table');
-        // Load data to table
-        loadVisiMisiData();
-    } else {
-        console.error('❌ No valid data to load');
-        // Force show fallback data
-        visiMisiData = [
-            {
-                id: 1,
-                jenis: 'visi',
-                konten: '<p><strong>Test Data - Menjadi universitas terkemuka di Indonesia</strong></p>',
-                status: 'aktif',
-                created_at: '2024-01-15 10:30:00'
-            },
-            {
-                id: 2,
-                jenis: 'misi',
-                konten: '<p><strong>Test Data - Menyelenggarakan pendidikan tinggi yang berkualitas</strong></p>',
-                status: 'aktif',
-                created_at: '2024-01-15 10:35:00'
-            }
-        ];
-        console.log('📋 Using fallback data:', visiMisiData);
-        loadVisiMisiData();
-    }
+    // Load data to table
+    loadVisiMisiData();
 }
 
 // Load data to table
 function loadVisiMisiData() {
-    console.log('📋 loadVisiMisiData called');
-    console.log('📋 Data to load:', visiMisiData);
-    console.log('📋 Data length:', visiMisiData.length);
-
     const tbody = document.getElementById('visiMisiTableBody');
-    console.log('📋 Table body element:', tbody);
 
     if (!tbody) {
-        console.error('❌ Table body not found!');
         return;
     }
 
     if (visiMisiData.length === 0) {
-        console.log('📋 No data available, showing no data message');
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-12 text-center text-gray-500">
@@ -468,7 +390,6 @@ function loadVisiMisiData() {
         return;
     }
 
-    console.log('📋 Rendering data rows for', visiMisiData.length, 'items');
     tbody.innerHTML = visiMisiData.map((item, index) => `
         <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -484,8 +405,8 @@ function loadVisiMisiData() {
                 </span>
             </td>
             <td class="px-6 py-4 text-sm text-gray-900 max-w-md">
-                <div class="truncate" title="${stripHtml(item.konten)}">
-                    ${stripHtml(item.konten).length > 100 ? stripHtml(item.konten).substring(0, 100) + '...' : stripHtml(item.konten)}
+                <div class="truncate" title="${escapeHtml(stripHtml(item.konten))}">
+                    ${escapeHtml(stripHtml(item.konten).length > 100 ? stripHtml(item.konten).substring(0, 100) + '...' : stripHtml(item.konten))}
                 </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -501,7 +422,7 @@ function loadVisiMisiData() {
                 ${formatDate(item.created_at)}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button onclick="editVisiMisi(${item.id})"
+                <button onclick="editVisiMisi(${escapeHtml(item.id)})"
                         class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg"
                         title="Edit">
                     <i data-lucide="edit" class="h-4 w-4 mr-2"></i>
@@ -671,86 +592,124 @@ function handleFormSubmit(e) {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
 
+    // Validate form data
+    if (!data.jenis || !data.konten || !data.status) {
+        showError('Semua field harus diisi!');
+        return;
+    }
+
+    // Show SweetAlert when submit button is clicked
+    showSubmitConfirmation(data);
+}
+
+// Process form submission after confirmation
+async function processFormSubmission(data) {
     // Show loading
     showSubmitLoading(true);
 
-    // Determine API endpoint and method
-    let url, method;
-    if (currentEditId) {
-        url = `{{ url('admin-universitas/visi-misi') }}/${currentEditId}`;
-        method = 'PUT';
-    } else {
-        url = `{{ route('admin-universitas.visi-misi.store') }}`;
-        method = 'POST';
-    }
-
-    // Add CSRF token
-    data._token = '{{ csrf_token() }}';
-    if (method === 'PUT') {
-        data._method = 'PUT';
-    }
-
-    // Make API call
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            if (currentEditId) {
-                // Update existing data
-                const index = visiMisiData.findIndex(item => item.id === currentEditId);
-                if (index !== -1) {
-                    visiMisiData[index] = {
-                        ...visiMisiData[index],
-                        jenis: data.jenis,
-                        konten: data.konten,
-                        status: data.status
-                    };
-                }
-            } else {
-                // Add new data
-                visiMisiData.push(result.data);
-            }
-
-            // Reload data from API to get fresh data
-            loadVisiMisiDataFromAPI().then(() => {
-                closeModal();
-                showSuccess(result.message);
-            });
+    try {
+        // Determine API endpoint and method
+        let url, method;
+        if (currentEditId) {
+            url = `/admin-universitas/visi-misi/${currentEditId}`;
+            method = 'PUT';
         } else {
-            showError(result.message);
+            url = '/admin-universitas/visi-misi';
+            method = 'POST';
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+
+        // Add CSRF token
+        data._token = '{{ csrf_token() }}';
+        if (method === 'PUT') {
+            data._method = 'PUT';
+        }
+
+        // Make API call
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: new URLSearchParams(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Reload data from API to get fresh data
+            await loadVisiMisiDataFromServer();
+            closeModal();
+            showSuccess('Data berhasil disimpan');
+        } else {
+            showError('Gagal menyimpan data');
+        }
+    } catch (error) {
         showError('Terjadi kesalahan saat menyimpan data');
-    })
-    .finally(() => {
+    } finally {
         showSubmitLoading(false);
-    });
+    }
 }
 
+// Open create modal
+function openCreateModal() {
+    currentEditId = null;
+    document.getElementById('modalTitle').textContent = 'Tambah Visi dan Misi';
+    document.getElementById('submitBtnText').textContent = 'Simpan';
+
+    // Reset form
+    document.getElementById('visiMisiForm').reset();
+    document.getElementById('editId').value = '';
+
+    // Reset jenis field display to show select dropdown
+    const jenisSelect = document.getElementById('jenis');
+    const jenisDisplay = document.getElementById('jenisDisplay');
+
+    jenisSelect.classList.remove('hidden');
+    jenisDisplay.classList.add('hidden');
+
+    // Reset editor
+    const editorElement = document.getElementById('editor');
+    const hiddenTextarea = document.getElementById('konten');
+    editorElement.innerHTML = '';
+    hiddenTextarea.value = '';
+
+    // Open modal
+    document.getElementById('visiMisiModal').classList.remove('hidden');
+
+    // Focus jenis select
+    setTimeout(() => {
+        document.getElementById('jenis').focus();
+    }, 100);
+}
 
 // Edit visi misi
 function editVisiMisi(id) {
     const item = visiMisiData.find(item => item.id === id);
-    if (!item) return;
+
+    if (!item) {
+        return;
+    }
 
     currentEditId = id;
+
+    document.getElementById('modalTitle').textContent = 'Edit Visi dan Misi';
+    document.getElementById('submitBtnText').textContent = 'Perbarui';
     document.getElementById('editId').value = item.id;
-    document.getElementById('jenis').value = item.jenis;
     document.getElementById('status').value = item.status;
 
-    // Set jenis display
+    // Hide select dropdown and show read-only display for jenis
+    const jenisSelect = document.getElementById('jenis');
     const jenisDisplay = document.getElementById('jenisDisplay');
-    jenisDisplay.textContent = item.jenis === 'visi' ? 'Visi' : 'Misi';
+    const jenisText = document.getElementById('jenisText');
+
+    jenisSelect.classList.add('hidden');
+    jenisDisplay.classList.remove('hidden');
+    jenisText.textContent = item.jenis === 'visi' ? 'Visi' : 'Misi';
+
+    // Set hidden value for form submission
+    jenisSelect.value = item.jenis;
 
     // Set editor content
     const editorElement = document.getElementById('editor');
@@ -775,6 +734,40 @@ function editVisiMisi(id) {
     }, 100);
 }
 
+// Delete visi misi
+function deleteVisiMisi(id) {
+    const item = visiMisiData.find(item => item.id === id);
+    if (!item) return;
+
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: `Apakah Anda yakin ingin menghapus ${escapeHtml(item.jenis === 'visi' ? 'Visi' : 'Misi')} ini?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        customClass: {
+            popup: 'bg-gray-800 text-white',
+            title: 'text-white',
+            content: 'text-gray-300',
+            confirmButton: 'bg-red-600 hover:bg-red-700 text-white',
+            cancelButton: 'bg-gray-600 hover:bg-gray-700 text-white'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Remove item from data
+            visiMisiData = visiMisiData.filter(item => item.id !== id);
+
+            // Reload table
+            loadVisiMisiData();
+
+            showSuccess('Data berhasil dihapus!');
+        }
+    });
+}
+
 
 // Close modal
 function closeModal() {
@@ -787,8 +780,12 @@ function closeModal() {
     editorElement.innerHTML = '';
     hiddenTextarea.value = '';
 
-    // Reset jenis display
-    document.getElementById('jenisDisplay').textContent = '-';
+    // Reset jenis field display
+    const jenisSelect = document.getElementById('jenis');
+    const jenisDisplay = document.getElementById('jenisDisplay');
+
+    jenisSelect.classList.remove('hidden');
+    jenisDisplay.classList.add('hidden');
 
     // Reset form
     document.getElementById('visiMisiForm').reset();
@@ -811,11 +808,41 @@ function showSubmitLoading(show) {
     }
 }
 
+// Show submit confirmation
+function showSubmitConfirmation(data) {
+    const action = currentEditId ? 'memperbarui' : 'menyimpan';
+    const jenis = data.jenis === 'visi' ? 'Visi' : 'Misi';
+
+    Swal.fire({
+        title: 'Konfirmasi',
+        text: `Apakah Anda yakin ingin ${action} data ${escapeHtml(jenis)} ini?`,
+        icon: 'question',
+        confirmButtonText: 'Ya, Simpan',
+        showCancelButton: true,
+        cancelButtonText: 'Batal',
+        customClass: {
+            popup: 'bg-gradient-to-br from-green-50 to-emerald-100',
+            title: 'text-green-800',
+            content: 'text-green-600',
+            confirmButton: 'bg-green-600 hover:bg-green-700 text-white',
+            cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Continue with form submission
+            processFormSubmission(data);
+        } else {
+            // Hide loading and don't submit
+            showSubmitLoading(false);
+        }
+    });
+}
+
 // Show success message
 function showSuccess(message) {
     Swal.fire({
         title: 'Berhasil!',
-        text: message,
+        text: escapeHtml(message),
         icon: 'success',
         confirmButtonText: 'OK',
         customClass: {
@@ -831,7 +858,7 @@ function showSuccess(message) {
 function showError(message) {
     Swal.fire({
         title: 'Error!',
-        text: message,
+        text: escapeHtml(message),
         icon: 'error',
         confirmButtonText: 'OK',
         customClass: {

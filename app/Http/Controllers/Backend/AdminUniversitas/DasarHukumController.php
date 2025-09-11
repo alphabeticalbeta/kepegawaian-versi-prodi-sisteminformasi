@@ -86,19 +86,15 @@ class DasarHukumController extends Controller
                 }
             }
 
-            // Handle file uploads
-            $data = $request->except(['thumbnail', 'lampiran']);
+            // Prepare data for database
+            $data = $request->except(['thumbnail', 'lampiran', 'penulis']);
 
-            // Upload thumbnail
-            if ($request->hasFile('thumbnail')) {
-                $thumbnail = $request->file('thumbnail');
-                $thumbnailName = time() . '_' . $thumbnail->getClientOriginalName();
-                $thumbnailPath = $thumbnail->storeAs('public/dasar-hukum/thumbnails', $thumbnailName);
-                $data['thumbnail'] = Storage::url($thumbnailPath);
+            // Add file paths to data
+            if ($thumbnailPath) {
+                $data['thumbnail'] = '/storage/' . $thumbnailPath;
             }
 
-            // Upload lampiran
-            if ($request->hasFile('lampiran')) {
+            if (!empty($lampiranPaths)) {
                 $data['lampiran'] = $lampiranPaths;
             }
 
@@ -109,7 +105,7 @@ class DasarHukumController extends Controller
                 $data['tags'] = null;
             }
 
-            // Auto-fill penulis (always from logged in user)
+            // Auto-fill penulis (always from logged in user - ignore form input for security)
             if (Auth::guard('pegawai')->check()) {
                 $data['penulis'] = Auth::guard('pegawai')->user()->nama_lengkap ?? Auth::guard('pegawai')->user()->name ?? 'Pegawai';
             } else {
@@ -235,7 +231,7 @@ class DasarHukumController extends Controller
             }
 
             // Handle file uploads
-            $data = $request->except(['thumbnail', 'lampiran']);
+            $data = $request->except(['thumbnail', 'lampiran', 'penulis']);
 
             // Upload thumbnail
             if ($request->hasFile('thumbnail')) {
@@ -248,7 +244,7 @@ class DasarHukumController extends Controller
                 $thumbnail = $request->file('thumbnail');
                 $thumbnailName = time() . '_' . $thumbnail->getClientOriginalName();
                 $thumbnailPath = $thumbnail->storeAs('public/dasar-hukum/thumbnails', $thumbnailName);
-                $data['thumbnail'] = Storage::url($thumbnailPath);
+                $data['thumbnail'] = '/storage/' . str_replace('public/', '', $thumbnailPath);
             }
 
             // Upload lampiran
@@ -264,6 +260,9 @@ class DasarHukumController extends Controller
                     ];
                 }
                 $data['lampiran'] = $lampiranFiles;
+            } else {
+                // Keep existing lampiran if no new files uploaded
+                $data['lampiran'] = $dasarHukum->lampiran;
             }
 
             // Parse tags
@@ -273,7 +272,7 @@ class DasarHukumController extends Controller
                 $data['tags'] = null;
             }
 
-            // Auto-fill penulis (always from logged in user)
+            // Auto-fill penulis (always from logged in user - ignore form input for security)
             if (Auth::guard('pegawai')->check()) {
                 $data['penulis'] = Auth::guard('pegawai')->user()->nama_lengkap ?? Auth::guard('pegawai')->user()->name ?? 'Pegawai';
             } else {
@@ -424,7 +423,7 @@ class DasarHukumController extends Controller
             // Pagination
             $perPage = $request->get('per_page', 10);
             $page = $request->get('page', 1);
-            
+
             Log::info('Dasar Hukum API Request', [
                 'page' => $page,
                 'per_page' => $perPage,
@@ -472,10 +471,7 @@ class DasarHukumController extends Controller
      */
     public function showDocument($filename)
     {
-        // Authentication check - user must be logged in
-        if (!Auth::check()) {
-            abort(403, 'Unauthorized. Anda harus login untuk mengakses dokumen ini.');
-        }
+        // Public access - no authentication required for document viewing
 
         // Get file path from storage - check both lampiran and thumbnails
         $filePath = 'public/dasar-hukum/lampiran/' . $filename;
@@ -487,7 +483,8 @@ class DasarHukumController extends Controller
             if (Storage::disk('local')->exists($thumbnailPath)) {
                 $filePath = $thumbnailPath;
             } else {
-                abort(404, 'File tidak ditemukan: ' . $filename);
+                // File not found - return placeholder image
+                return $this->getPlaceholderImage($filename);
             }
         }
 
@@ -496,5 +493,66 @@ class DasarHukumController extends Controller
 
         // Return the file
         return response()->file($fullPath);
+    }
+
+    /**
+     * Generate placeholder image for missing files
+     */
+    private function getPlaceholderImage($filename)
+    {
+        // Determine file type from extension
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        // Create a simple placeholder image
+        $width = 400;
+        $height = 300;
+
+        // Create image resource
+        $image = imagecreate($width, $height);
+
+        // Set colors
+        $bgColor = imagecolorallocate($image, 240, 240, 240); // Light gray background
+        $textColor = imagecolorallocate($image, 100, 100, 100); // Dark gray text
+        $borderColor = imagecolorallocate($image, 200, 200, 200); // Border color
+
+        // Fill background
+        imagefill($image, 0, 0, $bgColor);
+
+        // Draw border
+        imagerectangle($image, 0, 0, $width-1, $height-1, $borderColor);
+
+        // Add text
+        $text = "File Tidak Ditemukan";
+        $fontSize = 3;
+        $textWidth = imagefontwidth($fontSize) * strlen($text);
+        $textHeight = imagefontheight($fontSize);
+        $x = ($width - $textWidth) / 2;
+        $y = ($height - $textHeight) / 2;
+
+        imagestring($image, $fontSize, $x, $y, $text, $textColor);
+
+        // Add filename
+        $filenameText = "File: " . $filename;
+        $filenameWidth = imagefontwidth($fontSize) * strlen($filenameText);
+        $filenameX = ($width - $filenameWidth) / 2;
+        $filenameY = $y + $textHeight + 10;
+
+        imagestring($image, $fontSize, $filenameX, $filenameY, $filenameText, $textColor);
+
+        // Output image
+        ob_start();
+        imagejpeg($image, null, 80);
+        $imageData = ob_get_contents();
+        ob_end_clean();
+
+        // Clean up
+        imagedestroy($image);
+
+        // Return image response
+        return response($imageData)
+            ->header('Content-Type', 'image/jpeg')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 }

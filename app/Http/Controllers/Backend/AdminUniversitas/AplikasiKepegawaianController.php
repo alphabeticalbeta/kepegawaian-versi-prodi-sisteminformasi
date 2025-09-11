@@ -23,6 +23,93 @@ class AplikasiKepegawaianController extends Controller
     }
 
     /**
+     * Get data for API
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getData(Request $request)
+    {
+        try {
+            // Validate input parameters
+            $request->validate([
+                'page' => 'nullable|integer|min:1',
+                'limit' => 'nullable|integer|min:1|max:100',
+                'search' => 'nullable|string|max:255',
+                'status' => 'nullable|in:aktif,tidak_aktif'
+            ]);
+
+            // Check authentication
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 401);
+            }
+
+            // Build query with filters
+            $query = AplikasiKepegawaian::query();
+
+            // Apply search filter
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('nama_aplikasi', 'like', "%{$search}%")
+                      ->orWhere('sumber', 'like', "%{$search}%")
+                      ->orWhere('keterangan', 'like', "%{$search}%");
+                });
+            }
+
+            // Apply status filter
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+
+            // Apply pagination
+            $limit = $request->input('limit', 10);
+            $aplikasiData = $query->orderBy('created_at', 'desc')->paginate($limit);
+
+            Log::info('Aplikasi Kepegawaian data retrieved', [
+                'user_id' => Auth::id(),
+                'count' => $aplikasiData->count(),
+                'filters' => $request->only(['search', 'status'])
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $aplikasiData->items(),
+                'pagination' => [
+                    'current_page' => $aplikasiData->currentPage(),
+                    'last_page' => $aplikasiData->lastPage(),
+                    'per_page' => $aplikasiData->perPage(),
+                    'total' => $aplikasiData->total()
+                ],
+                'message' => 'Data aplikasi kepegawaian berhasil diambil'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input parameters',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error('Error getting aplikasi kepegawaian data from database', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'data' => [],
+                'message' => 'Terjadi kesalahan saat mengambil data'
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -31,6 +118,14 @@ class AplikasiKepegawaianController extends Controller
     public function store(Request $request)
     {
         try {
+            // Check authentication
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 401);
+            }
+
             // Validate request
             $request->validate([
                 'nama_aplikasi' => 'required|string|max:255',
@@ -40,18 +135,22 @@ class AplikasiKepegawaianController extends Controller
                 'status' => 'required|in:aktif,tidak_aktif'
             ]);
 
-            // Save to database
-            $aplikasi = AplikasiKepegawaian::create([
-                'nama_aplikasi' => $request->nama_aplikasi,
-                'sumber' => $request->sumber,
-                'keterangan' => $request->keterangan,
-                'link' => $request->link,
+            // Sanitize input
+            $data = [
+                'nama_aplikasi' => strip_tags(trim($request->nama_aplikasi)),
+                'sumber' => strip_tags(trim($request->sumber)),
+                'keterangan' => strip_tags(trim($request->keterangan)),
+                'link' => filter_var($request->link, FILTER_SANITIZE_URL),
                 'status' => $request->status
-            ]);
+            ];
+
+            // Save to database
+            $aplikasi = AplikasiKepegawaian::create($data);
 
             Log::info('Aplikasi Kepegawaian data saved to database', [
+                'user_id' => Auth::id(),
                 'id' => $aplikasi->id,
-                'nama_aplikasi' => $request->nama_aplikasi
+                'nama_aplikasi' => $data['nama_aplikasi']
             ]);
 
             return response()->json([
@@ -60,14 +159,23 @@ class AplikasiKepegawaianController extends Controller
                 'data' => $aplikasi
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input data',
+                'errors' => $e->errors()
+            ], 422);
+
         } catch (\Exception $e) {
             Log::error('Error saving aplikasi kepegawaian data to database', [
-                'error' => $e->getMessage()
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat menyimpan data'
             ], 500);
         }
     }
@@ -120,7 +228,7 @@ class AplikasiKepegawaianController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat memperbarui data'
             ], 500);
         }
     }
@@ -155,7 +263,7 @@ class AplikasiKepegawaianController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat memperbarui data'
             ], 500);
         }
     }

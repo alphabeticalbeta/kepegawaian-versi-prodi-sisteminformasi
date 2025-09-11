@@ -150,7 +150,7 @@ async function loadSuratKementerian(page = 1, isSearch = false, isPagination = f
             jenis: 'surat_kementerian'
         });
 
-        const response = await fetch(`/api/dasar-hukum?${params}`, {
+        const response = await fetch(`/dasar-hukum-simple/data?${params}`, {
             signal: abortController.signal,
             cache: 'no-cache' // Ensure fresh data for search
         });
@@ -163,7 +163,7 @@ async function loadSuratKementerian(page = 1, isSearch = false, isPagination = f
             // For search and pagination, update content immediately without delay
             if (isSearch || isPagination) {
                 displaySuratKementerian(data.data);
-                updatePagination(data.pagination);
+                updatePagination(data);
 
                 // Show elements immediately for smooth experience
                 const gridElement = document.getElementById('suratKementerianGrid');
@@ -179,7 +179,7 @@ async function loadSuratKementerian(page = 1, isSearch = false, isPagination = f
             } else {
                 // For initial load, use setTimeout for smooth transition
                 displaySuratKementerian(data.data);
-                updatePagination(data.pagination);
+                updatePagination(data);
 
                 setTimeout(() => {
                     const loadingElement = document.getElementById('loadingState');
@@ -201,13 +201,6 @@ async function loadSuratKementerian(page = 1, isSearch = false, isPagination = f
                 }, 100);
             }
         } else {
-            console.error('API returned success: false');
-            if (!isSearch && !isPagination) {
-                const loadingElement = document.getElementById('loadingState');
-                if (loadingElement) {
-                    loadingElement.remove();
-                }
-            }
             showError();
         }
     } catch (error) {
@@ -216,13 +209,6 @@ async function loadSuratKementerian(page = 1, isSearch = false, isPagination = f
             return;
         }
 
-        console.error('Error loading surat kementerian:', error);
-        if (!isSearch && !isPagination) {
-            const loadingElement = document.getElementById('loadingState');
-            if (loadingElement) {
-                loadingElement.remove();
-            }
-        }
         showError();
     }
 }
@@ -245,8 +231,8 @@ function displaySuratKementerian(suratKementerian) {
         <article class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer transform hover:scale-105 animate-fade-in" style="animation-delay: ${index * 100}ms" onclick="showSuratKementerianDetail(${item.id})">
             <div class="relative">
                 ${item.thumbnail ? `
-                    <img src="/admin-universitas/dasar-hukum-document/${item.thumbnail.split('/').pop()}"
-                         alt="${item.judul}"
+                    <img src="/dasar-hukum-document/${escapeHtml(item.thumbnail.split('/').pop())}"
+                         alt="${escapeHtml(item.judul)}"
                          class="w-full h-48 object-cover"
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
                 ` : `
@@ -284,7 +270,7 @@ function displaySuratKementerian(suratKementerian) {
                 </div>
 
                 <h3 class="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-emerald-600 transition-colors duration-300">
-                    ${item.judul}
+                    ${escapeHtml(item.judul)}
                 </h3>
 
                 <p class="text-xs text-gray-600 mb-3 line-clamp-2">
@@ -296,7 +282,7 @@ function displaySuratKementerian(suratKementerian) {
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
-                        ${item.penulis || 'Admin'}
+                        ${escapeHtml(item.penulis || 'Admin')}
                     </div>
 
                     <div class="text-emerald-600 font-medium text-xs transition-colors duration-300 hover:text-emerald-800">
@@ -321,80 +307,145 @@ function displaySuratKementerian(suratKementerian) {
 // Show surat kementerian detail modal
 async function showSuratKementerianDetail(id) {
     try {
-        const response = await fetch(`/api/dasar-hukum/${id}`);
+        const response = await fetch(`/dasar-hukum-simple/${id}`);
         const data = await response.json();
 
         if (data.success) {
             const item = data.data;
 
             document.getElementById('modalTitle').textContent = item.judul;
-            document.getElementById('modalContent').innerHTML = `
-                <div class="space-y-6">
-                    <div class="flex items-center text-sm text-gray-500">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        ${formatDate(item.tanggal_dokumen)}
-                        <span class="mx-2">•</span>
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        ${item.penulis || 'Admin'}
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="font-semibold text-gray-700">Nomor Dokumen:</span>
-                            <p class="text-gray-600">${item.nomor_dokumen || '-'}</p>
-                        </div>
-                        <div>
-                            <span class="font-semibold text-gray-700">Instansi:</span>
-                            <p class="text-gray-600">${item.nama_instansi || '-'}</p>
-                        </div>
-                        <div>
-                            <span class="font-semibold text-gray-700">Jenis:</span>
-                            <p class="text-gray-600">${item.jenis_label || 'Surat Kementerian'}</p>
-                        </div>
-                        <div>
-                            <span class="font-semibold text-gray-700">Status:</span>
-                            <p class="text-gray-600">${item.status_label || '-'}</p>
-                        </div>
-                    </div>
-
-                    ${item.thumbnail ? `
-                        <img src="/admin-universitas/dasar-hukum-document/${item.thumbnail.split('/').pop()}"
-                             alt="${item.judul}"
-                             class="w-full h-60 object-cover rounded-lg"
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
-                    ` : ''}
-
-                    <div class="prose max-w-none">
-                        ${item.konten}
-                    </div>
-
-                    ${item.lampiran && item.lampiran.length > 0 ? `
-                        <div class="border-t pt-6">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Lampiran</h4>
-                            <div class="space-y-2">
-                                ${item.lampiran.map(file => `
-                                    <a href="/admin-universitas/dasar-hukum-document/${file.split('/').pop()}" target="_blank"
-                                       class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        <span class="text-gray-700">${file.split('/').pop()}</span>
-                                    </a>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
+            
+            // Clear modal content safely
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = '';
+            
+            // Create main container
+            const container = createSafeElement('div', '', 'space-y-6');
+            
+            // Create date and author info
+            const infoDiv = createSafeElement('div', '', 'flex items-center text-sm text-gray-500');
+            
+            const dateIcon = document.createElement('svg');
+            dateIcon.className = 'w-4 h-4 mr-1';
+            dateIcon.setAttribute('fill', 'none');
+            dateIcon.setAttribute('stroke', 'currentColor');
+            dateIcon.setAttribute('viewBox', '0 0 24 24');
+            dateIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>';
+            
+            const dateText = createSafeElement('span', formatDate(item.tanggal_dokumen));
+            const separator = createSafeElement('span', '•', 'mx-2');
+            
+            const authorIcon = document.createElement('svg');
+            authorIcon.className = 'w-4 h-4 mr-1';
+            authorIcon.setAttribute('fill', 'none');
+            authorIcon.setAttribute('stroke', 'currentColor');
+            authorIcon.setAttribute('viewBox', '0 0 24 24');
+            authorIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>';
+            
+            const authorText = createSafeElement('span', escapeHtml(item.penulis || 'Admin'));
+            
+            infoDiv.appendChild(dateIcon);
+            infoDiv.appendChild(dateText);
+            infoDiv.appendChild(separator);
+            infoDiv.appendChild(authorIcon);
+            infoDiv.appendChild(authorText);
+            container.appendChild(infoDiv);
+            
+            // Create document details grid
+            const detailsGrid = createSafeElement('div', '', 'grid grid-cols-1 md:grid-cols-2 gap-4 text-sm');
+            
+            // Document number
+            const docNumberDiv = createSafeElement('div', '');
+            const docNumberLabel = createSafeElement('span', 'Nomor Dokumen:', 'font-semibold text-gray-700');
+            const docNumberValue = createSafeElement('p', escapeHtml(item.nomor_dokumen || '-'), 'text-gray-600');
+            docNumberDiv.appendChild(docNumberLabel);
+            docNumberDiv.appendChild(docNumberValue);
+            
+            // Institution
+            const instansiDiv = createSafeElement('div', '');
+            const instansiLabel = createSafeElement('span', 'Instansi:', 'font-semibold text-gray-700');
+            const instansiValue = createSafeElement('p', escapeHtml(item.nama_instansi || '-'), 'text-gray-600');
+            instansiDiv.appendChild(instansiLabel);
+            instansiDiv.appendChild(instansiValue);
+            
+            // Type
+            const jenisDiv = createSafeElement('div', '');
+            const jenisLabel = createSafeElement('span', 'Jenis:', 'font-semibold text-gray-700');
+            const jenisValue = createSafeElement('p', escapeHtml(item.jenis_label || 'Surat Kementerian'), 'text-gray-600');
+            jenisDiv.appendChild(jenisLabel);
+            jenisDiv.appendChild(jenisValue);
+            
+            // Status
+            const statusDiv = createSafeElement('div', '');
+            const statusLabel = createSafeElement('span', 'Status:', 'font-semibold text-gray-700');
+            const statusValue = createSafeElement('p', escapeHtml(item.status_label || '-'), 'text-gray-600');
+            statusDiv.appendChild(statusLabel);
+            statusDiv.appendChild(statusValue);
+            
+            detailsGrid.appendChild(docNumberDiv);
+            detailsGrid.appendChild(instansiDiv);
+            detailsGrid.appendChild(jenisDiv);
+            detailsGrid.appendChild(statusDiv);
+            container.appendChild(detailsGrid);
+            
+            // Add thumbnail if exists
+            if (item.thumbnail) {
+                const img = document.createElement('img');
+                img.src = `/dasar-hukum-document/${escapeHtml(item.thumbnail.split('/').pop())}`;
+                img.alt = escapeHtml(item.judul);
+                img.className = 'w-full h-60 object-cover rounded-lg';
+                img.onerror = function() {
+                    this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                };
+                container.appendChild(img);
+            }
+            
+            // Add content
+            const contentDiv = createSafeElement('div', '', 'prose max-w-none');
+            contentDiv.innerHTML = item.konten; // Content is already sanitized from backend
+            container.appendChild(contentDiv);
+            
+            // Add attachments if exist
+            if (item.lampiran && item.lampiran.length > 0) {
+                const attachmentsDiv = createSafeElement('div', '', 'border-t pt-6');
+                const attachmentsTitle = createSafeElement('h4', 'Lampiran', 'text-lg font-semibold text-gray-900 mb-4');
+                const attachmentsList = createSafeElement('div', '', 'space-y-2');
+                
+                item.lampiran.forEach(file => {
+                    const fileLink = document.createElement('a');
+                    fileLink.href = `/dasar-hukum-document/${escapeHtml(file.split('/').pop())}`;
+                    fileLink.target = '_blank';
+                    fileLink.className = 'flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
+                    
+                    const fileIcon = document.createElement('svg');
+                    fileIcon.className = 'w-5 h-5 text-gray-500 mr-3';
+                    fileIcon.setAttribute('fill', 'none');
+                    fileIcon.setAttribute('stroke', 'currentColor');
+                    fileIcon.setAttribute('viewBox', '0 0 24 24');
+                    fileIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>';
+                    
+                    const fileName = createSafeElement('span', escapeHtml(file.split('/').pop()), 'text-gray-700');
+                    
+                    fileLink.appendChild(fileIcon);
+                    fileLink.appendChild(fileName);
+                    attachmentsList.appendChild(fileLink);
+                });
+                
+                attachmentsDiv.appendChild(attachmentsTitle);
+                attachmentsDiv.appendChild(attachmentsList);
+                container.appendChild(attachmentsDiv);
+            }
+            
+            // Append container to modal
+            modalContent.appendChild(container);
 
             document.getElementById('suratKementerianModal').classList.remove('hidden');
         }
     } catch (error) {
-        console.error('Error loading surat kementerian detail:', error);
+        // Show user-friendly error message
+        const modalContent = document.getElementById('modalContent');
+        modalContent.innerHTML = '<div class="text-center py-8"><p class="text-red-600">Gagal memuat detail dokumen. Silakan coba lagi.</p></div>';
+        document.getElementById('suratKementerianModal').classList.remove('hidden');
     }
 }
 
@@ -404,14 +455,14 @@ function closeModal() {
 }
 
 // Update pagination
-function updatePagination(pagination) {
+function updatePagination(response) {
     const container = document.getElementById('paginationContainer');
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
 
-    currentPage = pagination.current_page;
-    totalPages = pagination.last_page;
+    currentPage = response.current_page;
+    totalPages = response.last_page;
 
     // Show/hide pagination
     if (totalPages > 1) {
@@ -444,9 +495,9 @@ function updatePagination(pagination) {
     nextBtn.onclick = () => currentPage < totalPages && loadSuratKementerian(currentPage + 1, false, true);
 
     // Update showing info
-    document.getElementById('showingFrom').textContent = pagination.from || 0;
-    document.getElementById('showingTo').textContent = pagination.to || 0;
-    document.getElementById('totalItems').textContent = pagination.total || 0;
+    document.getElementById('showingFrom').textContent = response.from || 0;
+    document.getElementById('showingTo').textContent = response.to || 0;
+    document.getElementById('totalItems').textContent = response.total || 0;
 }
 
 // Show loading state
@@ -501,6 +552,26 @@ function stripHtml(html) {
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || '';
+}
+
+// XSS Protection - Escape HTML
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Safe DOM manipulation
+function createSafeElement(tag, text, className = '') {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    if (className) element.className = className;
+    return element;
 }
 
 function formatFileSize(bytes) {

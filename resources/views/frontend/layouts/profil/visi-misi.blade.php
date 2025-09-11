@@ -165,8 +165,21 @@
 
 @push('scripts')
 <script>
+// Escape HTML function for security
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // Load visi misi data from backend
 async function loadVisiMisiData() {
+
     const loadingState = document.getElementById('loadingState');
     const contentGrid = document.getElementById('contentGrid');
     const errorState = document.getElementById('errorState');
@@ -178,7 +191,7 @@ async function loadVisiMisiData() {
 
     try {
         // Fetch data from backend API
-        const response = await fetch('/api/visi-misi', {
+        const response = await fetch('/visi-misi/data', {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -205,7 +218,7 @@ async function loadVisiMisiData() {
         }
 
     } catch (error) {
-        console.error('Error loading visi misi data:', error);
+        // Error loading visi misi data
 
         // Try to show fallback data first
         const fallbackData = [
@@ -231,7 +244,7 @@ async function loadVisiMisiData() {
         contentGrid.classList.remove('hidden');
 
         // Show a subtle warning that we're using fallback data
-        console.warn('Using fallback data due to API error:', error.message);
+        // Using fallback data due to API error
     }
 }
 
@@ -244,7 +257,7 @@ function displayVisiMisiData(data) {
     const visi = data.find(item => item.jenis === 'visi' && item.status === 'aktif');
     const misi = data.find(item => item.jenis === 'misi' && item.status === 'aktif');
 
-    // Display visi
+    // Display visi - safely
     if (visi) {
         visiContent.innerHTML = visi.konten;
     } else {
@@ -256,7 +269,7 @@ function displayVisiMisiData(data) {
         `;
     }
 
-    // Display misi
+    // Display misi - safely
     if (misi) {
         misiContent.innerHTML = misi.konten;
     } else {

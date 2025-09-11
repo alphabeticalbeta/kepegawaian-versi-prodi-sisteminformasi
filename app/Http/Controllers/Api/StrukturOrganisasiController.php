@@ -34,7 +34,7 @@ class StrukturOrganisasiController extends Controller
                 })->first();
 
                 $filename = basename($latestFile);
-                $imageUrl = asset('storage/' . $latestFile);
+                $imageUrl = '/storage/' . $latestFile;
 
                 $strukturData = [
                     'id' => 1,
@@ -117,7 +117,7 @@ class StrukturOrganisasiController extends Controller
                 $path = $file->storeAs($directory, $filename, 'public');
 
                 // Generate URL
-                $imageUrl = asset('storage/' . $path);
+                $imageUrl = '/storage/' . $path;
 
                 // Here you would save to database
                 // For now, we'll return the uploaded file info

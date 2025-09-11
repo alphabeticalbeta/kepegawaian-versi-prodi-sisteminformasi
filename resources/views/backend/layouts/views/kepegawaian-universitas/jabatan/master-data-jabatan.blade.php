@@ -334,7 +334,16 @@
 <!-- Notification Container -->
 <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-<script>
+    <script>
+        // XSS Protection Function
+        function escapeHtml(text) {
+            if (text === null || text === undefined) {
+                return '';
+            }
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
 document.addEventListener('DOMContentLoaded', function() {
     const notificationContainer = document.getElementById('notificationContainer');
 
@@ -356,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             : 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z'
                     }"></path>
                 </svg>
-                <span class="font-medium">${message}</span>
+                <span class="font-medium">${escapeHtml(message)}</span>
             </div>
         `;
 
@@ -380,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Delete jabatan function
     window.deleteJabatan = function(id, jabatanName) {
-        if (confirm(`Apakah Anda yakin ingin menghapus jabatan "${jabatanName}"?`)) {
+        if (confirm(`Apakah Anda yakin ingin menghapus jabatan "${escapeHtml(jabatanName)}"?`)) {
             // Show loading notification
             showNotification('Menghapus jabatan...', 'info');
 
@@ -388,8 +397,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'DELETE',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
             })
             .then(response => response.json())
             .then(data => {
@@ -405,7 +416,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 showNotification('Terjadi kesalahan pada server. Silakan coba lagi.', 'error');
             });
         }

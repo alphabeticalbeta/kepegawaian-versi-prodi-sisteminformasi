@@ -56,6 +56,15 @@
 {{-- Script validasi/submit --}}
 @push('scripts')
 <script>
+        // XSS Protection Function
+        function escapeHtml(text) {
+            if (text === null || text === undefined) {
+                return '';
+            }
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
 // =====================================
 // FORM DISPLAY/HIDE FUNCTIONS
 // =====================================
@@ -66,7 +75,6 @@ function showReturnForm() {
     const textarea = document.getElementById('catatan_umum_return');
 
     if (!form) {
-        console.error('Return form not found');
         return;
     }
 
@@ -82,7 +90,6 @@ function hideReturnForm() {
     const charCount = document.getElementById('charCount_return');
 
     if (!form) {
-        console.error('Return form not found');
         return;
     }
 
@@ -101,7 +108,6 @@ function showNotRecommendedForm() {
     const textarea = document.getElementById('catatan_umum_not_recommended');
 
     if (!form) {
-        console.error('Not recommended form not found');
         return;
     }
 
@@ -117,7 +123,6 @@ function hideNotRecommendedForm() {
     const charCount = document.getElementById('charCount_not_recommended');
 
     if (!form) {
-        console.error('Not recommended form not found');
         return;
     }
 
@@ -135,7 +140,6 @@ function showSendToAssessorForm() {
     const form = document.getElementById('sendToAssessorForm');
 
     if (!form) {
-        console.error('Send to assessor form not found');
         return;
     }
 
@@ -146,7 +150,6 @@ function hideSendToAssessorForm() {
     const form = document.getElementById('sendToAssessorForm');
 
     if (!form) {
-        console.error('Send to assessor form not found');
         return;
     }
 
@@ -163,7 +166,6 @@ function showSendToSenateForm() {
     const form = document.getElementById('sendToSenateForm');
 
     if (!form) {
-        console.error('Send to senate form not found');
         return;
     }
 
@@ -174,7 +176,6 @@ function hideSendToSenateForm() {
     const form = document.getElementById('sendToSenateForm');
 
     if (!form) {
-        console.error('Send to senate form not found');
         return;
     }
 
@@ -229,7 +230,6 @@ function filterAssessorList() {
 // =====================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing form handlers...');
 
     // Return Form Submission
     const returnForm = document.getElementById('returnFormSubmit');
@@ -237,7 +237,6 @@ document.addEventListener('DOMContentLoaded', function() {
         returnForm.addEventListener('submit', function(e) {
             const textarea = document.getElementById('catatan_umum_return');
             if (!textarea) {
-                console.error('Return form textarea not found');
                 return;
             }
 
@@ -260,7 +259,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return confirm('Apakah Anda yakin ingin mengembalikan usulan ini ke pegawai untuk perbaikan?');
         });
     } else {
-        console.warn('Return form submit handler not found');
     }
 
     // Not Recommended Form Submission
@@ -269,7 +267,6 @@ document.addEventListener('DOMContentLoaded', function() {
         notRecommendedForm.addEventListener('submit', function(e) {
             const textarea = document.getElementById('catatan_umum_not_recommended');
             if (!textarea) {
-                console.error('Not recommended form textarea not found');
                 return;
             }
 
@@ -292,7 +289,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return confirm('Apakah Anda yakin ingin menandai usulan ini sebagai tidak direkomendasikan? Pegawai tidak dapat submit lagi di periode ini.');
         });
     } else {
-        console.warn('Not recommended form submit handler not found');
     }
 
     // Send to Assessor Team Form Submission
@@ -317,9 +313,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return cb.nextElementSibling ? cb.nextElementSibling.textContent : 'Unknown';
             }).join(', ');
 
-            return confirm(`Apakah Anda yakin ingin mengirim usulan ini ke Tim Penilai?\n\nPenilai yang dipilih:\n${assessorNames}`);
+            return confirm(`Apakah Anda yakin ingin mengirim usulan ini ke Tim Penilai?\n\nPenilai yang dipilih:\n${escapeHtml(assessorNames)}`);
         });
     } else {
-        console.warn('Send to assessor form submit handler not found');
     }
 

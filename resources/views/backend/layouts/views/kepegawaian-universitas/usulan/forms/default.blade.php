@@ -149,7 +149,16 @@
     </div>
 </div>
 
-<script>
+    <script>
+        // XSS Protection Function
+        function escapeHtml(text) {
+            if (text === null || text === undefined) {
+                return '';
+            }
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-populate pegawai dropdown via AJAX
     // This would be implemented based on your existing pegawai data structure
@@ -162,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const files = input.files;
         for (let i = 0; i < files.length; i++) {
             if (files[i].size > maxSize) {
-                alert(`File ${files[i].name} terlalu besar. Maksimal ${maxSize / (1024 * 1024)}MB`);
+                alert(`File ${escapeHtml(files[i].name)} terlalu besar. Maksimal ${maxSize / (1024 * 1024)}MB`);
                 input.value = '';
                 return false;
             }

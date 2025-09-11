@@ -150,7 +150,7 @@ async function loadPeraturan(page = 1, isSearch = false, isPagination = false) {
             jenis: 'peraturan'
         });
 
-        const response = await fetch(`/api/dasar-hukum?${params}`, {
+        const response = await fetch(`/dasar-hukum-simple/data?${params}`, {
             signal: abortController.signal,
             cache: 'no-cache' // Ensure fresh data for search
         });
@@ -163,7 +163,7 @@ async function loadPeraturan(page = 1, isSearch = false, isPagination = false) {
             // For search and pagination, update content immediately without delay
             if (isSearch || isPagination) {
                 displayPeraturan(data.data);
-                updatePagination(data.pagination);
+                updatePagination(data);
 
                 // Show elements immediately for smooth experience
                 const gridElement = document.getElementById('peraturanGrid');
@@ -179,7 +179,7 @@ async function loadPeraturan(page = 1, isSearch = false, isPagination = false) {
             } else {
                 // For initial load, use setTimeout for smooth transition
                 displayPeraturan(data.data);
-                updatePagination(data.pagination);
+                updatePagination(data);
 
                 setTimeout(() => {
                     const loadingElement = document.getElementById('loadingState');
@@ -201,13 +201,6 @@ async function loadPeraturan(page = 1, isSearch = false, isPagination = false) {
                 }, 100);
             }
         } else {
-            console.error('API returned success: false');
-            if (!isSearch && !isPagination) {
-                const loadingElement = document.getElementById('loadingState');
-                if (loadingElement) {
-                    loadingElement.remove();
-                }
-            }
             showError();
         }
     } catch (error) {
@@ -216,13 +209,6 @@ async function loadPeraturan(page = 1, isSearch = false, isPagination = false) {
             return;
         }
 
-        console.error('Error loading peraturan:', error);
-        if (!isSearch && !isPagination) {
-            const loadingElement = document.getElementById('loadingState');
-            if (loadingElement) {
-                loadingElement.remove();
-            }
-        }
         showError();
     }
 }
@@ -245,8 +231,8 @@ function displayPeraturan(peraturan) {
         <article class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer transform hover:scale-105 animate-fade-in" style="animation-delay: ${index * 100}ms" onclick="showPeraturanDetail(${item.id})">
             <div class="relative">
                 ${item.thumbnail ? `
-                    <img src="/admin-universitas/dasar-hukum-document/${item.thumbnail.split('/').pop()}"
-                         alt="${item.judul}"
+                    <img src="/dasar-hukum-document/${escapeHtml(item.thumbnail.split('/').pop())}"
+                         alt="${escapeHtml(item.judul)}"
                          class="w-full h-48 object-cover"
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
                 ` : `
@@ -284,7 +270,7 @@ function displayPeraturan(peraturan) {
                 </div>
 
                 <h3 class="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-teal-600 transition-colors duration-300">
-                    ${item.judul}
+                    ${escapeHtml(item.judul)}
                 </h3>
 
                 <p class="text-xs text-gray-600 mb-3 line-clamp-2">
@@ -296,7 +282,7 @@ function displayPeraturan(peraturan) {
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
-                        ${item.penulis || 'Admin'}
+                        ${escapeHtml(item.penulis || 'Admin')}
                     </div>
 
                     <div class="text-teal-600 font-medium text-xs transition-colors duration-300 hover:text-teal-800">
@@ -321,7 +307,7 @@ function displayPeraturan(peraturan) {
 // Show peraturan detail modal
 async function showPeraturanDetail(id) {
     try {
-        const response = await fetch(`/api/dasar-hukum/${id}`);
+        const response = await fetch(`/dasar-hukum-simple/${id}`);
         const data = await response.json();
 
         if (data.success) {
@@ -339,31 +325,31 @@ async function showPeraturanDetail(id) {
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
-                        ${item.penulis || 'Admin'}
+                        ${escapeHtml(item.penulis || 'Admin')}
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                             <span class="font-semibold text-gray-700">Nomor Dokumen:</span>
-                            <p class="text-gray-600">${item.nomor_dokumen || '-'}</p>
+                            <p class="text-gray-600">${escapeHtml(item.nomor_dokumen || '-')}</p>
                         </div>
                         <div>
                             <span class="font-semibold text-gray-700">Instansi:</span>
-                            <p class="text-gray-600">${item.nama_instansi || '-'}</p>
+                            <p class="text-gray-600">${escapeHtml(item.nama_instansi || '-')}</p>
                         </div>
                         <div>
                             <span class="font-semibold text-gray-700">Jenis:</span>
-                            <p class="text-gray-600">${item.jenis_label || 'Peraturan'}</p>
+                            <p class="text-gray-600">${escapeHtml(item.jenis_label || 'Peraturan')}</p>
                         </div>
                         <div>
                             <span class="font-semibold text-gray-700">Status:</span>
-                            <p class="text-gray-600">${item.status_label || '-'}</p>
+                            <p class="text-gray-600">${escapeHtml(item.status_label || '-')}</p>
                         </div>
                     </div>
 
                     ${item.thumbnail ? `
-                        <img src="/admin-universitas/dasar-hukum-document/${item.thumbnail.split('/').pop()}"
-                             alt="${item.judul}"
+                        <img src="/dasar-hukum-document/${escapeHtml(item.thumbnail.split('/').pop())}"
+                             alt="${escapeHtml(item.judul)}"
                              class="w-full h-60 object-cover rounded-lg"
                              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
                     ` : ''}
@@ -377,12 +363,12 @@ async function showPeraturanDetail(id) {
                             <h4 class="text-lg font-semibold text-gray-900 mb-4">Lampiran</h4>
                             <div class="space-y-2">
                                 ${item.lampiran.map(file => `
-                                    <a href="/admin-universitas/dasar-hukum-document/${file.split('/').pop()}" target="_blank"
+                                    <a href="/dasar-hukum-document/${escapeHtml(file.split('/').pop())}" target="_blank"
                                        class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                         <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                         </svg>
-                                        <span class="text-gray-700">${file.split('/').pop()}</span>
+                                        <span class="text-gray-700">${escapeHtml(file.split('/').pop())}</span>
                                     </a>
                                 `).join('')}
                             </div>
@@ -394,7 +380,10 @@ async function showPeraturanDetail(id) {
             document.getElementById('peraturanModal').classList.remove('hidden');
         }
     } catch (error) {
-        console.error('Error loading peraturan detail:', error);
+        // Show user-friendly error message
+        const modalContent = document.getElementById('modalContent');
+        modalContent.innerHTML = '<div class="text-center py-8"><p class="text-red-600">Gagal memuat detail dokumen. Silakan coba lagi.</p></div>';
+        document.getElementById('peraturanModal').classList.remove('hidden');
     }
 }
 
@@ -404,14 +393,14 @@ function closeModal() {
 }
 
 // Update pagination
-function updatePagination(pagination) {
+function updatePagination(response) {
     const container = document.getElementById('paginationContainer');
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
 
-    currentPage = pagination.current_page;
-    totalPages = pagination.last_page;
+    currentPage = response.current_page;
+    totalPages = response.last_page;
 
     // Show/hide pagination
     if (totalPages > 1) {
@@ -444,9 +433,9 @@ function updatePagination(pagination) {
     nextBtn.onclick = () => currentPage < totalPages && loadPeraturan(currentPage + 1, false, true);
 
     // Update showing info
-    document.getElementById('showingFrom').textContent = pagination.from || 0;
-    document.getElementById('showingTo').textContent = pagination.to || 0;
-    document.getElementById('totalItems').textContent = pagination.total || 0;
+    document.getElementById('showingFrom').textContent = response.from || 0;
+    document.getElementById('showingTo').textContent = response.to || 0;
+    document.getElementById('totalItems').textContent = response.total || 0;
 }
 
 // Show loading state
@@ -501,6 +490,26 @@ function stripHtml(html) {
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || '';
+}
+
+// XSS Protection - Escape HTML
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Safe DOM manipulation
+function createSafeElement(tag, text, className = '') {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    if (className) element.className = className;
+    return element;
 }
 
 function formatFileSize(bytes) {

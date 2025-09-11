@@ -3,11 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Frontend\ProfilController as FrontendProfil;
 use App\Http\Controllers\Frontend\LayananController as FrontendLayanan;
+use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController;
 
 // ------ RUTE HALAMAN FRONTEND ------//
-Route::get('/', function () {
-    return view('frontend.index');
-});
+Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
 
 Route::prefix('profil')->group(function () {
     Route::get('/visi-misi', [FrontendProfil::class, 'visiMisi'])->name('profil.visi-misi');
@@ -17,11 +17,11 @@ Route::prefix('profil')->group(function () {
 // Informasi Routes
 Route::get('/berita', function () {
     return view('frontend.layouts.informasi.berita');
-})->name('berita');
+})->name('frontend.berita');
 
 Route::get('/pengumuman', function () {
     return view('frontend.layouts.informasi.pengumuman');
-})->name('pengumuman');
+})->name('frontend.pengumuman');
 
 Route::get('/keputusan', function () {
     return view('frontend.layouts.dasar-hukum.keputusan');
@@ -51,11 +51,17 @@ Route::get('/surat-rektor-unmul', function () {
     return view('frontend.layouts.dasar-hukum.surat-rektor-unmul');
 })->name('surat-rektor-unmul');
 
+// Public route for dasar hukum documents (no authentication required)
+Route::get('/dasar-hukum-document/{filename}', [DasarHukumController::class, 'showDocument'])
+    ->name('dasar-hukum.document');
+
 // Admin Universitas Routes (using frontend routes)
-Route::prefix('admin-universitas')->group(function () {
+Route::prefix('admin-universitas')->middleware(['auth', 'web'])->group(function () {
     Route::get('/visi-misi', function () {
         return view('backend.layouts.views.admin-universitas.visi-misi');
     })->name('admin-universitas.visi-misi.index');
+    Route::get('/visi-misi/data', [App\Http\Controllers\Backend\AdminUniversitas\VisiMisiController::class, 'getData'])
+        ->name('admin-universitas.visi-misi.data');
 
     Route::get('/struktur-organisasi', function () {
         return view('backend.layouts.views.admin-universitas.struktur-organisasi');
@@ -72,6 +78,8 @@ Route::prefix('admin-universitas')->group(function () {
     Route::get('/aplikasi-kepegawaian', function () {
         return view('backend.layouts.views.admin-universitas.aplikasi-kepegawaian');
     })->name('admin-universitas.aplikasi-kepegawaian.index');
+    Route::get('/aplikasi-kepegawaian/data', [App\Http\Controllers\Backend\AdminUniversitas\AplikasiKepegawaianController::class, 'getData'])
+        ->name('admin-universitas.aplikasi-kepegawaian.data');
 
     Route::post('/aplikasi-kepegawaian', [App\Http\Controllers\Backend\AdminUniversitas\AplikasiKepegawaianController::class, 'store'])
         ->name('admin-universitas.aplikasi-kepegawaian.store');
@@ -81,20 +89,19 @@ Route::prefix('admin-universitas')->group(function () {
         ->name('admin-universitas.aplikasi-kepegawaian.destroy');
 
     // Dasar Hukum Routes
-    Route::get('/dasar-hukum', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'index'])
+    Route::get('/dasar-hukum', [DasarHukumController::class, 'index'])
         ->name('admin-universitas.dasar-hukum.index');
-    Route::post('/dasar-hukum', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'store'])
+    Route::post('/dasar-hukum', [DasarHukumController::class, 'store'])
         ->name('admin-universitas.dasar-hukum.store');
-    Route::get('/dasar-hukum/{id}', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'show'])
-        ->name('admin-universitas.dasar-hukum.show');
-    Route::put('/dasar-hukum/{id}', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'update'])
-        ->name('admin-universitas.dasar-hukum.update');
-    Route::delete('/dasar-hukum/{id}', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'destroy'])
-        ->name('admin-universitas.dasar-hukum.destroy');
-    Route::get('/dasar-hukum-api', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'getData'])
+    // Route khusus untuk data API - HARUS DI ATAS route {id}
+    Route::get('/dasar-hukum/data', [DasarHukumController::class, 'getData'])
         ->name('admin-universitas.dasar-hukum.get-data');
-    Route::get('/dasar-hukum-document/{filename}', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'showDocument'])
-        ->name('admin-universitas.dasar-hukum.document');
+    Route::get('/dasar-hukum/{id}', [DasarHukumController::class, 'show'])
+        ->name('admin-universitas.dasar-hukum.show');
+    Route::put('/dasar-hukum/{id}', [DasarHukumController::class, 'update'])
+        ->name('admin-universitas.dasar-hukum.update');
+    Route::delete('/dasar-hukum/{id}', [DasarHukumController::class, 'destroy'])
+        ->name('admin-universitas.dasar-hukum.destroy');
 
     Route::get('/informasi', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'index'])
         ->name('admin-universitas.informasi.index');
@@ -110,6 +117,23 @@ Route::prefix('admin-universitas')->group(function () {
         ->name('admin-universitas.informasi.generate-nomor-surat');
 });
 
+// Simple endpoints for informasi (alternative to admin-universitas routes)
+Route::get('/informasi/data', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'getData'])
+    ->name('informasi.data');
+Route::get('/informasi/{id}', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'show'])
+    ->name('informasi.show');
+
+Route::get('/informasi-simple/data', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'getData'])
+    ->name('informasi.simple.data');
+Route::post('/informasi-simple', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'store'])
+    ->name('informasi.simple.store');
+Route::put('/informasi-simple/{id}', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'update'])
+    ->name('informasi.simple.update');
+Route::delete('/informasi-simple/{id}', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'destroy'])
+    ->name('informasi.simple.destroy');
+Route::post('/informasi-simple/generate-nomor-surat', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'generateNomorSurat'])
+    ->name('informasi.simple.generate-nomor-surat');
+
 Route::prefix('layanan')->group(function () {
     Route::get('/aplikasi', [FrontendLayanan::class, 'aplikasi'])->name('layanan.aplikasi');
     Route::get('/usulan-kepegawaian', [FrontendLayanan::class, 'usulanKepegawaian'])->name('layanan.usulan-kepegawaian');
@@ -118,7 +142,7 @@ Route::prefix('layanan')->group(function () {
 Route::view('/blangko-surat', 'frontend.layouts.blangko-surat')->name('blangko.surat');
 
 // API Routes for Frontend
-Route::get('/api/visi-misi', [App\Http\Controllers\Api\VisiMisiController::class, 'index']);
+Route::get('/api/visi-misi', [App\Http\Controllers\Backend\AdminUniversitas\VisiMisiController::class, 'getData']);
 Route::options('/api/visi-misi', function () {
     return response('', 200)
         ->header('Access-Control-Allow-Origin', '*')
@@ -150,9 +174,21 @@ Route::get('/api/informasi/pinned', [App\Http\Controllers\Api\InformasiControlle
 Route::get('/api/informasi/latest', [App\Http\Controllers\Api\InformasiController::class, 'latest']);
 Route::get('/api/informasi/{id}', [App\Http\Controllers\Api\InformasiController::class, 'show']);
 
-// API routes for Dasar Hukum
-Route::get('/api/dasar-hukum', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'getData']);
-Route::get('/api/dasar-hukum/{id}', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'show']);
+// Simple endpoints for Dasar Hukum (alternative to API routes)
+Route::get('/dasar-hukum-simple/data', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'getData']);
+Route::get('/dasar-hukum-simple/{id}', [App\Http\Controllers\Backend\AdminUniversitas\DasarHukumController::class, 'show']);
+
+// Simple endpoints for Struktur Organisasi
+Route::get('/struktur-organisasi/data', [App\Http\Controllers\Api\StrukturOrganisasiController::class, 'index'])
+    ->name('struktur-organisasi.data');
+Route::post('/struktur-organisasi/store', [App\Http\Controllers\Api\StrukturOrganisasiController::class, 'store'])
+    ->name('struktur-organisasi.store');
+Route::delete('/struktur-organisasi/delete', [App\Http\Controllers\Api\StrukturOrganisasiController::class, 'destroy'])
+    ->name('struktur-organisasi.delete');
+
+// Simple endpoints for Visi Misi
+Route::get('/visi-misi/data', [App\Http\Controllers\Backend\AdminUniversitas\VisiMisiController::class, 'getData'])
+    ->name('visi-misi.data');
 
 // Route untuk mengakses file lampiran dengan authentication
 Route::get('/lampiran/{filename}', [App\Http\Controllers\Backend\AdminUniversitas\InformasiController::class, 'showDocument'])

@@ -18,7 +18,7 @@ class FileStorageService
     {
         $this->documentAccessService = $documentAccessService;
         $this->maxFileSize = 2048; // 2MB
-        $this->allowedMimes = ['pdf', 'doc', 'docx'];
+        $this->allowedMimes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif']; // Tambahkan format gambar
     }
 
     /**
@@ -28,7 +28,7 @@ class FileStorageService
     {
         try {
             // Validasi file
-            $this->validateFile($file);
+            $this->validateFile($file, $field);
 
             // Generate unique filename
             $filename = $filename ?? $this->generateUniqueFilename($file);
@@ -63,7 +63,7 @@ class FileStorageService
         try {
             // Determine disk based on field type
             $disk = $field ? $this->documentAccessService->getDiskForField($field) : 'local';
-            
+
             if (Storage::disk($disk)->exists($filePath)) {
                 Storage::disk($disk)->delete($filePath);
                 $this->logDeleteActivity($filePath, $disk);
@@ -167,7 +167,7 @@ class FileStorageService
                 $existingPath = $dokumenPendukung[$pathKey];
                 $debugInfo['existing_path_from_validasi'] = $existingPath;
                 $debugInfo['lookup_key_used'] = $pathKey;
-            } 
+            }
             // Fallback to old key format (e.g., 'file_surat_usulan')
             elseif (!empty($dokumenPendukung[$fieldName])) {
                 $existingPath = $dokumenPendukung[$fieldName];
@@ -195,11 +195,19 @@ class FileStorageService
     /**
      * Validate file sebelum upload
      */
-    private function validateFile($file)
+    private function validateFile($file, $field = null)
     {
-        $validator = Validator::make(['file' => $file], [
-            'file' => "required|file|mimes:" . implode(',', $this->allowedMimes) . "|max:{$this->maxFileSize}"
-        ]);
+        // Validasi khusus untuk foto
+        if ($field === 'foto') {
+            $validator = Validator::make(['file' => $file], [
+                'file' => "required|file|mimes:jpg,jpeg,png,gif|max:{$this->maxFileSize}"
+            ]);
+        } else {
+            // Validasi untuk dokumen lainnya
+            $validator = Validator::make(['file' => $file], [
+                'file' => "required|file|mimes:pdf,doc,docx|max:{$this->maxFileSize}"
+            ]);
+        }
 
         if ($validator->fails()) {
             throw new \Exception($validator->errors()->first());

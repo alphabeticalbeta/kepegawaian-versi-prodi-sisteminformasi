@@ -100,7 +100,7 @@ async function loadStrukturOrganisasi() {
         document.getElementById('contentState').classList.add('hidden');
         document.getElementById('noDataState').classList.add('hidden');
 
-        const response = await fetch('/api/struktur-organisasi', {
+        const response = await fetch('/struktur-organisasi/data', {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -129,11 +129,11 @@ async function loadStrukturOrganisasi() {
 
             // Add loading event to image
             imageElement.onload = function() {
-                console.log('Struktur organisasi image loaded successfully');
+                // Struktur organisasi image loaded successfully
             };
 
             imageElement.onerror = function() {
-                console.error('Failed to load struktur organisasi image');
+                // Failed to load struktur organisasi image
                 showError('Gagal memuat gambar struktur organisasi');
             };
 
@@ -146,7 +146,7 @@ async function loadStrukturOrganisasi() {
         }
 
     } catch (error) {
-        console.error('Error loading struktur organisasi:', error);
+        // Error loading struktur organisasi
 
         // Show error state
         document.getElementById('loadingState').classList.add('hidden');

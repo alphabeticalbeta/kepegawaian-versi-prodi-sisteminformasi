@@ -1,7 +1,13 @@
 {{-- resources/views/pegawai-unmul/profile/show.blade.php --}}
-@extends('backend.layouts.roles.pegawai-unmul.app')
+@php
+    $layout = $isAdmin ? 'backend.layouts.roles.kepegawaian-universitas.app' : 'backend.layouts.roles.pegawai-unmul.app';
+    $title = $isAdmin ?
+        ($isCreating ? 'Tambah Data Pegawai' : ($isEditing ? 'Edit Data Pegawai' : 'Data Pegawai')) :
+        ($isEditing ? 'Edit Profil Saya' : 'Profil Saya');
+@endphp
+@extends($layout)
 
-@section('title', $isEditing ? 'Edit Profil Saya' : 'Profil Saya')
+@section('title', $title)
 
 @php
     function formatDate($date) {
@@ -22,18 +28,20 @@
         'disertasi_thesis_terakhir' => ['label' => 'Disertasi/Thesis', 'icon' => 'book-open'],
     ];
 
-    // Tambahkan PAK Integrasi hanya untuk jabatan tertentu
-    if ($pegawai->jabatan && in_array($pegawai->jabatan->jenis_jabatan, ['Dosen Fungsional', 'Tenaga Kependidikan Fungsional Tertentu'])) {
+    // Tambahkan PAK Integrasi hanya untuk jabatan tertentu (hanya jika bukan create mode)
+    if (!$isCreating && $pegawai->jabatan && in_array($pegawai->jabatan->jenis_jabatan, ['Dosen Fungsional', 'Tenaga Kependidikan Fungsional Tertentu'])) {
         $documentFields['pak_integrasi'] = ['label' => 'PAK Integrasi', 'icon' => 'calculator'];
     }
 @endphp
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-    <form action="{{ route('pegawai-unmul.profile.update') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ $isCreating ? route('backend.kepegawaian-universitas.data-pegawai.store') : ($isAdmin ? route('backend.kepegawaian-universitas.data-pegawai.update', $pegawai->id) : route('pegawai-unmul.profile.update')) }}" method="POST" enctype="multipart/form-data">
         @csrf
-        @if($isEditing)
-            @method('PUT')
+        @if($isEditing && !$isCreating)
+            @if(!$isCreating)
+                @method('PUT')
+            @endif
         @endif
 
         {{-- Header Section --}}
@@ -42,10 +50,18 @@
                 <div class="py-6 flex flex-wrap gap-4 justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">
-                            {{ $isEditing ? 'Edit Profil' : 'Profil Pegawai' }}
+                            @if($isAdmin)
+                                {{ $isCreating ? 'Tambah Data Pegawai' : ($isEditing ? 'Edit Data Pegawai' : 'Data Pegawai') }}
+                            @else
+                                {{ $isEditing ? 'Edit Profil' : 'Profil Pegawai' }}
+                            @endif
                         </h1>
                         <p class="mt-1 text-sm text-gray-500">
-                            {{ $isEditing ? 'Perbarui informasi kepegawaian Anda' : 'Informasi lengkap data kepegawaian' }}
+                            @if($isAdmin)
+                                {{ $isCreating ? 'Tambahkan pegawai baru ke dalam sistem' : ($isEditing ? 'Perbarui informasi kepegawaian pegawai' : 'Informasi lengkap data kepegawaian pegawai') }}
+                            @else
+                                {{ $isEditing ? 'Perbarui informasi kepegawaian Anda' : 'Informasi lengkap data kepegawaian' }}
+                            @endif
                         </p>
                     </div>
                 </div>
@@ -56,7 +72,8 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 p-5"
              x-data="{
                  activeTab: 'personal',
-                 jenisPegawai: '{{ old('jenis_pegawai', $pegawai->jenis_pegawai) ?? 'Dosen' }}',
+                 jenisPegawai: '{{ old('jenis_pegawai', $pegawai->jenis_pegawai ?? 'Dosen') }}',
+                 statusKepegawaian: '{{ old('status_kepegawaian', $pegawai->status_kepegawaian ?? '') }}',
                  statuses: {
                      'Dosen': ['Dosen PNS', 'Dosen PPPK', 'Dosen Non ASN'],
                      'Tenaga Kependidikan': ['Tenaga Kependidikan PNS', 'Tenaga Kependidikan PPPK', 'Tenaga Kependidikan Non ASN']
@@ -67,7 +84,7 @@
              }">
 
             {{-- Profile Header Component --}}
-            @include('backend.layouts.views.pegawai-unmul.profile.profile-header', ['pegawai' => $pegawai, 'isEditing' => $isEditing])
+            @include('backend.layouts.views.pegawai-unmul.profile.profile-header', ['pegawai' => $pegawai, 'isEditing' => $isEditing, 'isAdmin' => $isAdmin, 'isCreating' => $isCreating])
 
             {{-- Tab Navigation & Content --}}
             <div class="bg-white rounded-xl shadow-sm border mb-6">
@@ -145,30 +162,34 @@
                 {{-- Tab Content --}}
                 <div class="p-6">
                     {{-- Personal Tab --}}
-                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.personal-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing])
+                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.personal-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing, 'isAdmin' => $isAdmin, 'isCreating' => $isCreating])
 
                     {{-- Kepegawaian Tab --}}
                     @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.kepegawaian-tab', [
                         'pegawai' => $pegawai,
                         'isEditing' => $isEditing,
+                        'isAdmin' => $isAdmin,
+                        'isCreating' => $isCreating,
                         'pangkats' => $pangkats ?? [],
                         'jabatans' => $jabatans ?? [],
                         'unitKerjas' => $unitKerjas ?? []
                     ])
 
                     {{-- PAK & SKP Tab --}}
-                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.pak-skp-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing])
+                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.pak-skp-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing, 'isAdmin' => $isAdmin, 'isCreating' => $isCreating])
 
                     {{-- Informasi Dosen Tab - Conditional --}}
-                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.dosen-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing])
+                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.dosen-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing, 'isAdmin' => $isAdmin, 'isCreating' => $isCreating])
 
                     {{-- Security Tab --}}
-                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.security-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing])
+                    @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.security-tab', ['pegawai' => $pegawai, 'isEditing' => $isEditing, 'isAdmin' => $isAdmin, 'isCreating' => $isCreating])
 
                     {{-- Dokumen Tab --}}
                     @include('backend.layouts.views.pegawai-unmul.profile.components.tabs.dokumen-tab', [
                         'pegawai' => $pegawai,
                         'isEditing' => $isEditing,
+                        'isAdmin' => $isAdmin,
+                        'isCreating' => $isCreating,
                         'documentFields' => $documentFields
                     ])
                 </div>
@@ -177,7 +198,7 @@
             {{-- Mobile Action Buttons --}}
             @if($isEditing)
                 <div class="fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-3 flex gap-3 md:hidden z-40">
-                    <a href="{{ route('pegawai-unmul.profile.show') }}"
+                    <a href="{{ $isAdmin ? route('backend.kepegawaian-universitas.data-pegawai.index') : route('pegawai-unmul.profile.show') }}"
                        class="flex-1 text-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg">
                         Batal
                     </a>

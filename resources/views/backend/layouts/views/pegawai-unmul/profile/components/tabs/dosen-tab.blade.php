@@ -28,7 +28,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {{-- NUPTK --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-xl text-gray-700 mb-2">
                         <i data-lucide="credit-card" class="w-4 h-4 inline mr-1"></i>
                         NUPTK
                     </label>
@@ -40,7 +40,7 @@
                     @else
                         <div class="flex items-center gap-2">
                             @if($pegawai->nuptk)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-xl bg-blue-100 text-blue-700">
                                     <i data-lucide="credit-card" class="w-3 h-3 mr-1"></i>
                                     {{ $pegawai->nuptk }}
                                 </span>
@@ -53,7 +53,7 @@
 
                 {{-- URL Sinta --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-xl text-gray-700 mb-2">
                         <i data-lucide="link" class="w-4 h-4 inline mr-1"></i>
                         URL Profil Sinta
                     </label>
@@ -79,7 +79,7 @@
 
                 {{-- Ranting Ilmu --}}
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-xl text-gray-700 mb-2">
                         <i data-lucide="book-open" class="w-4 h-4 inline mr-1"></i>
                         Ranting Ilmu/Kepakaran
                     </label>
@@ -100,7 +100,7 @@
 
                 {{-- Mata Kuliah --}}
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-xl text-gray-700 mb-2">
                         <i data-lucide="book" class="w-4 h-4 inline mr-1"></i>
                         Mata Kuliah Diampu
                     </label>
@@ -126,7 +126,7 @@
             <div class="flex items-start gap-3">
                 <i data-lucide="info" class="w-5 h-5 text-purple-600 mt-0.5"></i>
                 <div>
-                    <h4 class="font-medium text-purple-800 text-sm">Informasi Penting</h4>
+                    <h4 class="font-medium text-xl text-purple-800 text-sm">Informasi Penting</h4>
                     <ul class="text-purple-700 text-xs mt-1 space-y-1">
                         <li>• NUPTK diperlukan untuk validasi data dosen di sistem nasional</li>
                         <li>• Profil Sinta membantu meningkatkan visibilitas penelitian Anda</li>

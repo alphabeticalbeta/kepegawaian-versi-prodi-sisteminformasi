@@ -10,18 +10,23 @@ class DocumentAccessService
 {
     /**
      * Determine disk storage untuk field tertentu
-     * 
+     *
      * NOTE: Semua dokumen usulan saat ini disimpan di disk 'public' untuk kemudahan akses multi-role
      * Dokumen pegawai pribadi tetap di disk 'local' untuk keamanan
      */
     public function getDiskForField(string $field): string
     {
+        // Foto menggunakan disk public untuk akses langsung
+        if ($field === 'foto') {
+            return 'public';
+        }
+
         // Dokumen pribadi pegawai (sangat sensitif) - tetap di local
         $privateFields = [
             'ijazah_terakhir', 'transkrip_nilai_terakhir', 'sk_pangkat_terakhir',
             'sk_jabatan_terakhir', 'skp_tahun_pertama', 'skp_tahun_kedua',
             'pak_konversi', 'sk_cpns', 'sk_pns', 'sk_penyetaraan_ijazah',
-            'disertasi_thesis_terakhir', 'foto'
+            'disertasi_thesis_terakhir'
         ];
 
         // Dokumen pribadi pegawai - gunakan local
@@ -49,7 +54,7 @@ class DocumentAccessService
         }
 
         $userRole = $user->roles->first()->name ?? null;
-        
+
         // Log access attempt
         Log::info('Document access attempt', [
             'user_id' => $user->id,
@@ -71,7 +76,7 @@ class DocumentAccessService
             ]);
             return $canAccess;
         }
-        
+
         // Admin Fakultas: dokumen pegawai di fakultasnya
         if ($userRole === 'Admin Fakultas') {
             $canAccess = $usulan->pegawai->unitKerja->subUnitKerja->unit_kerja_id === $user->unit_kerja_id;
@@ -82,19 +87,19 @@ class DocumentAccessService
             ]);
             return $canAccess;
         }
-        
+
         // Admin Universitas: SEMUA dokumen (full access)
         if ($userRole === 'Admin Universitas') {
             Log::info('Admin Universitas access granted');
             return true;
         }
-        
+
         // Kepegawaian Universitas: SEMUA dokumen (full access)
         if ($userRole === 'Kepegawaian Universitas') {
             Log::info('Kepegawaian Universitas access granted');
             return true;
         }
-        
+
         // Penilai: dokumen yang di-assign
         if ($userRole === 'Penilai Universitas') {
             $canAccess = $usulan->isAssignedToPenilai($user->id);
@@ -104,7 +109,7 @@ class DocumentAccessService
             ]);
             return $canAccess;
         }
-        
+
         // Fallback: jika user tidak memiliki role yang jelas, cek apakah dia pemilik usulan
         if (!$userRole) {
             $canAccess = $usulan->pegawai_id === $user->id;
@@ -115,7 +120,7 @@ class DocumentAccessService
             ]);
             return $canAccess;
         }
-        
+
         // TEMPORARY FIX: Untuk testing, izinkan akses jika user adalah pemilik usulan
         if ($usulan->pegawai_id === $user->id) {
             Log::info('Temporary fix: allowing access for usulan owner', [
@@ -125,12 +130,12 @@ class DocumentAccessService
             ]);
             return true;
         }
-        
+
         Log::warning('Unknown role or access denied', [
             'user_role' => $userRole,
             'user_id' => $user->id
         ]);
-        
+
         return false;
     }
 
@@ -140,14 +145,14 @@ class DocumentAccessService
     public function getAllowedFields($user): array
     {
         $userRole = $user->roles->first()->name ?? null;
-        
+
         // Debug: log role check
         Log::info('Getting allowed fields', [
             'user_id' => $user->id,
             'user_role' => $userRole,
             'has_roles' => $user->roles->count()
         ]);
-        
+
         $baseFields = [
             'pakta_integritas', 'bukti_korespondensi', 'turnitin',
             'upload_artikel', 'bukti_syarat_guru_besar'
@@ -164,7 +169,7 @@ class DocumentAccessService
                 'pak_konversi', 'sk_cpns', 'sk_pns', 'sk_penyetaraan_ijazah',
                 'disertasi_thesis_terakhir', 'foto'
             ];
-            
+
             $allowedFields = array_merge($baseFields, $bkdFields, $profilFields);
             Log::info('Admin/Kepegawaian role - returning all fields', ['count' => count($allowedFields), 'user_role' => $userRole]);
             return $allowedFields;
@@ -189,31 +194,31 @@ class DocumentAccessService
         ]);
 
         $allowedFields = $this->getAllowedFields($user);
-        
+
         // Check exact match
         if (in_array($field, $allowedFields)) {
             Log::info('Field validation: exact match found', ['field' => $field]);
             return true;
         }
-        
+
         // Check BKD pattern
         if (str_starts_with($field, 'bkd_') && in_array('bkd_semester_1', $allowedFields)) {
             Log::info('Field validation: BKD pattern match', ['field' => $field]);
             return true;
         }
-        
+
         // Fallback: jika user tidak memiliki role, izinkan semua field
         if (!$user->roles->first()) {
             Log::info('Field validation: fallback (no role) - allowing all fields', ['field' => $field]);
             return true;
         }
-        
+
         Log::warning('Field validation: access denied', [
             'field' => $field,
             'allowed_fields' => $allowedFields,
             'user_role' => $user->roles->first()->name ?? 'no role'
         ]);
-        
+
         return false;
     }
 

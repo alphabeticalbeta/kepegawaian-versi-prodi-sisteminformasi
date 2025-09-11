@@ -168,174 +168,71 @@
 let currentEditId = null;
 let aplikasiData = [];
 
+// Escape HTML function for security
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM Content Loaded - Starting initialization');
-
-    // Test basic functionality first
-    console.log('Testing basic functionality...');
     const tbody = document.getElementById('aplikasiTableBody');
-    console.log('Table body found:', tbody);
-
     if (tbody) {
-        console.log('✅ Table body exists, proceeding with data load');
-        loadAplikasiDataFromAPI();
-    } else {
-        console.error('❌ Table body not found!');
+        loadAplikasiDataFromServer();
     }
-
     initializeForm();
-    console.log('✅ Initialization completed');
 });
 
-// Load data from API
-async function loadAplikasiDataFromAPI() {
-    console.log('🚀 Starting to load data from API...');
+// Load data from server using database
+async function loadAplikasiDataFromServer() {
     try {
-        const response = await fetch('/api/aplikasi-kepegawaian', {
+        const response = await fetch('/admin-universitas/aplikasi-kepegawaian/data', {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         });
 
-        console.log('📡 API Response status:', response.status);
-        console.log('📡 API Response ok:', response.ok);
-
         if (response.ok) {
             const result = await response.json();
-            console.log('📊 API Response data:', result);
-
             if (result.success && result.data) {
                 aplikasiData = result.data;
-                console.log('✅ Loaded aplikasi data from API:', aplikasiData);
-                console.log('✅ Data count:', aplikasiData.length);
             } else {
-                console.log('⚠️ No data from API, using fallback data');
-                // Fallback to sample data if no data from API
-                aplikasiData = [
-                    {
-                        id: 1,
-                        nama_aplikasi: 'SIDAK',
-                        sumber: 'Universitas Mulawarman',
-                        keterangan: 'Sistem Informasi Database Administrasi Kepegawaian',
-                        link: 'https://sidak.unmul.ac.id',
-                        status: 'aktif',
-                        created_at: '2024-01-15 10:30:00'
-                    },
-                    {
-                        id: 2,
-                        nama_aplikasi: 'Simkinerja',
-                        sumber: 'Universitas Mulawarman',
-                        keterangan: 'Sistem Informasi Kinerja (Remunerasi)',
-                        link: 'https://simkinerja.unmul.ac.id',
-                        status: 'aktif',
-                        created_at: '2024-01-15 10:35:00'
-                    }
-                ];
+                // No data available
+                aplikasiData = [];
             }
         } else {
-            console.error('❌ API failed, using fallback data');
-            // Fallback to sample data if API fails
-            aplikasiData = [
-                {
-                    id: 1,
-                    nama_aplikasi: 'SIDAK',
-                    sumber: 'Universitas Mulawarman',
-                    keterangan: 'Sistem Informasi Database Administrasi Kepegawaian',
-                    link: 'https://sidak.unmul.ac.id',
-                    status: 'aktif',
-                    created_at: '2024-01-15 10:30:00'
-                },
-                {
-                    id: 2,
-                    nama_aplikasi: 'Simkinerja',
-                    sumber: 'Universitas Mulawarman',
-                    keterangan: 'Sistem Informasi Kinerja (Remunerasi)',
-                    link: 'https://simkinerja.unmul.ac.id',
-                    status: 'aktif',
-                    created_at: '2024-01-15 10:35:00'
-                }
-            ];
+            // Server error
+            aplikasiData = [];
         }
     } catch (error) {
-        console.error('❌ Error loading data from API:', error);
-        // Fallback to sample data if API fails
-        aplikasiData = [
-            {
-                id: 1,
-                nama_aplikasi: 'SIDAK',
-                sumber: 'Universitas Mulawarman',
-                keterangan: 'Sistem Informasi Database Administrasi Kepegawaian',
-                link: 'https://sidak.unmul.ac.id',
-                status: 'aktif',
-                created_at: '2024-01-15 10:30:00'
-            },
-            {
-                id: 2,
-                nama_aplikasi: 'Simkinerja',
-                sumber: 'Universitas Mulawarman',
-                keterangan: 'Sistem Informasi Kinerja (Remunerasi)',
-                link: 'https://simkinerja.unmul.ac.id',
-                status: 'aktif',
-                created_at: '2024-01-15 10:35:00'
-            }
-        ];
+        // Error loading data
+        aplikasiData = [];
     }
 
-    console.log('📋 Final data to load:', aplikasiData);
-    console.log('📋 Data length:', aplikasiData.length);
-
-    // Test if data is valid
-    if (aplikasiData && aplikasiData.length > 0) {
-        console.log('✅ Data is valid, proceeding to load table');
-        // Load data to table
-        loadAplikasiData();
-    } else {
-        console.error('❌ No valid data to load');
-        // Force show fallback data
-        aplikasiData = [
-            {
-                id: 1,
-                nama_aplikasi: 'Test Data - SIDAK',
-                sumber: 'Universitas Mulawarman',
-                keterangan: 'Test Data - Sistem Informasi Database Administrasi Kepegawaian',
-                link: 'https://sidak.unmul.ac.id',
-                status: 'aktif',
-                created_at: '2024-01-15 10:30:00'
-            },
-            {
-                id: 2,
-                nama_aplikasi: 'Test Data - Simkinerja',
-                sumber: 'Universitas Mulawarman',
-                keterangan: 'Test Data - Sistem Informasi Kinerja (Remunerasi)',
-                link: 'https://simkinerja.unmul.ac.id',
-                status: 'aktif',
-                created_at: '2024-01-15 10:35:00'
-            }
-        ];
-        console.log('📋 Using fallback data:', aplikasiData);
-        loadAplikasiData();
-    }
+    // Load data to table
+    loadAplikasiData();
 }
 
 // Load data to table
 function loadAplikasiData() {
-    console.log('📋 loadAplikasiData called');
-    console.log('📋 Data to load:', aplikasiData);
-    console.log('📋 Data length:', aplikasiData.length);
-
     const tbody = document.getElementById('aplikasiTableBody');
-    console.log('📋 Table body element:', tbody);
-
     if (!tbody) {
-        console.error('❌ Table body not found!');
         return;
     }
 
     if (aplikasiData.length === 0) {
-        console.log('📋 No data available, showing no data message');
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="px-6 py-12 text-center text-gray-500">
@@ -350,23 +247,22 @@ function loadAplikasiData() {
         return;
     }
 
-    console.log('📋 Rendering data rows for', aplikasiData.length, 'items');
     tbody.innerHTML = aplikasiData.map((item, index) => `
         <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 ${index + 1}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">${item.nama_aplikasi}</div>
+            <td class="px-6 py-4">
+                <div class="text-sm font-medium text-gray-900 break-words max-w-xs">${escapeHtml(item.nama_aplikasi)}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">${item.sumber}</div>
+                <div class="text-sm text-gray-900">${escapeHtml(item.sumber)}</div>
             </td>
             <td class="px-6 py-4">
-                <div class="text-sm text-gray-900 max-w-xs truncate" title="${item.keterangan}">${item.keterangan}</div>
+                <div class="text-sm text-gray-900 break-words max-w-xs" title="${escapeHtml(item.keterangan)}">${escapeHtml(item.keterangan)}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <a href="${item.link}" target="_blank"
+                <a href="${escapeHtml(item.link)}" target="_blank"
                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg">
                     <i data-lucide="external-link" class="h-4 w-4 mr-2"></i>
                     Buka Aplikasi
@@ -398,9 +294,6 @@ function loadAplikasiData() {
         </tr>
     `).join('');
 
-    console.log('Generated HTML content for table');
-    console.log('✅ Data successfully loaded to table');
-
     // Reinitialize Lucide icons
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -412,7 +305,6 @@ function initializeForm() {
     const form = document.getElementById('aplikasiForm');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
-        console.log('✅ Form event listener added');
     }
 }
 
@@ -441,7 +333,8 @@ function handleFormSubmit(event) {
             'X-Requested-With': 'XMLHttpRequest',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(result => {
@@ -464,8 +357,8 @@ function handleFormSubmit(event) {
                 aplikasiData.push(result.data);
             }
 
-            // Reload data from API to get fresh data
-            loadAplikasiDataFromAPI().then(() => {
+            // Reload data from server to get fresh data
+            loadAplikasiDataFromServer().then(() => {
                 closeModal();
                 showSuccess(result.message);
             });
@@ -474,7 +367,7 @@ function handleFormSubmit(event) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        // Error handling
         showError('Terjadi kesalahan saat menyimpan data');
     })
     .finally(() => {
@@ -542,7 +435,8 @@ function deleteAplikasi(id) {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ _method: 'DELETE' })
+                body: JSON.stringify({ _method: 'DELETE' }),
+                credentials: 'same-origin'
             })
             .then(response => response.json())
             .then(result => {
@@ -556,7 +450,7 @@ function deleteAplikasi(id) {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                // Error handling
                 showError('Terjadi kesalahan saat menghapus data');
             });
         }

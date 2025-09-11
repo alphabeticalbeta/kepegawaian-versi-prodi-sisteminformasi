@@ -106,6 +106,7 @@
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
@@ -113,6 +114,7 @@
     .line-clamp-3 {
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
@@ -125,6 +127,16 @@
     /* Show pagination when needed */
     #paginationContainer.show {
         display: block;
+    }
+
+    /* Show pagination info even when pagination controls are hidden */
+    #paginationContainer:not(.show) {
+        display: block;
+    }
+
+    /* Hide pagination controls when not needed */
+    #paginationContainer:not(.show) .flex.items-center.space-x-2 {
+        display: none;
     }
 
     /* Table transition animations */
@@ -461,17 +473,16 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label for="penulis" class="block text-sm font-semibold text-gray-700 mb-3">
-                                Penulis <span class="text-red-500">*</span>
+                                Penulis
                             </label>
-                            <input type="text" id="penulis" name="penulis" required
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-indigo-400 disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
+                            <input type="text" id="penulis" name="penulis" readonly
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
                                    placeholder="Nama penulis"
                                    @if(auth()->guard('pegawai')->check())
                                        value="{{ auth()->guard('pegawai')->user()->nama_lengkap ?? auth()->guard('pegawai')->user()->name ?? 'Pegawai' }}"
                                    @else
                                        value="{{ auth()->user()->name ?? 'Administrator' }}"
-                                   @endif
-                                   readonly>
+                                   @endif>
                             <p class="text-xs text-gray-500 mt-1">
                                 <i data-lucide="lock" class="w-3 h-3 inline mr-1"></i>
                                 Penulis otomatis dari pegawai yang login
@@ -519,9 +530,9 @@
                         </div>
                         <div>
                             <label for="lampiran" class="block text-sm font-semibold text-gray-700 mb-3">
-                                Lampiran <span class="text-red-500">*</span>
+                                Lampiran <span class="text-red-500" id="lampiranRequired">*</span>
                             </label>
-                            <input type="file" id="lampiran" name="lampiran[]" multiple accept=".pdf" required
+                            <input type="file" id="lampiran" name="lampiran[]" multiple accept=".pdf"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-indigo-400">
                             <p class="text-xs text-gray-500 mt-1">
                                 Format: PDF saja. Max: 10MB per file
@@ -609,6 +620,21 @@
 
 @push('scripts')
 <script>
+// Escape HTML function for security
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // Global variables
 let currentPage = 1;
 let totalPages = 1;
@@ -642,41 +668,57 @@ async function loadDasarHukum(page = 1) {
             status: currentFilters.status
         });
 
-        const response = await fetch(`/admin-universitas/dasar-hukum-api?${params}`);
-        const data = await response.json();
+        const response = await fetch(`/admin-universitas/dasar-hukum/data?${params}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin'
+        });
 
-        console.log('API Response:', data);
+        if (response.ok) {
+            const data = await response.json();
+            // API Response received
 
-        if (data.success) {
-            // Store data globally for edit functionality
-            dasarHukumData = data.data;
-            console.log('Data loaded:', data.data.length, 'items');
-            console.log('Pagination info:', {
-                current_page: data.current_page,
-                last_page: data.last_page,
-                total: data.total
-            });
+            if (data.success) {
+                // Store data globally for edit functionality
+                dasarHukumData = data.data;
+                window.currentDasarHukumData = data.data;
+                // Data loaded successfully
 
-            // Add delay for smooth animation
-            setTimeout(() => {
-                renderTable(data.data);
-                updatePagination(data);
+                // Check if pagination should be shown
+
+                // Add delay for smooth animation
+                setTimeout(() => {
+                    renderTable(data.data);
+                    updatePagination(data);
+                    hideTableLoading();
+                }, 200);
+            } else {
                 hideTableLoading();
-            }, 200);
+                showAlert('Error!', 'Terjadi kesalahan saat memuat data', 'error');
+            }
         } else {
             hideTableLoading();
-            showAlert('Error', data.message, 'error');
+            showAlert('Error!', 'Gagal memuat data dasar hukum', 'error');
         }
     } catch (error) {
         hideTableLoading();
-        console.error('Error loading dasar hukum:', error);
-        showAlert('Error', 'Gagal memuat data dasar hukum', 'error');
+        // Error loading data
+        showAlert('Error!', 'Terjadi kesalahan saat memuat data', 'error');
     }
 }
 
 // Render table
 function renderTable(dasarHukum) {
     const tbody = document.getElementById('dasarHukumTableBody');
+
+    if (!tbody) {
+        // Table body not found
+        return;
+    }
 
     // Add fade-in animation class
     tbody.classList.add('fade-in');
@@ -698,7 +740,7 @@ function renderTable(dasarHukum) {
     }
 
     tbody.innerHTML = dasarHukum.map((item, index) => `
-        <tr class="hover:bg-gray-50 transition-colors duration-200">
+        <tr class="hover:bg-gray-50 transition-all duration-200 animate-fade-in" style="animation-delay: ${index * 50}ms">
             <td class="px-4 py-3 text-sm text-gray-900 text-center">${(currentPage - 1) * 10 + index + 1}</td>
             <td class="px-4 py-3 text-center">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -707,11 +749,11 @@ function renderTable(dasarHukum) {
                 ${item.sub_jenis ? `<div class="text-xs text-gray-500 mt-1">${getSubJenisLabel(item.sub_jenis)}</div>` : ''}
             </td>
             <td class="px-4 py-3">
-                <div class="text-sm font-medium text-gray-900 line-clamp-2">${item.judul}</div>
-                <div class="text-sm text-gray-500">${item.penulis}</div>
+                <div class="text-sm font-medium text-gray-900 line-clamp-2" title="${escapeHtml(item.judul)}">${escapeHtml(item.judul)}</div>
+                <div class="text-sm text-gray-500">${escapeHtml(item.penulis)}</div>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-900 text-center">${item.nomor_dokumen}</td>
-            <td class="px-4 py-3 text-sm text-gray-900 text-center">${item.nama_instansi}</td>
+            <td class="px-4 py-3 text-sm text-gray-900 text-center">${escapeHtml(item.nomor_dokumen)}</td>
+            <td class="px-4 py-3 text-sm text-gray-900 text-center">${escapeHtml(item.nama_instansi)}</td>
             <td class="px-4 py-3 text-center">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(item.status)}">
                     ${getStatusLabel(item.status)}
@@ -721,7 +763,7 @@ function renderTable(dasarHukum) {
             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-center">
                 ${item.lampiran && item.lampiran.length > 0 ?
                     item.lampiran.map((file, index) =>
-                        `<a href="/dasar-hukum-document/${file.path}" target="_blank" class="inline-flex items-center px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 mr-1" title="Buka ${file.name}"><i data-lucide="paperclip" class="h-3 w-3 mr-1"></i>Lihat Dokumen${item.lampiran.length > 1 ? ' ' + (index + 1) : ''}</a>`
+                        `<a href="/dasar-hukum-document/${escapeHtml(file.path)}" target="_blank" class="inline-flex items-center px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 mr-1" title="Buka ${escapeHtml(file.name)}"><i data-lucide="paperclip" class="h-3 w-3 mr-1"></i>Lihat Dokumen${item.lampiran.length > 1 ? ' ' + (index + 1) : ''}</a>`
                     ).join('')
                     : '<span class="text-gray-400 text-xs">-</span>'}
             </td>
@@ -743,7 +785,9 @@ function renderTable(dasarHukum) {
     `).join('');
 
     // Re-initialize Lucide icons
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
 
 // Helper functions
@@ -807,6 +851,19 @@ function openModal() {
     document.getElementById('submitText').textContent = 'Simpan';
     document.getElementById('editor').innerHTML = '';
     document.getElementById('subJenisField').classList.add('hidden');
+
+    // Set lampiran as required for new entries
+    document.getElementById('lampiran').required = true;
+    document.getElementById('lampiranRequired').style.display = 'inline';
+
+    // Restore penulis value after reset (since it's read-only)
+    setTimeout(() => {
+        @if(auth()->guard('pegawai')->check())
+            document.getElementById('penulis').value = "{{ auth()->guard('pegawai')->user()->nama_lengkap ?? auth()->guard('pegawai')->user()->name ?? 'Pegawai' }}";
+        @else
+            document.getElementById('penulis').value = "{{ auth()->user()->name ?? 'Administrator' }}";
+        @endif
+    }, 10);
 
     // Hide current files
     document.getElementById('currentThumbnail').classList.add('hidden');
@@ -884,7 +941,7 @@ function displayCurrentFiles(item) {
         const filename = item.thumbnail.split('/').pop();
 
         // Use the same route as lampiran for thumbnail access
-        const thumbnailUrl = `/admin-universitas/dasar-hukum-document/${filename}`;
+        const thumbnailUrl = `/dasar-hukum-document/${filename}`;
 
         thumbnailPreview.src = thumbnailUrl;
         thumbnailName.textContent = filename;
@@ -914,10 +971,10 @@ function displayCurrentFiles(item) {
                     <i data-lucide="file" class="h-8 w-8 text-gray-400"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">${fileName}</p>
+                    <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(fileName)}</p>
                     <p class="text-xs text-gray-500">${fileSize ? `Size: ${(fileSize / 1024).toFixed(1)} KB` : 'Klik untuk download'}</p>
                 </div>
-                <a href="/admin-universitas/dasar-hukum-document/${filePath}" target="_blank"
+                <a href="/dasar-hukum-document/${escapeHtml(filePath)}" target="_blank"
                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     <i data-lucide="download" class="h-3 w-3 mr-1"></i>
                     Download
@@ -1044,21 +1101,31 @@ document.getElementById('dasarHukumForm').addEventListener('submit', async funct
             body: formData,
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
+            },
+            credentials: 'same-origin'
         });
 
         const data = await response.json();
 
         if (data.success) {
-            showAlert('Success', data.message, 'success');
+            showAlert('Berhasil!', 'Data berhasil disimpan', 'success');
             closeModal();
             loadDasarHukum(currentPage);
         } else {
-            showAlert('Error', data.message, 'error');
+            // Handle validation errors
+            if (data.errors) {
+                let errorMessage = 'Validasi gagal:\n';
+                for (const field in data.errors) {
+                    errorMessage += `• ${escapeHtml(data.errors[field][0])}\n`;
+                }
+                showAlert('Error!', errorMessage, 'error');
+            } else {
+                showAlert('Error!', 'Terjadi kesalahan saat menyimpan data', 'error');
+            }
         }
     } catch (error) {
-        console.error('Error submitting form:', error);
-        showAlert('Error', 'Gagal menyimpan data', 'error');
+        // Error submitting form
+        showAlert('Error!', 'Terjadi kesalahan saat menyimpan data', 'error');
     } finally {
         // Hide loading
         showSubmitLoading(false);
@@ -1088,20 +1155,14 @@ function editDasarHukum(id) {
     const item = dasarHukumData.find(item => item.id === id);
     if (!item) return;
 
-    // Debug: Log item data
-    console.log('Edit item data:', item);
-    console.log('Penulis:', item.penulis);
-    console.log('Lampiran:', item.lampiran);
-    console.log('Thumbnail:', item.thumbnail);
-    console.log('Tanggal Publish:', item.tanggal_publish);
-    console.log('Masa Berlaku:', item.masa_berlaku);
+    // Edit item data
 
     currentEditId = id;
     document.getElementById('modalTitle').textContent = 'Edit Dasar Hukum';
     document.getElementById('editId').value = item.id;
     document.getElementById('jenis_dasar_hukum').value = item.jenis_dasar_hukum;
     document.getElementById('judul').value = item.judul;
-    document.getElementById('editor').innerHTML = item.konten;
+    document.getElementById('editor').innerHTML = escapeHtml(item.konten);
     document.getElementById('konten').value = item.konten;
     document.getElementById('status').value = item.status;
 
@@ -1120,52 +1181,49 @@ function editDasarHukum(id) {
         const tanggalField = document.getElementById('tanggal_publish');
         const masaBerlakuField = document.getElementById('masa_berlaku');
 
-        console.log('Sub Jenis field found:', subJenisField);
-        console.log('Nomor Dokumen field found:', nomorDokumenField);
-        console.log('Tanggal Dokumen field found:', tanggalDokumenField);
-        console.log('Nama Instansi field found:', namaInstansiField);
-        console.log('Penulis field found:', penulisField);
-        console.log('Tags field found:', tagsField);
-        console.log('Tanggal field found:', tanggalField);
-        console.log('Masa Berlaku field found:', masaBerlakuField);
+        // Form fields found
 
         if (subJenisField) {
             subJenisField.value = item.sub_jenis || '';
-            console.log('Sub Jenis value set to:', subJenisField.value);
+            // Sub Jenis value set
         }
 
         if (nomorDokumenField) {
             nomorDokumenField.value = item.nomor_dokumen || '';
-            console.log('Nomor Dokumen value set to:', nomorDokumenField.value);
+            // Nomor Dokumen value set
         }
 
         if (tanggalDokumenField) {
-            console.log('Tanggal Dokumen raw data:', item.tanggal_dokumen);
+            // Handle tanggal_dokumen format
             // Handle tanggal_dokumen format
             if (item.tanggal_dokumen) {
                 // Convert from "2025-09-07T00:00:00.000000Z" to "2025-09-07" (date format)
                 const dateStr = item.tanggal_dokumen.substring(0, 10);
                 tanggalDokumenField.value = dateStr;
-                console.log('Tanggal Dokumen value set to:', tanggalDokumenField.value);
+                // Tanggal Dokumen value set
             } else {
                 tanggalDokumenField.value = '';
-                console.log('Tanggal Dokumen is empty, field cleared');
+                // Tanggal Dokumen is empty, field cleared
             }
         }
 
         if (namaInstansiField) {
             namaInstansiField.value = item.nama_instansi || '';
-            console.log('Nama Instansi value set to:', namaInstansiField.value);
+            // Nama Instansi value set
         }
 
+        // Ensure penulis field is always filled with current user (read-only)
         if (penulisField) {
-            penulisField.value = item.penulis || '';
-            console.log('Penulis value set to:', penulisField.value);
+            @if(auth()->guard('pegawai')->check())
+                penulisField.value = "{{ auth()->guard('pegawai')->user()->nama_lengkap ?? auth()->guard('pegawai')->user()->name ?? 'Pegawai' }}";
+            @else
+                penulisField.value = "{{ auth()->user()->name ?? 'Administrator' }}";
+            @endif
         }
 
         if (tagsField) {
             tagsField.value = item.tags ? item.tags.join(', ') : '';
-            console.log('Tags value set to:', tagsField.value);
+            // Tags value set
         }
 
         // Handle tanggal_publish format
@@ -1173,14 +1231,14 @@ function editDasarHukum(id) {
             // Convert from "2025-09-07T17:41:00.000000Z" to "2025-09-07T17:41"
             const dateStr = item.tanggal_publish.replace('T', 'T').substring(0, 16);
             tanggalField.value = dateStr;
-            console.log('Tanggal value set to:', tanggalField.value);
+            // Tanggal value set
         } else if (tanggalField) {
             tanggalField.value = '';
         }
 
         if (masaBerlakuField) {
             masaBerlakuField.value = item.masa_berlaku || '';
-            console.log('Masa Berlaku value set to:', masaBerlakuField.value);
+            // Masa Berlaku value set
         }
 
         document.getElementById('is_featured').checked = item.is_featured;
@@ -1188,6 +1246,10 @@ function editDasarHukum(id) {
 
         // Display current files
         displayCurrentFiles(item);
+
+        // Set lampiran as optional for edit (since existing files are preserved)
+        document.getElementById('lampiran').required = false;
+        document.getElementById('lampiranRequired').style.display = 'none';
     }, 100); // End setTimeout
 
     const modal = document.getElementById('dasarHukumModal');
@@ -1204,26 +1266,71 @@ function editDasarHukum(id) {
 
 // Delete function
 async function deleteDasarHukum(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-        try {
-            const response = await fetch(`/admin-universitas/dasar-hukum/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                showAlert('Success', data.message, 'success');
-                loadDasarHukum(currentPage);
-            } else {
-                showAlert('Error', data.message, 'error');
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: 'Data yang dihapus tidak dapat dikembalikan!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'bg-gray-800 text-white',
+                title: 'text-white',
+                content: 'text-gray-300',
+                confirmButton: 'bg-red-600 hover:bg-red-700 text-white',
+                cancelButton: 'bg-gray-600 hover:bg-gray-700 text-white'
             }
-        } catch (error) {
-            console.error('Error deleting dasar hukum:', error);
-            showAlert('Error', 'Gagal menghapus data', 'error');
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin-universitas/dasar-hukum/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showAlert('Berhasil!', 'Data berhasil dihapus', 'success');
+                        loadDasarHukum(currentPage);
+                    } else {
+                        showAlert('Error!', 'Terjadi kesalahan saat menghapus data', 'error');
+                    }
+                } catch (error) {
+                    // Error deleting data
+                    showAlert('Error!', 'Terjadi kesalahan saat menghapus data', 'error');
+                }
+            }
+        });
+    } else {
+        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+            try {
+                const response = await fetch(`/admin-universitas/dasar-hukum/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Success', 'Data berhasil dihapus', 'success');
+                    loadDasarHukum(currentPage);
+                } else {
+                    showAlert('Error', 'Terjadi kesalahan saat menghapus data', 'error');
+                }
+            } catch (error) {
+                // Error deleting data
+                showAlert('Error', 'Gagal menghapus data', 'error');
+            }
         }
     }
 }
@@ -1289,8 +1396,22 @@ function debounce(func, wait) {
 
 // Alert function
 function showAlert(title, message, type) {
-    // You can implement SweetAlert2 or any other alert library here
-    alert(`${title}: ${message}`);
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: title,
+            text: message,
+            icon: type,
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'bg-gray-800 text-white',
+                title: 'text-white',
+                content: 'text-gray-300',
+                confirmButton: type === 'success' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'
+            }
+        });
+    } else {
+        alert(`${escapeHtml(title)}: ${escapeHtml(message)}`);
+    }
 }
 
 // Loading animation functions
@@ -1316,31 +1437,27 @@ function updatePagination(data) {
     totalPages = data.last_page;
     totalData = data.total;
 
-    console.log('updatePagination called with:', {
-        currentPage,
-        totalPages,
-        totalData
-    });
+    // Update pagination
 
     const container = document.getElementById('paginationContainer');
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevPageBtn');
     const nextBtn = document.getElementById('nextPageBtn');
 
-    console.log('Pagination elements found:', {
-        container: !!container,
-        pageNumbers: !!pageNumbers,
-        prevBtn: !!prevBtn,
-        nextBtn: !!nextBtn
-    });
+    // Pagination elements found
 
     // Show/hide pagination
     if (totalPages > 1) {
-        console.log('Showing pagination - totalPages > 1');
         container.classList.add('show');
     } else {
-        console.log('Hiding pagination - totalPages <= 1');
         container.classList.remove('show');
+    }
+
+    // Always show pagination container if there's data
+    if (totalData > 0) {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
     }
 
     // Update pagination info

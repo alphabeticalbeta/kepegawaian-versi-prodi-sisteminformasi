@@ -6,10 +6,10 @@
             {{-- Photo --}}
             <div class="relative">
                 <div class="w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-lg">
-                    <img src="{{ $pegawai->foto ? Storage::url($pegawai->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($pegawai->nama_lengkap) . '&size=128&background=6366f1&color=fff' }}"
+                    <img src="{{ $pegawai->foto ? (str_starts_with($pegawai->foto, '/storage/') ? $pegawai->foto : Storage::url($pegawai->foto)) : 'https://ui-avatars.com/api/?name=' . urlencode($pegawai->nama_lengkap) . '&size=128&background=6366f1&color=fff' }}"
                          alt="Foto Profil"
                          id="profile-photo"
-                         data-original-src="{{ $pegawai->foto ? Storage::url($pegawai->foto) : 'https://ui-avatars.com/api/?name=' . urlencode($pegawai->nama_lengkap) . '&size=128&background=6366f1&color=fff' }}"
+                         data-original-src="{{ $pegawai->foto ? (str_starts_with($pegawai->foto, '/storage/') ? $pegawai->foto : Storage::url($pegawai->foto)) : 'https://ui-avatars.com/api/?name=' . urlencode($pegawai->nama_lengkap) . '&size=128&background=6366f1&color=fff' }}"
                          class="w-full h-full object-cover">
                 </div>
                 @if($isEditing)
@@ -75,7 +75,7 @@
             <div class="flex-shrink-0">
                 @if($isEditing)
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('pegawai-unmul.profile.show') }}"
+                        <a href="{{ $isAdmin ? route('backend.kepegawaian-universitas.data-pegawai.index') : route('pegawai-unmul.profile.show') }}"
                            class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
                             <i data-lucide="x" class="w-4 h-4"></i>
                             Batal
@@ -87,11 +87,19 @@
                         </button>
                     </div>
                 @else
-                    <a href="{{ route('pegawai-unmul.profile.edit') }}"
-                       class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
-                        <i data-lucide="edit" class="w-4 h-4"></i>
-                        Edit Profil
-                    </a>
+                    @if($isAdmin)
+                        <a href="{{ route('backend.kepegawaian-universitas.data-pegawai.edit', $pegawai->id) }}"
+                           class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                            <i data-lucide="edit" class="w-4 h-4"></i>
+                            Edit Data
+                        </a>
+                    @else
+                        <a href="{{ route('pegawai-unmul.profile.edit') }}"
+                           class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                            <i data-lucide="edit" class="w-4 h-4"></i>
+                            Edit Profil
+                        </a>
+                    @endif
                 @endif
             </div>
         </div>

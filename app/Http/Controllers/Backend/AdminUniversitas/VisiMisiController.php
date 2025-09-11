@@ -23,6 +23,33 @@ class VisiMisiController extends Controller
     }
 
     /**
+     * Get all visi misi data for API
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getData()
+    {
+        try {
+            $visiMisi = VisiMisi::orderBy('created_at', 'desc')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $visiMisi
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching visi misi data from database', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request

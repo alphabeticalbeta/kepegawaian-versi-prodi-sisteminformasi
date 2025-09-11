@@ -533,9 +533,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateProgress();
     }, 100);
 
-    // Show success message if available
-    if (window.successMessage) {
-        showToast(window.successMessage, 'success');
-    }
+    // Show success message if available (disabled to prevent duplicate with Laravel flash message)
+    // if (window.successMessage) {
+    //     showToast(window.successMessage, 'success');
+    // }
 
 });

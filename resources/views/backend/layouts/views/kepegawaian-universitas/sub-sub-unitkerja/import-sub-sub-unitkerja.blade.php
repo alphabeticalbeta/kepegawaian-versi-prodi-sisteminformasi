@@ -137,7 +137,16 @@
     </div>
 </div>
 
-<script>
+    <script>
+        // XSS Protection Function
+        function escapeHtml(text) {
+            if (text === null || text === undefined) {
+                return '';
+            }
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('file');
     const uploadArea = fileInput.closest('.border-dashed');
@@ -179,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <div class="text-sm text-slate-600">
-                    <span class="font-medium text-green-600">${fileName}</span>
+                    <span class="font-medium text-green-600">${escapeHtml(fileName)}</span>
                 </div>
                 <p class="text-xs text-slate-500">File siap untuk diupload</p>
             </div>

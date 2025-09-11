@@ -174,6 +174,15 @@
 
 @push('scripts')
 <script>
+// XSS Protection Function
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const toggleForm = document.getElementById('togglePeriodeForm');
     const toggleBtn = document.getElementById('togglePeriodeBtn');
@@ -191,8 +200,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     periode_id: document.querySelector('input[name="periode_id"]').value
                 })
@@ -204,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil!',
-                        text: data.message,
+                        text: 'Status periode berhasil diubah',
                         timer: 2000,
                         showConfirmButton: false
                     });
@@ -232,12 +244,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal!',
-                        text: data.message || 'Terjadi kesalahan saat mengubah status periode.'
+                        text: 'Terjadi kesalahan saat mengubah status periode.'
                     });
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal!',

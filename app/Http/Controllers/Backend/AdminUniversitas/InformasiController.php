@@ -120,6 +120,29 @@ class InformasiController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        try {
+            $informasi = Informasi::findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $informasi
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -169,7 +192,7 @@ class InformasiController extends Controller
                 $thumbnail = $request->file('thumbnail');
                 $thumbnailName = time() . '_' . $thumbnail->getClientOriginalName();
                 $thumbnailPath = $thumbnail->storeAs('public/informasi/thumbnails', $thumbnailName);
-                $data['thumbnail'] = Storage::url($thumbnailPath);
+                $data['thumbnail'] = '/storage/' . str_replace('public/', '', $thumbnailPath);
             }
 
             // Upload lampiran
@@ -320,7 +343,7 @@ class InformasiController extends Controller
                 $thumbnail = $request->file('thumbnail');
                 $thumbnailName = time() . '_' . $thumbnail->getClientOriginalName();
                 $thumbnailPath = $thumbnail->storeAs('public/informasi/thumbnails', $thumbnailName);
-                $data['thumbnail'] = Storage::url($thumbnailPath);
+                $data['thumbnail'] = '/storage/' . str_replace('public/', '', $thumbnailPath);
             }
 
             // Upload lampiran

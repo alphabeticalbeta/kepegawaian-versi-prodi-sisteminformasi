@@ -41,10 +41,10 @@
                 <table class="min-w-full bg-white border border-gray-300 shadow rounded-lg">
                     <thead class="bg-gray-100 text-gray-700">
                         <tr>
-                            <th class="py-3 px-4 border-b">Aplikasi</th>
-                            <th class="py-3 px-4 border-b">Sumber</th>
-                            <th class="py-3 px-4 border-b">Keterangan</th>
-                            <th class="py-3 px-4 border-b">Link</th>
+                            <th class="py-3 px-4 border-b w-1/4">Aplikasi</th>
+                            <th class="py-3 px-4 border-b w-1/6">Sumber</th>
+                            <th class="py-3 px-4 border-b w-1/3">Keterangan</th>
+                            <th class="py-3 px-4 border-b w-1/4">Link</th>
                         </tr>
                     </thead>
                     <tbody id="aplikasiTableBody" class="text-gray-700">
@@ -66,6 +66,18 @@
     @include('frontend.components.footer')
 
     <script>
+        // Escape HTML function for security
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
         // Load aplikasi data from API
         async function loadAplikasiData() {
             try {
@@ -88,7 +100,7 @@
                     displayError('Gagal memuat data aplikasi');
                 }
             } catch (error) {
-                console.error('Error loading aplikasi data:', error);
+                // Error loading aplikasi data
                 displayError('Terjadi kesalahan saat memuat data');
             }
         }
@@ -114,12 +126,12 @@
 
             tbody.innerHTML = data.map(item => `
                 <tr class="hover:bg-gray-100 transition duration-200 ease-in-out">
-                    <td class="py-2 px-4 border-b font-medium">${item.nama_aplikasi}</td>
-                    <td class="py-2 px-4 border-b">${item.sumber}</td>
-                    <td class="py-2 px-4 border-b">${item.keterangan}</td>
-                    <td class="py-2 px-4 border-b">
-                        <a href="${item.link}" target="_blank"
-                           class="inline-flex items-center bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-400 transition">
+                    <td class="py-2 px-4 border-b font-medium w-1/4">${escapeHtml(item.nama_aplikasi)}</td>
+                    <td class="py-2 px-4 border-b w-1/6">${escapeHtml(item.sumber)}</td>
+                    <td class="py-2 px-4 border-b w-1/3">${escapeHtml(item.keterangan)}</td>
+                    <td class="py-2 px-4 border-b w-1/4">
+                        <a href="${escapeHtml(item.link)}" target="_blank"
+                           class="inline-flex items-center bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-400 transition whitespace-nowrap">
                             <i data-lucide="external-link" class="h-4 w-4 mr-1"></i>
                             Buka Aplikasi
                         </a>
@@ -142,7 +154,7 @@
                         <div class="flex flex-col items-center">
                             <i data-lucide="alert-circle" class="h-12 w-12 text-red-300 mb-4"></i>
                             <p class="text-lg font-medium">Gagal Memuat Data</p>
-                            <p class="text-sm">${message}</p>
+                            <p class="text-sm">${escapeHtml(message)}</p>
                         </div>
                     </td>
                 </tr>

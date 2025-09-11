@@ -26,17 +26,9 @@
             <div class="relative w-96">
                 <input type="text" id="searchInput" placeholder="Cari berita  .  .  .  .  .  .  .  .  .  ."
                        class="w-full px-2 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all duration-300 hover:border-blue-400 focus:border-blue-500 focus:ring-blue-500">
-                <div id="searchLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
-                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                </div>
             </div>
         </div>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p class="mt-4 text-gray-600">Memuat berita...</p>
-        </div>
 
         <!-- Error State -->
         <div id="errorState" class="hidden text-center py-12">
@@ -137,10 +129,6 @@ async function loadBerita(page = 1, isSearch = false, isPagination = false) {
         // Create new abort controller for this request
         abortController = new AbortController();
 
-        // Only show loading for initial load, not for search or pagination
-        if (!isSearch && !isPagination) {
-            showLoading();
-        }
 
         const params = new URLSearchParams({
             page: page,
@@ -150,20 +138,18 @@ async function loadBerita(page = 1, isSearch = false, isPagination = false) {
             jenis: 'berita'
         });
 
-        const response = await fetch(`/api/informasi?${params}`, {
+        const response = await fetch(`/informasi/data?${params}`, {
             signal: abortController.signal,
             cache: 'no-cache' // Ensure fresh data for search
         });
         const data = await response.json();
 
         if (data.success) {
-            // Hide search loading animation
-            hideSearchLoading();
 
             // For search and pagination, update content immediately without delay
             if (isSearch || isPagination) {
                 displayBerita(data.data);
-                updatePagination(data.pagination);
+                updatePagination(data);
 
                 // Show elements immediately for smooth experience
                 const gridElement = document.getElementById('beritaGrid');
@@ -179,35 +165,22 @@ async function loadBerita(page = 1, isSearch = false, isPagination = false) {
             } else {
                 // For initial load, use setTimeout for smooth transition
                 displayBerita(data.data);
-                updatePagination(data.pagination);
+                updatePagination(data);
 
-                setTimeout(() => {
-                    const loadingElement = document.getElementById('loadingState');
-                    if (loadingElement) {
-                        loadingElement.remove();
-                    }
+                // Show other elements
+                const gridElement = document.getElementById('beritaGrid');
+                const paginationElement = document.getElementById('paginationContainer');
 
-                    // Show other elements
-                    const gridElement = document.getElementById('beritaGrid');
-                    const paginationElement = document.getElementById('paginationContainer');
+                if (gridElement) {
+                    gridElement.classList.remove('hidden');
+                }
 
-                    if (gridElement) {
-                        gridElement.classList.remove('hidden');
-                    }
-
-                    if (paginationElement) {
-                        paginationElement.classList.remove('hidden');
-                    }
-                }, 100);
+                if (paginationElement) {
+                    paginationElement.classList.remove('hidden');
+                }
             }
         } else {
             console.error('API returned success: false');
-            if (!isSearch && !isPagination) {
-                const loadingElement = document.getElementById('loadingState');
-                if (loadingElement) {
-                    loadingElement.remove();
-                }
-            }
             showError();
         }
     } catch (error) {
@@ -217,12 +190,6 @@ async function loadBerita(page = 1, isSearch = false, isPagination = false) {
         }
 
         console.error('Error loading berita:', error);
-        if (!isSearch && !isPagination) {
-            const loadingElement = document.getElementById('loadingState');
-            if (loadingElement) {
-                loadingElement.remove();
-            }
-        }
         showError();
     }
 }
@@ -317,65 +284,115 @@ function displayBerita(berita) {
     `).join('');
 }
 
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // Show berita detail modal
 async function showBeritaDetail(id) {
     try {
-        const response = await fetch(`/api/informasi/${id}`);
+        const response = await fetch(`/informasi/${id}`);
         const data = await response.json();
 
         if (data.success) {
             const item = data.data;
 
             document.getElementById('modalTitle').textContent = item.judul;
-            document.getElementById('modalContent').innerHTML = `
-                <div class="space-y-6">
-                    <div class="flex items-center text-sm text-gray-500">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        ${formatDate(item.tanggal_publish)}
-                        <span class="mx-2">•</span>
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        ${item.penulis || 'Admin'}
-                    </div>
-
-                    ${item.thumbnail ? `
-                        <img src="/lampiran/${item.thumbnail.split('/').pop()}"
-                             alt="${item.judul}"
-                             class="w-full h-60 object-cover rounded-lg"
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
-                    ` : ''}
-
-                    <div class="prose max-w-none">
-                        ${item.konten}
-                    </div>
-
-                    ${item.lampiran && item.lampiran.length > 0 ? `
-                        <div class="border-t pt-6">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Lampiran</h4>
-                            <div class="space-y-2">
-                                ${item.lampiran.map(file => `
-                                    <a href="/lampiran/${file.path}" target="_blank"
-                                       class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        <span class="text-gray-700">${file.name}</span>
-                                        <span class="ml-auto text-sm text-gray-500">${formatFileSize(file.size)}</span>
-                                    </a>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
+            
+            // Create modal content safely
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = '';
+            
+            // Create container
+            const container = document.createElement('div');
+            container.className = 'space-y-6';
+            
+            // Date and author info
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'flex items-center text-sm text-gray-500';
+            infoDiv.innerHTML = `
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                ${formatDate(item.tanggal_publish)}
+                <span class="mx-2">•</span>
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                ${escapeHtml(item.penulis || 'Admin')}
             `;
+            container.appendChild(infoDiv);
+            
+            // Thumbnail
+            if (item.thumbnail) {
+                const imgDiv = document.createElement('div');
+                const img = document.createElement('img');
+                img.src = `/lampiran/${item.thumbnail.split('/').pop()}`;
+                img.alt = escapeHtml(item.judul);
+                img.className = 'w-full h-60 object-cover rounded-lg';
+                img.onerror = function() {
+                    this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                };
+                imgDiv.appendChild(img);
+                container.appendChild(imgDiv);
+            }
+            
+            // Content - safely handle HTML content
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'prose max-w-none';
+            // Use textContent for safety, or implement proper HTML sanitization
+            contentDiv.textContent = item.konten;
+            container.appendChild(contentDiv);
+            
+            // Attachments
+            if (item.lampiran && item.lampiran.length > 0) {
+                const attachmentDiv = document.createElement('div');
+                attachmentDiv.className = 'border-t pt-6';
+                
+                const title = document.createElement('h4');
+                title.className = 'text-lg font-semibold text-gray-900 mb-4';
+                title.textContent = 'Lampiran';
+                attachmentDiv.appendChild(title);
+                
+                const filesDiv = document.createElement('div');
+                filesDiv.className = 'space-y-2';
+                
+                item.lampiran.forEach(file => {
+                    const fileLink = document.createElement('a');
+                    fileLink.href = `/lampiran/${file.path}`;
+                    fileLink.target = '_blank';
+                    fileLink.className = 'flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
+                    
+                    fileLink.innerHTML = `
+                        <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span class="text-gray-700">${escapeHtml(file.name)}</span>
+                        <span class="ml-auto text-sm text-gray-500">${formatFileSize(file.size)}</span>
+                    `;
+                    
+                    filesDiv.appendChild(fileLink);
+                });
+                
+                attachmentDiv.appendChild(filesDiv);
+                container.appendChild(attachmentDiv);
+            }
+            
+            modalContent.appendChild(container);
 
             document.getElementById('beritaModal').classList.remove('hidden');
         }
     } catch (error) {
-        console.error('Error loading berita detail:', error);
+        // Handle error silently for production
+        document.getElementById('modalContent').innerHTML = '<div class="text-center text-red-500">Gagal memuat detail berita</div>';
     }
 }
 
@@ -385,14 +402,14 @@ function closeModal() {
 }
 
 // Update pagination
-function updatePagination(pagination) {
+function updatePagination(response) {
     const container = document.getElementById('paginationContainer');
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
 
-    currentPage = pagination.current_page;
-    totalPages = pagination.last_page;
+    currentPage = response.current_page;
+    totalPages = response.last_page;
 
     // Show/hide pagination
     if (totalPages > 1) {
@@ -425,91 +442,22 @@ function updatePagination(pagination) {
     nextBtn.onclick = () => currentPage < totalPages && loadBerita(currentPage + 1, false, true);
 
     // Update showing info
-    document.getElementById('showingFrom').textContent = pagination.from || 0;
-    document.getElementById('showingTo').textContent = pagination.to || 0;
-    document.getElementById('totalItems').textContent = pagination.total || 0;
+    document.getElementById('showingFrom').textContent = response.from || 0;
+    document.getElementById('showingTo').textContent = response.to || 0;
+    document.getElementById('totalItems').textContent = response.total || 0;
 }
 
 
-// Show loading state
-function showLoading() {
-    const loadingElement = document.getElementById('loadingState');
-    if (loadingElement) {
-        loadingElement.style.display = 'block';
-        loadingElement.classList.remove('hidden');
-    }
-    document.getElementById('beritaGrid').classList.add('hidden');
-    document.getElementById('emptyState').classList.add('hidden');
-    document.getElementById('errorState').classList.add('hidden');
-    document.getElementById('paginationContainer').classList.add('hidden');
-}
 
 
 // Show error state
 function showError() {
-    document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('beritaGrid').classList.add('hidden');
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('errorState').classList.remove('hidden');
     document.getElementById('paginationContainer').classList.add('hidden');
 }
 
-// Hide loading state
-function hideLoading() {
-    console.log('hideLoading function started');
-
-    try {
-        // Try multiple approaches to hide loading state
-        const loadingElement = document.getElementById('loadingState');
-        console.log('Loading element found:', loadingElement);
-
-    if (loadingElement) {
-        console.log('Loading element current style:', loadingElement.style.cssText);
-
-        // Force hide with !important
-        loadingElement.style.setProperty('display', 'none', 'important');
-        loadingElement.style.setProperty('visibility', 'hidden', 'important');
-        loadingElement.style.setProperty('opacity', '0', 'important');
-        loadingElement.style.setProperty('height', '0', 'important');
-        loadingElement.style.setProperty('overflow', 'hidden', 'important');
-
-        console.log('Loading element style after force hide:', loadingElement.style.cssText);
-
-        // Also clear innerHTML
-        loadingElement.innerHTML = '';
-        console.log('Loading element innerHTML cleared');
-
-        // Remove from DOM as final step
-        setTimeout(() => {
-            if (loadingElement.parentNode) {
-                loadingElement.parentNode.removeChild(loadingElement);
-                console.log('Loading element removed from DOM');
-            }
-        }, 100);
-    } else {
-        console.error('Loading element not found!');
-    }
-
-    // Show other elements
-    const gridElement = document.getElementById('beritaGrid');
-    const paginationElement = document.getElementById('paginationContainer');
-
-    if (gridElement) {
-        gridElement.classList.remove('hidden');
-        console.log('Grid element shown');
-    }
-
-    if (paginationElement) {
-        paginationElement.classList.remove('hidden');
-        console.log('Pagination element shown');
-    }
-
-        console.log('hideLoading completed');
-    } catch (error) {
-        console.error('Error inside hideLoading function:', error);
-        console.error('Error stack:', error.stack);
-    }
-}
 
 // Utility functions
 function formatDate(dateString) {
@@ -535,28 +483,11 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Show search loading animation
-function showSearchLoading() {
-    const searchLoading = document.getElementById('searchLoading');
-    if (searchLoading) {
-        searchLoading.classList.remove('hidden');
-    }
-}
-
-// Hide search loading animation
-function hideSearchLoading() {
-    const searchLoading = document.getElementById('searchLoading');
-    if (searchLoading) {
-        searchLoading.classList.add('hidden');
-    }
-}
 
 // Event listeners
 document.getElementById('searchInput').addEventListener('input', debounce((e) => {
     currentSearch = e.target.value.trim();
 
-    // Show search loading animation
-    showSearchLoading();
 
     // If search is empty, load all berita immediately
     if (currentSearch === '') {

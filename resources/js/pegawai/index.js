@@ -4,7 +4,7 @@
 
 // Initialize pegawai functionality
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Pegawai JavaScript loaded');
+    // Pegawai JavaScript loaded
 
     // Initialize header functions
     initializeHeaderFunctions();
@@ -28,9 +28,9 @@ function initializeHeaderFunctions() {
                 mainContent.classList.add('ml-64');
             }
 
-            console.log('Sidebar toggled:', sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded');
+            // Sidebar toggled
         } else {
-            console.error('Sidebar or main content not found');
+            // Sidebar or main content not found
         }
     };
 
@@ -126,5 +126,5 @@ function initializeHeaderFunctions() {
         }
     });
 
-    console.log('Header functions initialized');
+    // Header functions initialized
 }

@@ -4,55 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log Usulan - {{ $usulan->jenis_usulan }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite',
-                        'slide-in-left': 'slideInLeft 0.6s ease-out',
-                        'fade-in-up': 'fadeInUp 0.8s ease-out',
-                        'scale-in': 'scaleIn 0.5s ease-out',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                        bounceSubtle: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-5px)' },
-                        },
-                        slideInLeft: {
-                            '0%': { opacity: '0', transform: 'translateX(-20px)' },
-                            '100%': { opacity: '1', transform: 'translateX(0)' },
-                        },
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        scaleIn: {
-                            '0%': { opacity: '0', transform: 'scale(0.9)' },
-                            '100%': { opacity: '1', transform: 'scale(1)' },
-                        },
-                    },
-                    backdropBlur: {
-                        'xs': '2px',
-                    },
-                    boxShadow: {
-                        'glow': '0 0 30px -5px rgba(99, 102, 241, 0.3)',
-                        'glow-lg': '0 0 50px -10px rgba(99, 102, 241, 0.4)',
-                        '3xl': '0 35px 60px -12px rgba(0, 0, 0, 0.25)',
-                        'inner-lg': 'inset 0 2px 8px 0 rgba(0, 0, 0, 0.06)',
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         /* Enhanced custom styles */
         .text-field {
@@ -243,7 +196,7 @@
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen relative overflow-x-hidden">
     <!-- Scroll Progress Indicator -->
     <div class="scroll-indicator" id="scrollIndicator"></div>
-    
+
     <!-- Background decorative elements -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-float"></div>
@@ -259,7 +212,7 @@
                 <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-float"></div>
                 <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-float" style="animation-delay: -2s;"></div>
                 <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-xl animate-pulse-slow"></div>
-                
+
                 <div class="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                     <div class="flex-1">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
@@ -281,7 +234,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <button onclick="window.close()" class="group px-6 lg:px-8 py-3 lg:py-4 bg-white/20 backdrop-blur-sm text-white rounded-2xl hover:bg-white/30 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 font-semibold border border-white/30 glass-strong">
                         <div class="flex items-center gap-2">
                             <i data-lucide="x" class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300"></i>
@@ -299,7 +252,7 @@
                     </div>
                     <span class="gradient-text">Data Diri Pegawai</span>
                 </h2>
-                
+
                 <div class="overflow-x-auto rounded-2xl shadow-lg border border-blue-200/30">
                     <table class="w-full bg-white/90 backdrop-blur-sm">
                         <thead>
@@ -398,7 +351,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Mobile Card View (Hidden on larger screens) -->
                 <div class="lg:hidden mt-6 space-y-4">
                     <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-blue-200/50 hover:shadow-xl transition-all duration-300">
@@ -411,7 +364,7 @@
                                 <p class="text-sm text-gray-500">Data Pegawai</p>
                             </div>
                         </div>
-                        
+
                         <div class="space-y-3">
                             <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                                 <div class="flex items-center">
@@ -420,7 +373,7 @@
                                 </div>
                                 <span class="font-bold text-gray-900 font-mono">{{ $usulan->pegawai->nip }}</span>
                             </div>
-                            
+
                             <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
                                 <div class="flex items-center">
                                     <i data-lucide="briefcase" class="w-4 h-4 text-purple-600 mr-2"></i>
@@ -428,7 +381,7 @@
                                 </div>
                                 <span class="font-bold text-gray-900">{{ $usulan->pegawai->jenis_pegawai }}</span>
                             </div>
-                            
+
                             <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
                                 <div class="flex items-center">
                                     <i data-lucide="award" class="w-4 h-4 text-orange-600 mr-2"></i>
@@ -436,7 +389,7 @@
                                 </div>
                                 <span class="font-bold text-gray-900">{{ $usulan->pegawai->status_kepegawaian }}</span>
                             </div>
-                            
+
                             <div class="p-3 bg-teal-50 rounded-lg border border-teal-200">
                                 <div class="flex items-center mb-2">
                                     <i data-lucide="mail" class="w-4 h-4 text-teal-600 mr-2"></i>
@@ -710,7 +663,7 @@
         function showWarning() {
             if (isWarningShown) return;
             isWarningShown = true;
-            
+
             const warning = document.createElement('div');
             warning.className = 'fixed top-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 animate-slide-in-left border border-white/20';
             warning.innerHTML = `
@@ -727,7 +680,7 @@
             `;
             document.body.appendChild(warning);
             lucide.createIcons();
-            
+
             setTimeout(() => {
                 if (warning.parentNode) {
                     warning.remove();
@@ -738,10 +691,10 @@
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
             clearTimeout(warningTimer);
-            
+
             // Show warning after 20 seconds
             warningTimer = setTimeout(showWarning, 20000);
-            
+
             // Close after 30 seconds
             inactivityTimer = setTimeout(() => {
                 window.close();
@@ -791,7 +744,7 @@
                 card.style.transform = 'translateY(-8px) scale(1.02)';
                 card.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
             });
-            
+
             card.addEventListener('mouseleave', () => {
                 card.style.transform = 'translateY(0) scale(1)';
                 card.style.boxShadow = '';
